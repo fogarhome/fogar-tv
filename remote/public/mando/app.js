@@ -21,6 +21,7 @@ import { trackpad } from './features/trackpad.js';
 import { tele } from './features/tele.js';
 import { keyboard } from './features/keyboard.js';
 import { go } from './features/go.js';
+import { recents } from './features/recents.js';
 import { agent } from './features/agent.js';
 import { spotify } from './features/spotify.js';
 import { pair, settle } from './features/pair.js';
@@ -38,7 +39,7 @@ function register(list) {
 }
 
 initSession();                                          // token de ?t= o guardado, código de #admin= y ajustes
-register([controls, tele, trackpad, keyboard, go, agent, spotify, pair, admin, settings, idle]);
+register([controls, tele, trackpad, keyboard, go, recents, agent, spotify, pair, admin, settings, idle]);
 handle('me', applyMe);
 // orden del script único: ambiente (v3), accesos, conexión (eco cada 2 s y visibilitychange), cabecera, trackpad, gestos,
 // botones, hojas, teclado, dirección, agente, Spotify, emparejar, administración, ajustes y reposo

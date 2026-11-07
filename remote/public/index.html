@@ -38,6 +38,7 @@
 <link rel="modulepreload" href="/mando/features/spotify.js">
 <link rel="modulepreload" href="/mando/features/pair.js">
 <link rel="modulepreload" href="/mando/features/pcm-player.js">
+<link rel="modulepreload" href="/mando/features/recents.js">
 <link rel="modulepreload" href="/mando/features/admin.js">
 <link rel="modulepreload" href="/mando/features/idle.js">
 <link rel="modulepreload" href="/mando/features/settings.js">
@@ -157,6 +158,9 @@
       <button class="b2 j-only" data-a="kb" data-click aria-label="Escribir en la tele">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="3"/><path d="M6.5 10h.01M10 10h.01M14 10h.01M17.5 10h.01M8 14h8"/></svg>
       </button>
+      <button class="b2 j-only" data-a="rc" data-click aria-label="Recientes de la tele">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3"/><path d="M4 4.5V8h3.5"/><path d="M12 8v4.2l2.8 1.8"/></svg>
+      </button>
       <button class="b2 j-only" data-a="go" data-click aria-label="Abrir una dirección">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3A4 4 0 0 0 11 18.7l1-1"/></svg>
       </button>
@@ -238,6 +242,12 @@
 </div>
 
 <!-- dirección -->
+<div class="sheet" id="rcS" role="dialog" aria-label="Recientes">
+  <div class="grab"></div>
+  <h2 class="rcH">Recientes</h2>
+  <div class="rcList" id="rcList"></div>
+</div>
+
 <div class="sheet" id="goS" role="dialog" aria-label="Ir a una dirección">
   <div class="grab"></div>
   <input class="in" id="gin" aria-label="Dirección o búsqueda" placeholder="Dirección o búsqueda" inputmode="url" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go">

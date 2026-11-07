@@ -455,7 +455,7 @@ a.bt{text-decoration:none}
 /* trackpad ↔ cruceta: la misma superficie; en la tele se desliza para moverse y se toca para elegir */
 .cross{position:absolute;inset:0 0 72px 0;pointer-events:none;opacity:0;transform:scale(.9);transition:opacity .45s ease,transform .7s var(--ease)}
 :root.tv .cross,:root.home:not(.off) .cross{opacity:1;transform:none;transition-delay:.12s}
-:root.home:not(.tv) .cross .cu{opacity:.3} /* en el inicio, arriba queda para Recientes (A3) */
+ /* en el inicio, arriba queda para Recientes (A3) */
 .cross i{position:absolute;width:30px;height:30px;color:var(--text-faint);transition:color .3s ease,transform .3s var(--ease)}
 .cross i svg{width:30px;height:30px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .cross .cu{left:50%;top:22px;margin-left:-15px}.cross .cd{left:50%;bottom:22px;margin-left:-15px}
@@ -603,3 +603,11 @@ a.bt{text-decoration:none}
 .u-mb6{margin-bottom:6px}
 .u-mb10{margin-bottom:10px}
 .u-tl{text-align:left}
+
+/* Recientes (A3): la hoja con lo último que hubo en la tele */
+.rcH{margin:4px 0 6px;font-size:17px;font-weight:600}
+.rcIt .im svg{width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:1.6}
+.rcIt .tx{border:0;background:transparent;color:inherit;font:inherit;text-align:left;padding:4px 0;cursor:pointer;touch-action:manipulation}
+.rcX{color:var(--text-soft)}
+.rcIt{transition:opacity .2s ease}
+.rcIt.rcGone{opacity:.3}

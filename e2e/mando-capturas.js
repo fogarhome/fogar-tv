@@ -226,6 +226,8 @@ async function adminScenes(theme, admin) {
     const up = await p.locator('.cross .cl').boundingBox();
     await padGesture(p, [['pointerdown', 1, up.x - b.x + 15, up.y - b.y + 15], ['pointerup', 1, up.x - b.x + 15, up.y - b.y + 15]]);   // flecha izquierda
     await padGesture(p, [['pointerdown', 1, b.width / 2, b.height / 2], ['pointerup', 1, b.width / 2, b.height / 2]]);                // centro: OK
+    const top = await p.locator('.cross .cu').boundingBox();
+    await padGesture(p, [['pointerdown', 1, top.x - b.x + 15, top.y - b.y + 15], ['pointerup', 1, top.x - b.x + 15, top.y - b.y + 15]]); // arriba: Recientes
     await padGesture(p, [['pointerdown', 1, 60, 200], ['pointermove', 1, 120, 205], ['pointermove', 1, 180, 210], ['pointerup', 1, 180, 210]]); // deslizar: derecha
     await wait(200);
   });
@@ -265,6 +267,18 @@ async function adminScenes(theme, admin) {
     if (closed.inert || closed.focus !== 'Ajustes') errors.push(`${T('hoja-dialogo')}: al cerrar ${JSON.stringify(closed)}`);
   });
   await focusTv({ kind: 'none' });
+  // Recientes (A3): la hoja con la lista (respuesta falsa: el servidor de prueba no tiene registro de uso)
+  await run('hoja-recientes', async p => {
+    const now = await p.evaluate(() => Date.now());   // el reloj de la página está fijado
+    await p.evaluate(items => { window.__wsFake['idle:'] = { ok: 1, items }; }, [
+      { key: 'netflix:fantasmas', src: 'netflix', title: 'Fantasmas', sub: '', at: now - 40 * 60e3 },
+      { key: 'spotify:spotify:album:x', src: 'spotify', title: 'CHROMAKOPIA', sub: '', at: now - 3 * 3600e3 },
+      { key: 'web:https://elpais.com/', src: 'web', title: 'EL PAÍS', sub: 'elpais.com', at: now - 26 * 3600e3 },
+    ]);
+    await tap(p, 'Recientes de la tele', 600); await shot(p, T('hoja-recientes'));
+    await p.evaluate(() => { delete window.__wsFake['idle:']; });
+    await shade(p);
+  });
   await run('hoja-direccion', async p => { await tap(p, 'Abrir una dirección'); await p.keyboard.type('elpais.com'); await shot(p, T('hoja-direccion')); });
   await run('hoja-agente', async p => {
     await tap(p, 'Hablar con Jota'); await shot(p, T('hoja-agente'));
