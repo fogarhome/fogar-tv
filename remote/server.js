@@ -184,7 +184,11 @@ const control = createControl({ cdp, state, broadcast, key: keyboard.key, audio,
 const spotify = createSpotify({ cdp, cfg: CFG, log, clients: ws.clients, idle: () => idle, tvAudio: androidTv && { set: v => control.volSet(v) } });
 const idle = createIdle({
   PUB, SELF, file: CFG.FILES.idle, place: CFG.PLACE, cdp, nav: control.nav, state, onWatch: () => spotify.now.poll(5000).then(n => idle.setMusic(n)),
-  onPlay: m => logUse({ src: 'spotify', title: m.context?.name || m.album || m.title }),
+  onPlay: m => logUse({ src: 'spotify', title: m.context?.name || m.album || m.title, url: m.context?.uri || '' }),
+  // Recientes (A3): del registro de uso; se vuelve por el camino de siempre (Netflix retoma el minuto)
+  recents: () => usage.recents(), forget: key => usage.forget(key),
+  onRecent: r => (r.src === 'netflix' ? netflix.play({ id: r.url.split('/watch/')[1], title: r.title })
+    : r.src === 'spotify' ? spotify.spotify({ a: 'uri', uri: r.url }) : control.nav(r.url)),
   stageKind: () => stage.stage.kind, onAmbient: () => broadcast(), log: log.info,
   // OK en el inicio (A2): la tarjeta de Netflix retoma esa serie; la de Spotify (o «ahora suena») pausa o reanuda
   onFocusOk: (src, b) => (src === 'netflix' ? netflix.play({ id: String(b.items[0].id), title: b.items[0].title })

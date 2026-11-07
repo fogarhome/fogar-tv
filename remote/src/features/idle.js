@@ -15,13 +15,17 @@ module.exports = function createIdle(deps) {
       { t: 'activity', perm: 'stage', quiet: true, run: m => idle.activity(m) },
       // pantalla en reposo: verla y cambiarla (cambiarla, solo el administrador)
       // focus (A2): mover el foco del inicio y OK. OK sobre «Estabas viendo» retoma lo del dueño: no para invitados (como play_last)
+      // Recientes (A3): lo del dueño, no para invitados; abrir pide lo mismo que abrir esa fuente a mano
       { t: 'idle', perm: (m, P, ctx) => {
         if (m.op === 'set' && !P.admin) return 'Solo el administrador';
-        if (m.op === 'focus' && m.k === 'ok' && idle.focused() === 'netflix') {
-          if (!P.web) return 'Abrir webs no está permitido';
-          if (ctx && ctx.dev && ctx.dev.role === 'guest') return 'Lo que se ve en Netflix es privado';
-        }
-        if (m.op === 'focus' && m.k === 'ok' && idle.focused() === 'spotify' && P.music === 'off') return 'La música no está permitida';
+        const guest = !!(ctx && ctx.dev && ctx.dev.role === 'guest'), f = idle.focused() || '';
+        const recent = ['recents', 'recent', 'forget'].includes(m.op) || (m.op === 'focus' && (m.k === 'up' || (m.k === 'ok' && f.startsWith('r:'))));
+        if (recent && guest) return 'Recientes es privado';
+        const opens = m.op === 'focus' && m.k === 'ok' ? (f.startsWith('r:') ? f.slice(2) : f) : m.op === 'recent' ? String(m.key || '') : '';
+        const src = opens.split(':')[0];
+        if ((src === 'netflix' || src === 'web') && !P.web) return 'Abrir webs no está permitido';
+        if (src === 'netflix' && guest) return 'Lo que se ve en Netflix es privado';
+        if (src === 'spotify' && P.music === 'off') return 'La música no está permitida';
         return null;
       }, quiet: true, run: m => idle.run(m) },
     ],

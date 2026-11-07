@@ -254,3 +254,57 @@ test('focus (A2), permisos: OK sobre Netflix no para invitados ni sin web; sobre
   assert.match(perm(ok, { ...P, music: 'off' }, {}), /música/);
   assert.match(perm({ op: 'set' }, P, {}), /administrador/);
 });
+
+test('recientes (A3): lista sin url, abre y quita por clave; arriba abre la capa o quita la tarjeta con foco; visitas y usage', async t => {
+  const NF = { key: 'netflix:dark', src: 'netflix', title: 'Dark', url: 'https://www.netflix.com/watch/81234567', at: 2 };
+  const WEB = { key: 'web:https://example.com/', src: 'web', title: '', url: 'https://www.example.com/', at: 1 };
+  let list = [NF, WEB]; const opened = [], forgot = [];
+  const { idle, state } = make(t, { recents: () => list, onRecent: r => { opened.push(r.key); return { ok: 1 }; },
+    forget: k => { forgot.push(k); list = list.filter(r => r.key !== k); } });
+  assert.deepEqual(idle.run({ op: 'recents' }).items, [
+    { key: 'netflix:dark', src: 'netflix', title: 'Dark', sub: '', at: 2 },
+    { key: 'web:https://example.com/', src: 'web', title: 'example.com', sub: 'example.com', at: 1 },
+  ], 'sin url; la web sin título enseña su dominio');
+  assert.equal((await idle.run({ op: 'recent', key: 'netflix:dark' })).src, 'netflix');
+  assert.deepEqual(opened, ['netflix:dark']);
+  assert.ok((await idle.run({ op: 'recent', key: 'nada' })).error);
+  state.url = idle.URL_IDLE;
+  assert.deepEqual(await idle.run({ op: 'focus', k: 'up' }), { ok: 1, recents: true }, 'arriba sin tarjeta: abre Recientes');
+  idle.setFocused('r:web:https://example.com/');
+  assert.equal(idle.focused(), 'r:web:https://example.com/');
+  assert.equal((await idle.run({ op: 'focus', k: 'up' })).forgot, 'web:https://example.com/', 'arriba sobre la tarjeta: la quita');
+  assert.deepEqual(forgot, ['web:https://example.com/']);
+  assert.equal(idle.focused(), null);
+  idle.setFocused('r:netflix:dark');
+  await idle.run({ op: 'focus', k: 'ok' });
+  assert.deepEqual(opened, ['netflix:dark', 'netflix:dark'], 'OK sobre la tarjeta la abre');
+  idle.setFocused('r:nada'); assert.equal(idle.focused(), null, 'solo claves que están en Recientes');
+  idle.run({ op: 'set', cfg: { privacy: { on: true, show: ['spotify'] } } });
+  assert.deepEqual(idle.run({ op: 'recents' }).items, [], 'visitas: tapa Netflix y webs');
+  idle.run({ op: 'set', cfg: { privacy: { on: true, show: ['netflix'] } } });
+  assert.equal(idle.run({ op: 'recents' }).items.length, 1, 'salvo lo que deje ver');
+  idle.run({ op: 'set', cfg: { privacy: { on: false }, usage: false } });
+  assert.deepEqual(idle.run({ op: 'recents' }).items, [], 'sin registro de uso no hay Recientes');
+});
+
+test('recientes (A3), permisos: invitados no; abrir pide web o música según la fuente', t => {
+  t.mock.timers.enable({ apis: ['setInterval', 'setTimeout'] });
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'idle-test-'));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  const feature = require(path.join(ROOT, 'src', 'features', 'idle'))({
+    PUB: path.join(ROOT, 'public'), SELF: 'http://127.0.0.1:8787', file: path.join(dir, 'idle.json'),
+    cdp: { call: async () => ({}), session: null }, nav: async () => {}, state: { url: '' }, stageKind: () => null,
+    fetch: /** @type {any} */ (async () => { throw new Error('sin red'); }),
+    recents: () => [{ key: 'spotify:spotify:album:0U28P0QVB1QRxpqp5IHOlH', src: 'spotify', title: 'X', url: 'spotify:album:0U28P0QVB1QRxpqp5IHOlH', at: 1 }],
+  });
+  const perm = feature.commands.find(c => c.t === 'idle').perm;
+  const P = { web: true, music: 'play' }, guest = { dev: { role: 'guest' } };
+  for (const m of [{ op: 'recents' }, { op: 'forget', key: 'web:x' }, { op: 'focus', k: 'up' }]) assert.match(perm(m, P, guest), /privado/);
+  assert.equal(perm({ op: 'recents' }, P, {}), null);
+  assert.match(perm({ op: 'recent', key: 'web:https://a/' }, { ...P, web: false }, {}), /webs/);
+  assert.match(perm({ op: 'recent', key: 'netflix:dark' }, { ...P, web: false }, {}), /webs/);
+  assert.match(perm({ op: 'recent', key: 'spotify:spotify:album:x' }, { ...P, music: 'off' }, {}), /música/);
+  feature.setFocused('r:spotify:spotify:album:0U28P0QVB1QRxpqp5IHOlH');
+  assert.match(perm({ op: 'focus', k: 'ok' }, { ...P, music: 'off' }, {}), /música/);
+  assert.match(perm({ op: 'focus', k: 'ok' }, P, guest), /privado/);
+});

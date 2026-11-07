@@ -60,6 +60,8 @@ const validTz = tz => { try { new Intl.DateTimeFormat('en-GB', { timeZone: tz })
  *   stageKind: () => string | null, onWatch?: () => void, onPlay?: (m: any) => void, onAmbient?: () => void, log?: (...a: any[]) => void,
  *   fetch?: typeof fetch, nfxRecent?: () => { at: number, items: any[] } | null,
  *   now?: () => number, onFocusOk?: (src: string, block: any) => any,
+ *   recents?: () => { key: string, src: string, title: string, url: string, at: number }[],
+ *   onRecent?: (item: { key: string, src: string, title: string, url: string, at: number }) => any, forget?: (key: string) => any,
  * }} IdleDeps   nfxRecent: lo último que se dejó de ver en Netflix, con su título (src/features/netflix-watch.js forIdleLast)
  */
 /** @param {IdleDeps} o */
@@ -206,7 +208,7 @@ function createIdle(o) {
       title: n.track.name, artist: n.artist, album: n.album?.name || '', art: n.album?.image?.l || '',
       playing: n.playing, progress: n.progress, duration: n.duration, at: n.at, device: n.device?.name || '',
       colors: n.colors?.hsl || null, accent: n.colors?.accent || null, liked: n.liked,
-      context: n.context ? { type: n.context.type, name: n.context.name } : null,
+      context: n.context ? { type: n.context.type, name: n.context.name, uri: n.context.uri || '' } : null, // uri: Recientes vuelve a esa lista
       next: n.queue?.[0] ? { name: n.queue[0].name, artist: n.queue[0].artist } : null,
       artistImage: n.artistInfo?.image?.m || null,
     };
@@ -427,16 +429,47 @@ function createIdle(o) {
   // ───────── foco del inicio (TVC Plan - Reposo contextual A2): la página mueve el foco y dice dónde está; OK lo hace aquí
   let focused = /** @type {string | null} */ (null);
   const FOCUS_KEYS = ['up', 'down', 'left', 'right', 'ok'];
-  function setFocused(src) { focused = src === 'netflix' || src === 'spotify' ? src : null; }
+  // una tarjeta de Recientes (A3) tiene el foco como 'r:<clave>'
+  function setFocused(src) {
+    focused = src === 'netflix' || src === 'spotify' || (typeof src === 'string' && src.startsWith('r:') && !!recentOf(src.slice(2))) ? src : null;
+  }
+  const toPage = m => { const s = JSON.stringify(m); for (const c of clients) if (c.readyState === WebSocket.OPEN) c.send(s); };
   function focus(k) {
     if (!FOCUS_KEYS.includes(k)) return { error: 'k debe ser up, down, left, right u ok' };
     if (!isIdle(state.url)) return { ok: 1, idle: false };
-    const s = JSON.stringify({ t: 'focus', k });
-    for (const c of clients) if (c.readyState === WebSocket.OPEN) c.send(s);
+    // arriba: sobre una tarjeta de Recientes la quita; si no, abre Recientes
+    if (k === 'up') {
+      if (focused && focused.startsWith('r:')) { const key = focused.slice(2); return forgetRecent(key).then(() => ({ ok: 1, forgot: key })); }
+      toPage({ t: 'recents', items: recentList(), open: true });
+      return { ok: 1, recents: true };
+    }
+    toPage({ t: 'focus', k });
     if (k !== 'ok' || !focused) return { ok: 1, focused };   // con el foco apagado, el primer gesto solo lo enciende
+    if (focused.startsWith('r:')) { const key = focused.slice(2); focused = null; return openRecent(key); }
     const src = focused, sg = wantSuggestions(), block = sg && sg.blocks.find(b => b.src === src);
     if (!block && !(src === 'spotify' && music && !hidden('spotify'))) return { ok: 1, focused: null };
     return Promise.resolve(o.onFocusOk ? o.onFocusOk(src, block || null) : null).then(r => ({ ok: 1, focused: src, go: src, r }));
+  }
+
+  // ───────── Recientes (TVC Plan - Reposo contextual A3): sale del registro de uso (server.js); con usage apagado no hay
+  // nada y el modo visitas tapa cada fuente salvo lo que deje ver privacy.show
+  const recentsAll = () => (cfg.usage && o.recents ? o.recents() : []).filter(r => !hidden(r.src));
+  const recentOf = key => recentsAll().find(r => r.key === key) || null;
+  const hostOf = u => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return ''; } };
+  /** Lo que ven la tele y el mando: sin la url (la web enseña su dominio). */
+  const recentList = () => recentsAll().map(r => ({ key: r.key, src: r.src, title: r.title || hostOf(r.url), sub: r.src === 'web' ? hostOf(r.url) : '', at: r.at }));
+  function openRecent(key) {
+    const r = recentOf(String(key || ''));
+    if (!r) return { error: 'Eso ya no está en Recientes' };
+    return Promise.resolve(o.onRecent ? o.onRecent(r) : null).then(res => ({ ok: 1, src: r.src, title: r.title, r: res }));
+  }
+  function forgetRecent(key) {
+    if (!recentOf(String(key || ''))) return Promise.resolve({ error: 'Eso ya no está en Recientes' });
+    return Promise.resolve(o.forget ? o.forget(String(key)) : null).then(() => {
+      if (focused === 'r:' + key) focused = null;
+      toPage({ t: 'recents', items: recentList() });
+      return { ok: 1, items: recentList() };
+    });
   }
 
   // ───────── órdenes
@@ -456,7 +489,10 @@ function createIdle(o) {
     }
     if (op === 'show') return nav(URL_IDLE);
     if (op === 'focus') return focus(String(m.k || ''));
-    return { error: 'op debe ser get, set, show o focus' };
+    if (op === 'recents') return { ok: 1, items: recentList() };
+    if (op === 'recent') return openRecent(m.key);
+    if (op === 'forget') return forgetRecent(m.key);
+    return { error: 'op debe ser get, set, show, focus, recents, recent o forget' };
   }
   function activity(m) {
     const op = String(m.op || 'set');

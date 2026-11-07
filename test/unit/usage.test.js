@@ -45,3 +45,28 @@ test('usage: una entrada rota en usage.json (null, sin at) se descarta y no romp
   u.add({ src: 'spotify', title: 'Jazz' });
   assert.deepEqual(saved.map(e => e.src), ['spotify', 'web']);
 });
+
+test('usage: recents junta cada pieza, deja fuera lo que no se abre y lo viejo, y forget no borra', () => {
+  let T = 10 * 864e5, saved = [];
+  const u = createUsage({ store: { load: () => [], save: v => { saved = v; } }, now: () => T, enabled: () => true });
+  const add = (e, dt = 60e3) => { T += dt; u.add(e); };
+  add({ src: 'web', title: 'Vieja', url: 'https://old.example/' });
+  add({ src: 'spotify', title: 'Sin uri' }, 8 * 864e5);              // apunte antiguo: sin uri, no se puede abrir
+  add({ src: 'netflix', title: 'Fantasmas', url: 'https://www.netflix.com/watch/81939626' });
+  add({ src: 'spotify', title: 'CHROMAKOPIA', url: 'spotify:album:0U28P0QVB1QRxpqp5IHOlH' });
+  add({ src: 'netflix', title: 'Fantasmas', url: 'https://www.netflix.com/watch/81939634' });
+  add({ src: 'web', title: 'Ejemplo', url: 'https://example.com/' });
+  const r = u.recents();
+  assert.deepEqual(r.map(x => x.title), ['Ejemplo', 'Fantasmas', 'CHROMAKOPIA'], 'una por pieza, sin lo de hace más de 7 días ni lo que no se abre');
+  assert.equal(r[1].url, 'https://www.netflix.com/watch/81939634', 'Netflix: el capítulo más reciente');
+  assert.equal(u.recents({ max: 2 }).length, 2);
+  assert.equal(u.forget(r[1].key), 2, 'marca todas las entradas de la serie');
+  assert.deepEqual(u.recents().map(x => x.title), ['Ejemplo', 'CHROMAKOPIA']);
+  assert.equal(u.list().length, 6, 'el registro sigue entero');
+  assert.ok(saved.some(e => e.gone));
+  add({ src: 'netflix', title: 'Fantasmas', url: 'https://www.netflix.com/watch/81939640' });
+  assert.equal(u.recents()[0].title, 'Fantasmas', 'usada otra vez: vuelve');
+  add({ src: 'web', title: 'Ejemplo', url: 'https://example.com/' }, 0);
+  u.forget(u.recents()[0].key); add({ src: 'web', title: 'Ejemplo', url: 'https://example.com/' });
+  assert.equal(u.recents()[0].title, 'Ejemplo', 'la misma seguida también la devuelve');
+});
