@@ -304,7 +304,9 @@ test('recientes (A3), permisos: invitados no; abrir pide web o música según la
   assert.match(perm({ op: 'recent', key: 'web:https://a/' }, { ...P, web: false }, {}), /webs/);
   assert.match(perm({ op: 'recent', key: 'netflix:dark' }, { ...P, web: false }, {}), /webs/);
   assert.match(perm({ op: 'recent', key: 'spotify:spotify:album:x' }, { ...P, music: 'off' }, {}), /música/);
+  assert.match(perm({ op: 'recent', key: 'spotify:spotify:album:x' }, { ...P, music: 'queue' }, {}), /cola/, 'solo encolar: no pone un álbum');
   feature.setFocused('r:spotify:spotify:album:0U28P0QVB1QRxpqp5IHOlH');
   assert.match(perm({ op: 'focus', k: 'ok' }, { ...P, music: 'off' }, {}), /música/);
   assert.match(perm({ op: 'focus', k: 'ok' }, P, guest), /privado/);
+  assert.match(perm({ op: 'focus', k: 'ok' }, { ...P, music: 'queue' }, {}), /cola/);
 });

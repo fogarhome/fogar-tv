@@ -26,6 +26,8 @@ module.exports = function createIdle(deps) {
         if ((src === 'netflix' || src === 'web') && !P.web) return 'Abrir webs no está permitido';
         if (src === 'netflix' && guest) return 'Lo que se ve en Netflix es privado';
         if (src === 'spotify' && P.music === 'off') return 'La música no está permitida';
+        // poner una lista o un álbum es elegir música: quien solo puede encolar (spotifyClamp) no lo cambia desde aquí
+        if (src === 'spotify' && P.music === 'queue' && (m.op === 'recent' || f.startsWith('r:'))) return 'Solo puedes añadir canciones a la cola';
         return null;
       }, quiet: true, run: m => idle.run(m) },
     ],

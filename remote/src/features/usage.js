@@ -48,6 +48,7 @@ function createUsage({ store, now = Date.now, enabled, keepDays = 90 }) {
         if (seen.has(key)) continue;
         seen.add(key);                                    // una pieza quitada no sale aunque tenga entradas más viejas
         if (/** @type {any} */ (e).gone || !OPENABLE[e.src] || !OPENABLE[e.src](e.url)) continue;
+        if (e.src === 'netflix' && !e.title) continue;   // sin título no se sabe qué serie es (saldría «netflix.com» suelto): ante la duda, nada
         out.push({ key, src: e.src, title: e.title, url: e.url, at: e.at });
         if (out.length >= max) break;
       }
