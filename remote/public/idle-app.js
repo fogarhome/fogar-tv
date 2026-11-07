@@ -465,7 +465,7 @@ function onData(m) {
   profile(); weather(); music(); acts(); suggest();
   if (JSON.stringify(D.cfg) !== prevCfg) { setLayout(D.cfg.layout); schedule(); }
   if (!moving) place(scenes()[scene % scenes().length]);
-  if (fx && !focusables().includes(fx)) setFx(null);            // lo que tenía el foco se fue (caducó, visitas, noche)
+  if (fx && !rcOn && !focusables().includes(fx)) setFx(null);            // lo que tenía el foco se fue (caducó, visitas, noche)
 }
 // ── foco del inicio (TVC Plan - Reposo contextual A2): el mando manda flechas y OK; el foco salta entre los widgets con
 // acción que se ven (la tarjeta del contexto y «ahora suena») y el servidor sabe cuál tiene, para hacer el OK. Lo oculto
@@ -479,16 +479,55 @@ function setFx(e) {
   if (e === fx) return;
   if (fx) fx.classList.remove('fx', 'press');
   fx = e; if (e) e.classList.add('fx');
-  clearTimeout(fxT); if (e) fxT = setTimeout(() => setFx(null), FOCUS_MS);
+  clearTimeout(fxT); if (e || rcOn) fxT = setTimeout(() => { setFx(null); closeRc(); }, FOCUS_MS);
   if (sock && sock.readyState === 1) sock.send(JSON.stringify({ t: 'focus', src: e ? e.dataset.act : null }));
 }
+// ── Recientes (TVC Plan - Reposo contextual A3): «arriba» en el inicio abre la fila; izquierda y derecha la recorren, OK
+// vuelve a esa cosa (lo hace el servidor), arriba sobre una tarjeta la quita y abajo cierra. Sin tocar, se cierra con el foco.
+let rcOn = false;
+const RC = $('rc'), rcCards = () => [...$('rcRow').children].filter(c => c.dataset.act);
+function closeRc() {
+  if (!rcOn) return;
+  rcOn = false; RC.classList.remove('on'); document.documentElement.classList.remove('rcing');
+  if (fx && fx.classList.contains('rc-c')) setFx(null);
+}
+function onRecents(m) {
+  if (!m.open && !rcOn) return;                                 // una lista nueva (se quitó una) con la fila cerrada
+  const items = m.items || [], keep = fx ? rcCards().indexOf(fx) : -1;
+  if (fx && fx.classList.contains('rc-c')) setFx(null);
+  const row = $('rcRow');
+  if (!items.length) {
+    const p = document.createElement('div'); p.className = 'rc-none'; p.textContent = 'Nada reciente'; row.replaceChildren(p);
+  } else row.replaceChildren(...items.map(it => {
+    const c = document.createElement('div'); c.className = 'rc-c'; c.dataset.act = 'r:' + it.key;
+    const sm = SRC[it.src]; if (sm) c.style.setProperty('--dot', sm[1]);
+    c.innerHTML = '<div class="rc-s"><i></i><span></span></div><div class="rc-t"></div><div class="rc-d"></div>';
+    const d = Math.floor((Date.now() - it.at - off) / 864e5);
+    c.querySelector('.rc-s span').textContent = (sm ? sm[0] : 'Web') + ' · ' + (d >= 1 ? (d === 1 ? 'ayer' : `hace ${d} días`) : agoLabel(it.at + off, Date.now()));
+    c.querySelector('.rc-t').textContent = it.title;
+    c.querySelector('.rc-d').textContent = it.sub || '';
+    return c;
+  }));
+  rcOn = true; RC.classList.add('on'); document.documentElement.classList.add('rcing');
+  const cards = rcCards();
+  if (cards.length) setFx(cards[Math.max(0, Math.min(keep, cards.length - 1))]);
+  else { clearTimeout(fxT); fxT = setTimeout(closeRc, 3000); }
+}
 function onFocusKey(k) {
+  if (rcOn) {
+    const cards = rcCards();
+    if (k === 'down' || !cards.length) { closeRc(); return; }
+    if (!fx || !cards.includes(fx)) { setFx(cards[0]); return; }
+    clearTimeout(fxT); fxT = setTimeout(() => { setFx(null); closeRc(); }, FOCUS_MS);
+    if (k === 'ok') { fx.classList.add('press'); setTimeout(() => { if (fx) fx.classList.remove('press'); closeRc(); }, 140); return; }
+    if (k === 'left' || k === 'right') setFx(cards[Math.max(0, Math.min(cards.length - 1, cards.indexOf(fx) + (k === 'right' ? 1 : -1)))]);
+    return;
+  }
   const list = focusables();
   if (!list.length) { setFx(null); return; }
   if (!fx || !list.includes(fx)) { setFx(list[0]); return; }   // el primer gesto solo enciende el foco, en lo más reciente
   clearTimeout(fxT); fxT = setTimeout(() => setFx(null), FOCUS_MS);
   if (k === 'ok') { fx.classList.add('press'); setTimeout(() => fx && fx.classList.remove('press'), 140); return; }
-  if (k === 'up') return;                                       // reservada para Recientes (A3)
   const pts = list.map(e => { const r = e.firstElementChild.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; });
   setFx(list[nextFocus(pts, list.indexOf(fx), k)]);
 }
@@ -497,8 +536,8 @@ let staleT = 0;
 function stale() { staleT = 0; D.music = null; D.acts = []; music(); acts(); }
 function connect() {
   const ws = sock = new WebSocket('ws://' + location.host + '/idle-ws');
-  ws.onopen = () => { if (fx) fx.classList.remove('fx', 'press'); fx = null; clearTimeout(fxT); };   // el servidor empieza sin foco
-  ws.onmessage = e => { clearTimeout(staleT); staleT = 0; try { const m = JSON.parse(e.data); if (m.t === 'idle') onData(m); else if (m.t === 'focus') onFocusKey(m.k); } catch {} };
+  ws.onopen = () => { if (fx) fx.classList.remove('fx', 'press'); fx = null; clearTimeout(fxT); rcOn = false; RC.classList.remove('on'); document.documentElement.classList.remove('rcing'); };   // el servidor empieza sin foco
+  ws.onmessage = e => { clearTimeout(staleT); staleT = 0; try { const m = JSON.parse(e.data); if (m.t === 'idle') onData(m); else if (m.t === 'focus') onFocusKey(m.k); else if (m.t === 'recents') onRecents(m); } catch {} };
   ws.onclose = () => { if (!staleT) staleT = setTimeout(stale, 60e3); setTimeout(connect, 1500); };
 }
 // para pruebas y capturas: TVIdle.scene(n) fuerza una escena con su reacomodo; TVIdle.place(n), al momento
