@@ -507,6 +507,12 @@ async function extraScenes(admin) {
     await tap(p, 'Horario por día', 600); await shot(p, 'extra-ajustes-dias');
     await p.getByLabel('Mié acostarse', { exact: true }).fill('23:15'); await p.waitForTimeout(700);
     await tap(p, 'Horario por día', 700);
+    // memoria (A4): apagar «Recordar lo que se ve» y volver a encenderlo
+    const usageSw = p.getByRole('button', { name: 'Recordar lo que se ve' });
+    await usageSw.scrollIntoViewIfNeeded(); await usageSw.tap(); await p.waitForTimeout(700);
+    if (await usageSw.getAttribute('aria-pressed') !== 'false') throw new Error('«Recordar lo que se ve» no se apagó');
+    await shot(p, 'extra-ajustes-memoria');
+    await usageSw.tap(); await p.waitForTimeout(700);
     await backSet(p); await goSet(p, 'personas', 900);
     for (let i = 0; i < 2; i++) {
       await tap(p, 'Hacer administrador a otro dispositivo', 800);

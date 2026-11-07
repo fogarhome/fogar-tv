@@ -36,6 +36,7 @@ function idlePaint() {
   sgPaint(); pvPaint();
   segPaint($('#idLay'), 'l', icfg.layout || 'rotar');
   $('#idCalm').setAttribute('aria-pressed', !!icfg.calm);
+  $('#idFresh').setAttribute('aria-pressed', icfg.fresh !== false); $('#idUsage').setAttribute('aria-pressed', icfg.usage !== false);
   segPaint($('#idGlass'), 'g', icfg.glass || 'auto');
   const wk = $('#idWeek'); wk.hidden = !icfg.perDay; wk.textContent = '';
   if (icfg.perDay) for (const [k, n] of DAYN) {
@@ -121,6 +122,8 @@ export const idle = {
     $('#pvOn').addEventListener('click', () => { if (!icfg || !icfg.privacy) return; buzz(7); icfg.privacy = { ...icfg.privacy, on: !icfg.privacy.on }; pvPaint(); idleSave(); });
     $('#pvShow').addEventListener('click', pvClick);
     $('#idCalm').addEventListener('click', () => icfg && put('calm', !icfg.calm));
+    $('#idFresh').addEventListener('click', () => icfg && put('fresh', icfg.fresh === false));
+    $('#idUsage').addEventListener('click', () => icfg && put('usage', icfg.usage === false));
     $('#idShow').addEventListener('click', () => { buzz(7); cmd({ t: 'idle', op: 'show' }); closeSheet(); });
   },
 };
