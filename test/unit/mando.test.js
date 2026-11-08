@@ -160,10 +160,10 @@ test('mando: el orbe de la voz no deja el gesto al navegador (touch-action:none;
   assert.doesNotMatch(rules, /touch-action:(manipulation|pan|auto)/);
 });
 
-test('mando: hoja de ajustes: cada #id de settings, idle y admin existe, cada fila abre su página y los segmentos son radiogroups', () => {
+test('mando: hoja de ajustes: cada #id de settings, idle, admin y gateway existe, cada fila abre su página y los segmentos son radiogroups', () => {
   const html = fs.readFileSync(path.join(PUB, 'index.html'), 'utf8');
   const ids = new Set([...html.matchAll(/\bid="([^"]+)"/g)].map(m => m[1]));
-  for (const f of ['settings', 'idle', 'admin']) {
+  for (const f of ['settings', 'idle', 'admin', 'gateway']) {
     const js = fs.readFileSync(path.join(PUB, 'mando', 'features', f + '.js'), 'utf8');
     assert.deepEqual([...new Set([...js.matchAll(/\$\('#([\w-]+)'\)/g)].map(m => m[1]))].filter(id => !ids.has(id)), [], f);
   }

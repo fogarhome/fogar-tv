@@ -21,6 +21,7 @@ const crypto = require('node:crypto');
 const { chromium } = require('playwright');
 const { start } = require('../test/helpers/server');
 const { startFakeCdp } = require('../test/helpers/fake-cdp');
+const { startFakeGateway } = require('../test/helpers/fake-gateway');
 
 const OUT = path.resolve(process.argv[2] || path.join(__dirname, 'capturas-mando'));
 fs.mkdirSync(OUT, { recursive: true });
@@ -142,7 +143,7 @@ function normalize(lines) {
   return out;
 }
 
-let browser, srv, cdp, binDir;
+let browser, srv, cdp, binDir, gwf;
 const scenes = [];
 
 async function newPage({ token, theme, name, landscape }) {
@@ -519,6 +520,33 @@ async function extraScenes(admin) {
       codes.push(await p.locator('#alBox b').textContent());
     }
   });
+  // conexión con Jota: olvidar el gateway → aviso arriba → «Conectar» → no lo encuentra → dirección a mano → código
+  await run('extra-gateway', async p => {
+    await tap(p, 'Ajustes', 1000);
+    await goSet(p, 'jota', 900);
+    await p.locator('#gwSt').filter({ hasText: 'Conectada a green-house' }).waitFor();
+    await shot(p, 'extra-gateway-ajustes');
+    await tap(p, 'Olvidar', 300); await tap(p, '¿Seguro?', 800);
+    await p.locator('#gwSt').filter({ hasText: 'Sin emparejar' }).waitFor();
+    await p.keyboard.press('Escape'); await p.waitForTimeout(400);
+    await p.locator('#gwN').waitFor();
+    await shot(p, 'extra-gateway-aviso');
+    await p.locator('#gwNGo').tap(); await p.waitForTimeout(300);
+    await p.locator('#gwHost').waitFor({ timeout: 10000 });
+    await shot(p, 'extra-gateway-buscar');
+    await p.locator('#gwHost').fill(gwf.host);
+    await tap(p, 'Usar', 500);
+    await shot(p, 'extra-gateway-codigo');
+    await p.getByLabel('Código de 6 cifras', { exact: true }).fill('000000');
+    await p.locator('#gwM.err').waitFor();
+    await shot(p, 'extra-gateway-mal');
+    await p.getByLabel('Código de 6 cifras', { exact: true }).fill('123456');
+    await p.getByText('Conectada a Jota en green-house').waitFor();
+    await shot(p, 'extra-gateway-hecho');
+    if (gwf.pairs.at(-1).client_type !== 'screen') throw new Error('el emparejamiento no manda client_type screen');
+    await tap(p, 'Listo', 500);
+    if (await p.locator('#gwN').isVisible()) throw new Error('el aviso sigue tras emparejar');
+  });
   await run('extra-canjear-admin', async p => {
     await tap(p, 'Ajustes', 1000);
     await p.locator('#clCode').fill(codes[0]);
@@ -563,8 +591,11 @@ async function extraScenes(admin) {
     evaluate: expr => (expr.includes('scrollingElement') ? [1, 900, 4000, 1000]   // sondeo: vídeo reproduciendo y scroll a un tercio
       : expr.includes('"boot":"') ? { ok: 1 } : undefined),                        // escribir en el campo: aplicado
   });
+  // gateway falso con la tele ya emparejada: el aviso de «Jota no está conectado» solo sale en su escena
+  gwf = await startFakeGateway();
   // TV_NAME=Salón: el nombre de la pantalla con el que se hicieron las capturas de referencia
-  srv = await start({ cdpPort: cdp.port, files: { 'devices.json': DEVICES, 'access.json': ACCESS }, env: { TV_NAME: 'Salón' } });
+  srv = await start({ cdpPort: cdp.port, env: { TV_NAME: 'Salón' },
+    files: { 'devices.json': DEVICES, 'access.json': ACCESS, 'gateway.json': { url: gwf.url, key: gwf.key, name: 'green-house' } } });
   try {
     await cdp.waitFor(m => m.method === 'Runtime.addBinding' && m.params.name === '__tvFocus', 10000);
     const r = { token: ADMIN_TOKEN };
@@ -582,7 +613,7 @@ async function extraScenes(admin) {
     await extraScenes(r.token);
   } finally {
     if (browser) await browser.close();
-    await srv.stop(); await cdp.close();
+    await srv.stop(); await cdp.close(); await gwf.stop();
     fs.rmSync(binDir, { recursive: true, force: true });
   }
   fs.writeFileSync(path.join(OUT, 'ordenes.txt'), logs.join('\n'));

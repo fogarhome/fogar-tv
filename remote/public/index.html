@@ -26,6 +26,7 @@
 <link rel="modulepreload" href="/mando/ui/gestures.js">
 <link rel="modulepreload" href="/mando/features/ambient.js">
 <link rel="modulepreload" href="/mando/features/controls.js">
+<link rel="modulepreload" href="/mando/features/gateway.js">
 <link rel="modulepreload" href="/mando/features/trackpad.js">
 <link rel="modulepreload" href="/mando/features/tele.js">
 <link rel="modulepreload" href="/mando/features/keyboard.js">
@@ -88,6 +89,7 @@
 <symbol id="i-moon" viewBox="0 0 24 24"><path d="M19.5 14.5A8 8 0 0 1 9.5 4.5a8 8 0 1 0 10 10z"/></symbol>
 <symbol id="i-film" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M10 9l5 3-5 3z"/></symbol>
 <symbol id="i-people" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.7a3.5 3.5 0 0 1 0 6.6M18.5 14a6 6 0 0 1 3 6"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></symbol>
 <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7.5 3v5.5c0 4.5-3.2 8-7.5 9.5-4.3-1.5-7.5-5-7.5-9.5V6zM9 12l2 2 4-4"/></symbol>
 </defs></svg>
 
@@ -116,6 +118,14 @@
     <button class="b2 pw2" data-a="pwoff" data-click aria-label="Apagar la tele">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 3.5v8"/><path d="M7 6.2a7.5 7.5 0 1 0 10 0"/></svg>
     </button>
+  </div>
+
+  <!-- conexión con Jota (solo administradores): en la columna, entre la cabecera y el trackpad, para no tapar nada; no
+       bloquea, se cierra con ✕ y no vuelve hasta que cambie el estado -->
+  <div class="gwN" id="gwN" role="status" hidden>
+    <span class="gwT" id="gwNT">Jota no está conectado</span>
+    <button class="bt big" type="button" id="gwNGo">Conectar</button>
+    <button class="bt gwX" type="button" id="gwNX" aria-label="Cerrar el aviso"><svg><use href="#i-x"/></svg></button>
   </div>
 
   <div class="mid2">
@@ -288,6 +298,29 @@
   <div class="rqb"><button class="bt" data-r="no">Rechazar</button><button class="bt" data-r="member">Miembro</button><button class="bt big" data-r="guest">Invitado</button></div>
 </div>
 
+<!-- conectar la tele con Jota: buscar, elegir, código y resultado -->
+<div class="sheet" id="gwS" role="dialog" aria-label="Conectar con Jota">
+  <div class="grab"></div>
+  <h2 class="rcH">Conectar con Jota</h2>
+  <p class="gwM" id="gwM" aria-live="polite"></p>
+  <div class="gwP" data-s="busy"><div class="spin2"></div></div>
+  <div class="gwP" data-s="list" hidden>
+    <div class="gwL" id="gwL"></div>
+    <div class="tms"><input class="in" id="gwHost" aria-label="Dirección del gateway" placeholder="Dirección del gateway" inputmode="url" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go"><button class="bt dv" id="gwHostGo" type="button">Usar</button></div>
+  </div>
+  <div class="gwP" data-s="local" hidden>
+    <p class="gwH">Puedo sacar el código yo mismo con <code>jota-gw</code>. Para eso uso el acceso de administrador del gateway de este equipo, solo esta vez.</p>
+    <button class="bt big" id="gwLocal" type="button">Hazlo tú</button>
+    <button class="bt ghost" id="gwByCode" type="button">Prefiero escribir el código</button>
+  </div>
+  <div class="gwP" data-s="code" hidden>
+    <p class="gwH">En el gateway, ejecuta <code>jota-gw pair</code> y escribe aquí el código.</p>
+    <input class="in code" id="gwCode" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="······" autocomplete="one-time-code" aria-label="Código de 6 cifras">
+    <button class="bt big" id="gwPair" type="button">Emparejar</button>
+  </div>
+  <div class="gwP" data-s="done" hidden><button class="bt big" id="gwDone" type="button">Listo</button></div>
+</div>
+
 <!-- spotify: ahora suena, con luces de los colores de la carátula -->
 <div class="sheet spV" id="spS" role="dialog" aria-label="Spotify">
   <i class="spL spLa" aria-hidden="true"></i><i class="spL spLb" aria-hidden="true"></i>
@@ -425,6 +458,9 @@
 
   <div class="sp" data-p="jota" hidden>
     <div class="pgH"><button class="pgB" type="button" data-back aria-label="Volver a Ajustes"><svg><use href="#i-back"/></svg></button><div><span class="pgS">La tele</span><h2 class="pgT">Jota en la tele</h2></div></div>
+    <div class="sh">Conexión</div>
+    <div class="fld"><span>Gateway<small id="gwSt">—</small></span><button class="bt dv" id="gwOpen" type="button">Conectar</button></div>
+    <div class="fld" id="gwForgetRow" hidden><span>Olvidar este gateway<small>La tele deja de usar su clave</small></span><button class="bt dv" id="gwForget" type="button">Olvidar</button></div>
     <div class="sh">Cristal del panel</div>
     <div class="fld flush"><div class="pick" id="idGlass" role="radiogroup" aria-label="Cristal">
       <button role="radio" data-g="auto"><span class="mini gl gl-A" aria-hidden="true"><i></i></span><b>Automático</b><small>Se aligera solo si la tele va justa</small></button>

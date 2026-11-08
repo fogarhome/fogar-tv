@@ -1,6 +1,6 @@
 // Hoja de ajustes: portada por alcance (este móvil, la tele, personas) con un resumen por fila y una página por tema.
 // Aquí viven los ajustes de este móvil (tema, pantalla completa, puntero, vibración, orbe mientras Jota habla), el perfil de
-// Netflix y quién eres; a un admin, además, el reposo, Jota en la tele, los dispositivos y los permisos.
+// Netflix y quién eres; a un admin, además, el reposo, Jota en la tele (y su conexión), los dispositivos y los permisos.
 import { $ } from '../core/dom.js';
 import { cfg, saveCfg, state, on } from '../core/store.js';
 import { getRtt, isUp, rpc } from '../core/api.js';
@@ -12,6 +12,7 @@ import { applyTheme } from '../ui/theme.js';
 import { paintAmbient } from './ambient.js';
 import { refreshDevs, devSum, permSum } from './admin.js';
 import { idleLoad, idleSum, glassSum } from './idle.js';
+import { gwLoad, gwSum } from './gateway.js';
 
 const x = n => n.toFixed(1).replace('.', ',') + '×';
 const isAdmin = () => !!state.me && state.me.role === 'admin';
@@ -27,7 +28,7 @@ function refreshSet() {
   $('#footDot').className = 'dot' + (isUp() ? ' ok' : ' bad');
   // resúmenes de la portada
   $('#sumMovil').textContent = (cfg.theme === 'claro' ? 'Claro' : 'Oscuro') + ' · puntero ' + x(cfg.speed) + ' · ' + (cfg.haptic ? 'vibra' : 'sin vibrar');
-  $('#sumReposo').textContent = idleSum(); $('#sumJota').textContent = glassSum();
+  $('#sumReposo').textContent = idleSum(); $('#sumJota').textContent = [gwSum(), glassSum()].filter(Boolean).join(' · ');
   $('#sumNetflix').textContent = $('#nfProf').value ? 'Perfil ' + $('#nfProf').value : '';
   $('#sumDevs').textContent = devSum(); $('#sumPerms').textContent = permSum();
   $('#teleSh').hidden = !isAdmin() && $('#nfBox').hidden;
@@ -57,7 +58,7 @@ function page(p) {
 
 export const settings = {
   name: 'settings',
-  clicks: { more: () => { page('home'); refreshSet(); netflixLoad(); if (isAdmin()) { refreshDevs(); idleLoad(); } openSheet('setS'); } },
+  clicks: { more: () => { page('home'); refreshSet(); netflixLoad(); if (isAdmin()) { refreshDevs(); idleLoad(); gwLoad(); } openSheet('setS'); } },
   init() {
     $('#setS').addEventListener('click', e => {
       const t = /** @type {HTMLElement} */ (e.target);

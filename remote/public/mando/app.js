@@ -5,7 +5,7 @@
 //   core/  dom, store (estado y ajustes), api (conexión), perms        ← no importa nada de fuera de core/
 //   ui/    haptics, pill, theme, status, sheets, actions, gestures     ← solo core/
 //   features/                                                          ← ui/ y core/, y entre sí solo en un sentido:
-//     settings → admin → pair, settings → idle, settings → ambient, controls → ambient, spotify → ambient,
+//     settings → admin → pair, settings → idle, settings → gateway, settings → ambient, controls → ambient, spotify → ambient,
 //     spotify → spotify-lists → spotify-state, agent → voice, controls → tele, controls → trackpad, trackpad → tele
 import { initSession, state } from './core/store.js';
 import { toSecure } from './core/secure.js';
@@ -28,6 +28,7 @@ import { pair, settle } from './features/pair.js';
 import { admin } from './features/admin.js';
 import { settings } from './features/settings.js';
 import { idle } from './features/idle.js';
+import { gateway } from './features/gateway.js';
 
 function register(list) {
   for (const f of list) {
@@ -39,15 +40,15 @@ function register(list) {
 }
 
 initSession();                                          // token de ?t= o guardado, código de #admin= y ajustes
-register([controls, tele, trackpad, keyboard, go, recents, agent, spotify, pair, admin, settings, idle]);
+register([controls, tele, trackpad, keyboard, go, recents, agent, spotify, pair, admin, settings, idle, gateway]);
 handle('me', applyMe);
 // orden del script único: ambiente (v3), accesos, conexión (eco cada 2 s y visibilitychange), cabecera, trackpad, gestos,
-// botones, hojas, teclado, dirección, agente, Spotify, emparejar, administración, ajustes y reposo
+// botones, hojas, teclado, dirección, agente, Spotify, emparejar, administración, ajustes, reposo y conexión con Jota
 ambient.init();
 controls.init();
 tele.init();
 start();
-for (const p of [status, trackpad, gestures, actions, sheets, keyboard, go, agent, spotify, pair, admin, settings, idle]) p.init();
+for (const p of [status, trackpad, gestures, actions, sheets, keyboard, go, agent, spotify, pair, admin, settings, idle, gateway]) p.init();
 
 // tras canjear enlaces (el maestro nunca viaja): por http y con una URL https que responde, se salta a ella (voz)
 settle().finally(() => { connect(); toSecure(state.token); });
