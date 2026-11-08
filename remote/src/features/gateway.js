@@ -11,11 +11,11 @@ const discoverDefault = require('../gateway/discover');
 const pairDefault = require('../gateway/pair');
 
 /**
- * @param {{ link: ReturnType<typeof import('../gateway/link').createGatewayLink>, name: string, port?: number, log: { info: Function },
+ * @param {{ link: ReturnType<typeof import('../gateway/link').createGatewayLink>, name: string, agent: string, port?: number, log: { info: Function },
  *   discover?: typeof discoverDefault, pair?: typeof pairDefault }} o
  *   port: el del gateway (TV_GATEWAY_PORT, 8004): donde se busca y el de una dirección escrita sin puerto
  */
-function createGatewayFeature({ link, name, port = discoverDefault.PORT, log, discover = discoverDefault, pair = pairDefault }) {
+function createGatewayFeature({ link, name, agent, port = discoverDefault.PORT, log, discover = discoverDefault, pair = pairDefault }) {
   /** @param {NonNullable<Awaited<ReturnType<typeof discoverDefault.probe>>>} g @param {string} code @param {boolean} manual */
   async function connect(g, code, manual) {
     const r = await pair.redeem({ http: g.http, code, name });
@@ -45,7 +45,7 @@ function createGatewayFeature({ link, name, port = discoverDefault.PORT, log, di
       case 'local': {
         const g = await discover.probe('127.0.0.1', { port });
         if (!g) return { error: 'No hay un gateway en este equipo' };
-        const c = await pair.localCode({ name });
+        const c = await pair.localCode({ name, agent });
         if ('error' in c) return c;
         return connect(g, c.code, false);
       }

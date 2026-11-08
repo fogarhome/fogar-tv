@@ -3,11 +3,13 @@
 // La conexión con el J Gateway, en un solo sitio: a qué gateway, con qué clave y si funciona. Para talk.js es lo mismo que
 // el cliente (ensure, send, audio, end, cancel, on, isReady, close); por debajo cambia de cliente al cambiar la clave
 // (use/forget) sin reiniciar el servidor, y los que escuchan siguen enganchados.
-// Estados: checking (aún sin comprobar), unpaired (sin clave), ok, unreachable (no responde; la clave se conserva) y
-// revoked (el Gateway rechazó la clave: se borra la guardada). Comprobar no cambia nada; emparejar u olvidar, solo a petición.
+// Estados: checking (aún sin comprobar), unpaired (sin clave), ok, unreachable (no responde; la clave se conserva),
+// refused (responde pero no deja usar el agente: lo arregla el admin del gateway) y revoked (rechazó la clave: se borra la
+// guardada). Comprobar no cambia nada; emparejar u olvidar, solo a petición. Una sesión que se cierra tras estar lista
+// (el Gateway cierra las inactivas a los 5 min) no cambia el estado ni reconecta: lo hará el siguiente ensure().
 const { createGatewayClient } = require('./client');
 
-/** @typedef {'checking'|'unpaired'|'ok'|'unreachable'|'revoked'} LinkStatus */
+/** @typedef {'checking'|'unpaired'|'ok'|'unreachable'|'refused'|'revoked'} LinkStatus */
 
 /**
  * @param {{ store: ReturnType<typeof import('./store').createGatewayStore>, envUrl?: string, envKey?: string, agent: string,
@@ -18,7 +20,7 @@ const { createGatewayClient } = require('./client');
 function createGatewayLink({ store, envUrl = '', envKey = '', agent, log, makeClient = createGatewayClient, onChange = () => {} }) {
   /** @type {ReturnType<typeof createGatewayClient> | null} */ let client = null;
   /** @type {LinkStatus} */ let status = 'checking';
-  let key = '', name = '', fromStore = false, rejected = false;
+  let key = '', name = '', fromStore = false, rejected = false, refused = false;
   const subs = new Set();
 
   /** @param {LinkStatus} s */
@@ -43,7 +45,7 @@ function createGatewayLink({ store, envUrl = '', envKey = '', agent, log, makeCl
     cl.on(ev => {
       if (cl !== client) return;
       if (ev.type === 'rejected') onRejected();
-      else if (ev.type === 'down') { set('unreachable'); check(); }
+      else if (ev.type === 'refused') { refused = true; log.warn('gateway: el Gateway no deja usar el agente', ev.reason); }
       for (const fn of [...subs]) { try { fn(ev); } catch (e) { log.warn('gateway: oyente con error', e); } }
     });
     client = cl;
@@ -61,10 +63,11 @@ function createGatewayLink({ store, envUrl = '', envKey = '', agent, log, makeCl
     const cl = client;
     if (!cl || rejected) return false;
     let ok = false;
+    refused = false;
     try { ok = await cl.ensure(); } catch (e) { log.warn('gateway: ensure con error', e); }
     if (cl !== client) return ok;
     if (ok) set('ok');
-    else if (!rejected) set('unreachable');
+    else if (!rejected) set(refused ? 'refused' : 'unreachable');
     if (rejected) { client = null; cl.close(); }           // sin clave que valga no se vuelve a intentar
     return ok;
   }

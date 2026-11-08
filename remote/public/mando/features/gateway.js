@@ -8,8 +8,8 @@ import { rpc } from '../core/api.js';
 import { buzz } from '../ui/haptics.js';
 import { openSheet, closeSheet, isOpen } from '../ui/sheets.js';
 
-const NOTE = { unpaired: 'Jota no está conectado', unreachable: 'Jota no responde', revoked: 'Hay que volver a emparejar Jota' };
-const ST = { checking: 'Comprobando…', unpaired: 'Sin emparejar', ok: 'Conectada', unreachable: 'No responde', revoked: 'La clave ya no vale' };
+const NOTE = { unpaired: 'Jota no está conectado', unreachable: 'Jota no responde', refused: 'El gateway no deja usar el agente de la tele', revoked: 'Hay que volver a emparejar Jota' };
+const ST = { checking: 'Comprobando…', unpaired: 'Sin emparejar', ok: 'Conectada', unreachable: 'No responde', refused: 'El gateway no permite su agente', revoked: 'La clave ya no vale' };
 const WHERE = { local: 'este equipo', tailnet: 'tailnet', manual: 'dirección escrita a mano' };
 /** @type {{ status: string, name: string } | null} */ let gw = null;
 let dismissed = '';                                      // estado para el que se cerró el aviso
@@ -31,8 +31,8 @@ function paintRow(i) {
   $('#gwOpen').textContent = i.status === 'ok' ? 'Cambiar' : 'Conectar';
   $('#gwForgetRow').hidden = i.status === 'unpaired';
 }
-/** Ajustes › Jota en la tele: la fila con lo que sabe el servidor (también el equipo). */
-export async function gwLoad() { const r = await rpc({ t: 'gateway', op: 'status' }); if (r && !r.error) paintRow(r); }
+/** Ajustes › Jota en la tele: lo comprueba ahora (no se queda con un «no responde» viejo) y pinta la fila (también el equipo). */
+export async function gwLoad() { const r = await rpc({ t: 'gateway', op: 'check' }); if (r && !r.error) paintRow(r); }
 
 /** @param {string} s @param {string} [msg] @param {boolean} [err] */
 function pane(s, msg = '', err = false) {

@@ -110,6 +110,7 @@ EOF
       unpaired) bad "Jota: la tele no está emparejada (en el mando: Ajustes › Jota en la tele › Conexión)" ;;
       unreachable) bad "Jota: el gateway${gwn:+ de $gwn} no responde" ;;
       revoked) bad "Jota: el gateway rechazó la clave; vuelve a emparejar desde el mando" ;;
+      refused) bad "Jota: el gateway no deja usar el agente de la tele (TV_AGENT); revisa los agentes permitidos del cliente" ;;
       *) bad "Jota: no he podido saber el estado de la conexión ($gws)" ;;
     esac
   fi

@@ -203,7 +203,7 @@ const idle = createIdle({
 const gw = createGatewayLink({ store: createGatewayStore(path.join(CFG.STATE_DIR, 'gateway.json')),
   envUrl: CFG.GATEWAY_URL, envKey: CFG.GATEWAY_KEY, agent: CFG.AGENT, log, onChange: () => broadcast() });
 gwKey = gw.key;
-const gateway = createGatewayFeature({ link: gw, name: CFG.NAME, port: CFG.GATEWAY_PORT, log });
+const gateway = createGatewayFeature({ link: gw, name: CFG.NAME, agent: CFG.AGENT, port: CFG.GATEWAY_PORT, log });
 gw.check();
 const speaker = createSpeaker({ runtimeDir: CFG.XDG_RUNTIME_DIR, cmd: CFG.SPEAKER_CMD, log });
 // la conversación en la tele (public/tv-agent.js, se inyecta una vez por página). `context` se lee en cada pintada:

@@ -195,7 +195,7 @@ test('los logs no llevan la clave ni texto', async () => {
   } finally { c.close(); await f.stop(); }
 });
 
-test('1008 por la clave → rejected; 1008 por otra cosa (agente no permitido) no', async () => {
+test('1008 por la clave → rejected; 1008 por otra cosa (agente no permitido) → refused con el motivo', async () => {
   const f1 = await fake(ws => ws.close(1008, 'Clave de cliente invalida o inactiva.'));
   const f2 = await fake(ws => ws.close(1008, "Agent 'x' not permitted for this client."));
   const c1 = mk(f1), c2 = mk(f2), e1 = [], e2 = [];
@@ -204,6 +204,6 @@ test('1008 por la clave → rejected; 1008 por otra cosa (agente no permitido) n
     assert.equal(await c1.ensure(), false);
     assert.equal(await c2.ensure(), false);
     assert.deepEqual(e1, ['rejected']);
-    assert.deepEqual(e2, []);
+    assert.deepEqual(e2, ['refused']);
   } finally { c1.close(); c2.close(); await f1.stop(); await f2.stop(); }
 });

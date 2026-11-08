@@ -3,7 +3,8 @@
 // Cliente del J Gateway (STT local + agente + TTS) por WebSocket: ws://<host>:8004/ws/stream.
 // Una sola sesión, perezosa: solo `ensure()` conecta (handshake → `ready`); no reconecta por su cuenta, quien la necesite
 // vuelve a llamar a `ensure()`. Traduce los mensajes del Gateway a eventos simples (`GwEvent`) y deja el resto a quien escucha.
-// Si el Gateway rechaza la clave en el handshake emite `rejected` (antes de que ensure() resuelva false).
+// Si el Gateway cierra el handshake con 1008 emite `rejected` (la clave) o `refused` (otra política: el agente no está
+// permitido o no existe), antes de que ensure() resuelva false.
 // El audio que sale antes de `ready` se guarda (con tope) y sale en orden después. Los logs no llevan la clave ni texto,
 // solo códigos de cierre y tamaños.
 const { WebSocket } = require('ws');
@@ -13,7 +14,7 @@ const AUDIO_MAGIC = 0xA1;                    // frame de audio del Gateway: 0xA1
 /**
  * @typedef {{type:'partial',text:string} | {type:'final',text:string} | {type:'turn_start',turnId:string,seq:number}
  *   | {type:'token',turnId:string,text:string} | {type:'turn_end',turnId:string} | {type:'audio',seq:number,pcm:Buffer,frame:Buffer}
- *   | {type:'turn_error',turnId:string,message:string} | {type:'down'} | {type:'rejected'} | ToolEvent} GwEvent
+ *   | {type:'turn_error',turnId:string,message:string} | {type:'down'} | {type:'rejected'} | {type:'refused',reason:string} | ToolEvent} GwEvent
  */
 /**
  * Llamada a herramienta del agente (solo llega si el Gateway tiene `tool_calls_enabled=true` para este cliente; no va en el handshake).
@@ -120,7 +121,7 @@ function createGatewayClient({ url, key, agent, log, WebSocketImpl = WebSocket, 
         log.info(`gateway: cierre ${code}`);
         // shortcut: el Gateway usa 1008 para varios fallos del handshake y solo el motivo dice que es la clave; si un día
         // tiene un código propio para clave inválida, mirar solo el código
-        if (!was && code === 1008 && /clave/i.test(String(reason || ''))) emit({ type: 'rejected' });
+        if (!was && code === 1008) emit(/clave/i.test(String(reason || '')) ? { type: 'rejected' } : { type: 'refused', reason: String(reason || '').slice(0, 200) });
         done(false);
         if (was && !closing.has(sock)) emit({ type: 'down' });
       });

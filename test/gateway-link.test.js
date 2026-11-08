@@ -125,13 +125,28 @@ test('forget(): borra la clave, conserva la dirección escrita a mano y pasa a u
   assert.deepEqual(s.load(), { url: 'ws://gw/ws/stream', key: '', name: '', manual: true });
 });
 
-test('una caída tras estar listo: unreachable y se vuelve a comprobar una vez', async () => {
+test('una sesión que se cierra tras estar lista (inactividad) no cambia el estado ni reconecta', async () => {
   const s = tmpStore(); s.save({ url: 'ws://gw/ws/stream', key: 'k1' });
   const f = fakes();
   const l = createGatewayLink({ store: s, agent: 'a', log: nolog, makeClient: f.make });
   await l.check();
-  f.made[0].next = 'fail';
+  let calls = 0; const orig = f.made[0].ensure; f.made[0].ensure = async () => { calls++; return orig(); };
+  f.made[0].ready = false;
   f.made[0].emit({ type: 'down' });
   await new Promise(r => setImmediate(r));
-  assert.equal(l.status().status, 'unreachable');
+  assert.equal(l.status().status, 'ok');
+  assert.equal(calls, 0, 'no reconecta solo');
+});
+
+test('el gateway no deja usar el agente: refused, la clave se conserva y se vuelve a probar al usarlo', async () => {
+  const s = tmpStore(); s.save({ url: 'ws://gw/ws/stream', key: 'k1' });
+  const f = fakes();
+  const l = createGatewayLink({ store: s, agent: 'a', log: nolog, makeClient: f.make });
+  f.made[0].ensure = async () => { f.made[0].emit({ type: 'refused', reason: "Agent 'a' not permitted for this client." }); return false; };
+  assert.equal(await l.ensure(), false);
+  assert.equal(l.status().status, 'refused');
+  assert.equal(s.load().key, 'k1');
+  f.made[0].ensure = async () => true;
+  assert.equal(await l.ensure(), true);
+  assert.equal(l.status().status, 'ok');
 });

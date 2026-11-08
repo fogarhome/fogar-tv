@@ -105,12 +105,12 @@ test('redeem: manda tipo screen y lo que sabe reproducir; errores claros y gené
 test('localCode: `jota-gw --json pair --type screen --name … --no-wait`', async () => {
   let args = null;
   const exec = (cmd, a, o, cb) => { args = [cmd, ...a]; cb(null, JSON.stringify({ id: 'p1', code: '482913', expires_at: 'x' })); };
-  assert.deepEqual(await pair.localCode({ name: 'Salón', exec }), { code: '482913' });
-  assert.deepEqual(args, ['jota-gw', '--json', 'pair', '--type', 'screen', '--name', 'Salón', '--no-wait']);
+  assert.deepEqual(await pair.localCode({ name: 'Salón', agent: 'j-assistant', exec }), { code: '482913' });
+  assert.deepEqual(args, ['jota-gw', '--json', 'pair', '--type', 'screen', '--name', 'Salón', '--agent', 'j-assistant', '--allowed-agent', 'j-assistant', '--no-wait']);
   const missing = (c, a, o, cb) => cb(Object.assign(new Error('x'), { code: 'ENOENT' }), '');
-  assert.deepEqual(await pair.localCode({ name: 'x', exec: missing }), { error: 'jota-gw no está instalado en este equipo' });
+  assert.deepEqual(await pair.localCode({ name: 'x', agent: 'a', exec: missing }), { error: 'jota-gw no está instalado en este equipo' });
   const junk = (c, a, o, cb) => cb(null, 'no json');
-  assert.ok('error' in await pair.localCode({ name: 'x', exec: junk }));
+  assert.ok('error' in await pair.localCode({ name: 'x', agent: 'a', exec: junk }));
 });
 
 /** Conexión con un cliente falso que siempre conecta. */
@@ -124,7 +124,7 @@ function mkLink() {
 test('orden pair: comprueba que es un Jota, canjea, guarda y conecta; la clave no vuelve al mando', async () => {
   const g = await fakeGw();
   const { store, made, link } = mkLink();
-  const f = createGatewayFeature({ link, name: 'Salón', log: nolog });
+  const f = createGatewayFeature({ link, name: 'Salón', agent: 'j-assistant', log: nolog });
   const run = m => f.commands[0].run({ t: 'gateway', ...m });
   try {
     assert.equal(f.commands[0].perm, 'admin');
@@ -144,7 +144,7 @@ test('orden pair: comprueba que es un Jota, canjea, guarda y conecta; la clave n
 test('orden local: sin gateway en este equipo no ejecuta jota-gw', async () => {
   const { link } = mkLink();
   let ran = false;
-  const f = createGatewayFeature({ link, name: 'Salón', log: nolog,
+  const f = createGatewayFeature({ link, name: 'Salón', agent: 'j-assistant', log: nolog,
     discover: { ...discover, probe: async () => null }, pair: { ...pair, localCode: async () => { ran = true; return { code: '123456' }; } } });
   assert.deepEqual(await f.commands[0].run({ t: 'gateway', op: 'local' }), { error: 'No hay un gateway en este equipo' });
   assert.equal(ran, false);
@@ -153,7 +153,7 @@ test('orden local: sin gateway en este equipo no ejecuta jota-gw', async () => {
 test('orden local: saca el código con jota-gw y lo canjea por la misma ruta', async () => {
   const g = await fakeGw();
   const { store, link } = mkLink();
-  const f = createGatewayFeature({ link, name: 'Salón', log: nolog,
+  const f = createGatewayFeature({ link, name: 'Salón', agent: 'j-assistant', log: nolog,
     discover: { ...discover, probe: h => discover.probe(h === '127.0.0.1' ? g.host : h) }, pair: { ...pair, localCode: async () => ({ code: '123456' }) } });
   try {
     assert.equal((await f.commands[0].run({ t: 'gateway', op: 'local' })).status, 'ok');

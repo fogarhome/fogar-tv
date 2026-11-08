@@ -36,11 +36,13 @@ async function redeem({ http, code, name, fetchImpl = fetch, timeoutMs = 8000 })
 }
 
 /**
- * El código, sacado en este equipo con `jota-gw --json pair … --no-wait`.
- * @param {{ name: string, exec?: typeof execFile }} o @returns {Promise<{ code: string } | { error: string }>}
+ * El código, sacado en este equipo con `jota-gw --json pair … --no-wait`. Sin admin que ponga la plantilla, la tele pide
+ * su agente como el único permitido: el mismo que pide al abrir sesión (si no, el Gateway la rechazaría).
+ * @param {{ name: string, agent: string, exec?: typeof execFile }} o @returns {Promise<{ code: string } | { error: string }>}
  */
-function localCode({ name, exec = execFile }) {
-  const args = ['--json', 'pair', '--type', CLIENT_TYPE, '--name', String(name || 'tele').slice(0, 80), '--no-wait'];
+function localCode({ name, agent, exec = execFile }) {
+  const args = ['--json', 'pair', '--type', CLIENT_TYPE, '--name', String(name || 'tele').slice(0, 80),
+    '--agent', agent, '--allowed-agent', agent, '--no-wait'];
   return new Promise(resolve => exec('jota-gw', args, { timeout: 15000, maxBuffer: 1 << 20 }, (err, out) => {
     if (err) return resolve({ error: /** @type {any} */ (err).code === 'ENOENT' ? 'jota-gw no está instalado en este equipo' : 'jota-gw no ha podido sacar el código' });
     let j; try { j = JSON.parse(String(out)); } catch { j = null; }
