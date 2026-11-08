@@ -53,6 +53,7 @@ function loadConfig(env = process.env, { hostname = os.hostname() } = {}) {
     STATE_DIR,                                                  // todo el estado: token, *.json y stage/
     STAGE_DIR: path.join(STATE_DIR, 'stage'),
     GATEWAY_URL: (env.TV_GATEWAY_URL || '').trim(),             // J Gateway escrito a mano: ws://<host>:8004/ws/stream; manda sobre gateway.json
+    GATEWAY_PORT: Number(env.TV_GATEWAY_PORT) || 8004,           // puerto del J Gateway al buscarlo (este equipo, tailnet) y por defecto
     GATEWAY_KEY: (env.TV_GATEWAY_KEY || '').trim(),             // shortcut: clave antigua hasta emparejar con el gateway nuevo; luego, solo gateway.json
     SPEAKER_CMD: speakerCmd(env.TV_SPEAKER_CMD),   // altavoz de la tele (stdin = PCM16 24 kHz mono); vacío = pw-cat
     ADB: (env.TV_ADB || '').trim(),                             // tele Google TV por ADB (ip:5555); vacío = sin tele nativa

@@ -11,9 +11,9 @@ Uso: scripts/doctor.sh [--since MINUTOS]
 Comprueba, sin cambiar nada: la configuración, los servicios (jota-screen, jota-screen-mdns si hay alias,
 jota-screen-spotify si está habilitado, jota-screen-kiosk), que el servidor haya conectado con Chrome
 («CDP conectado» en el registro), que /api/state responda 200 con cdp:true usando el token de TV_STATE_DIR
-y 401 sin token, que el token no aparezca en el registro reciente (por defecto, 15 minutos), los permisos
+y 401 sin token, que la tele esté conectada con Jota (el gateway), que el token no aparezca en el registro reciente (por defecto, 15 minutos), los permisos
 del estado (0700 la carpeta, 0600 los ficheros), que CDP solo escuche en 127.0.0.1, el alias mDNS y, si TV_ADB está puesto, que la tele responda por ADB.
-Nunca enseña el token.
+Nunca enseña el token ni la clave del gateway.
 EOF
     exit 0 ;;
   --since) SINCE=${2:?falta MINUTOS}; shift 2 ;;
@@ -85,18 +85,33 @@ const get = h => fetch(url, { headers: h, signal: AbortSignal.timeout(4000) });
     let cdp = '?';
     try { cdp = String((await a.json()).cdp); } catch {}
     const b = await get({});
-    console.log(a.status, cdp, b.status);
+    // Jota (el J Gateway): lo comprueba ahora; solo el estado y el nombre, nunca la clave
+    let gw = '? ';
+    try {
+      const r = await fetch(`http://127.0.0.1:${port}/api/cmd`, { method: 'POST', signal: AbortSignal.timeout(9000),
+        headers: { Authorization: 'Bearer ' + tok, 'Content-Type': 'application/json' }, body: JSON.stringify({ t: 'gateway', op: 'check' }) });
+      const j = await r.json();
+      gw = `${j.status || '?'} ${String(j.name || j.host || '').replace(/\s+/g, ' ')}`;
+    } catch {}
+    console.log(a.status, cdp, b.status, gw);
   } catch (e) { console.log('error', e.cause?.code || e.name); }
 })();
 EOF
 )
-  read -r st cdp st0 <<<"$res"
+  read -r st cdp st0 gws gwn <<<"$res"
   if [ "$st" = error ]; then bad "el servidor no responde en 127.0.0.1:$TV_PORT ($cdp)"
   else
     if [ "$st" = 200 ] && [ "$cdp" = true ]; then ok "/api/state con token: 200, cdp:true"
     elif [ "$st" = 200 ]; then bad "/api/state con token: 200 pero cdp:$cdp (el servidor no tiene a Chrome)"
     else bad "/api/state con token: $st (esperaba 200; ¿token distinto del que usa el servidor?)"; fi
     if [ "$st0" = 401 ]; then ok "/api/state sin token: 401"; else bad "/api/state sin token: $st0 (esperaba 401)"; fi
+    case "$gws" in
+      ok) ok "Jota: conectada a ${gwn:-el gateway}" ;;
+      unpaired) bad "Jota: la tele no está emparejada (en el mando: Ajustes › Jota en la tele › Conexión)" ;;
+      unreachable) bad "Jota: el gateway${gwn:+ de $gwn} no responde" ;;
+      revoked) bad "Jota: el gateway rechazó la clave; vuelve a emparejar desde el mando" ;;
+      *) bad "Jota: no he podido saber el estado de la conexión ($gws)" ;;
+    esac
   fi
 fi
 

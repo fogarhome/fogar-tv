@@ -82,6 +82,12 @@ if (a[0] === 'set-mute') s.m = !s.m;
 if (a[0] === 'set-volume') { const m = /^(\\d+)%([+-])$/.exec(a[2]); s.v = m ? s.v + (m[2] === '+' ? 1 : -1) * m[1] / 100 : +a[2]; s.v = Math.round(Math.min(1, Math.max(0, s.v)) * 100) / 100; }
 fs.writeFileSync(f, JSON.stringify(s));
 `, { mode: 0o755 });
+  // jota-gw falso para «Hazlo tú»: `--json pair … --no-wait` da el código bueno del gateway falso
+  fs.writeFileSync(path.join(dir, 'jota-gw'), `#!${process.execPath}
+const a = process.argv.slice(2);
+if (a[0] === '--json' && a[1] === 'pair' && a.includes('--no-wait')) console.log(JSON.stringify({ id: 'p1', code: '123456', expires_at: '2030-01-15T10:10:00Z' }));
+else process.exit(2);
+`, { mode: 0o755 });
   return dir;
 }
 
@@ -520,22 +526,27 @@ async function extraScenes(admin) {
       codes.push(await p.locator('#alBox b').textContent());
     }
   });
-  // conexión con Jota: olvidar el gateway → aviso arriba → «Conectar» → no lo encuentra → dirección a mano → código
+  // conexión con Jota: olvidar el gateway → aviso arriba → «Conectar» → lo encuentra en este equipo → código a mano (mal y
+  // bien); otra vez olvidar → «Hazlo tú» (jota-gw falso); y una dirección escrita a mano que no responde
+  const forget = async p => {
+    await tap(p, 'Ajustes', 1000); await goSet(p, 'jota', 900);
+    await tap(p, 'Olvidar', 300); await tap(p, '¿Seguro?', 800);
+    await p.locator('#gwSt').filter({ hasText: 'Sin emparejar' }).waitFor();
+    await p.keyboard.press('Escape'); await p.waitForTimeout(400);
+    await p.locator('#gwN').waitFor();
+  };
   await run('extra-gateway', async p => {
     await tap(p, 'Ajustes', 1000);
     await goSet(p, 'jota', 900);
     await p.locator('#gwSt').filter({ hasText: 'Conectada a green-house' }).waitFor();
     await shot(p, 'extra-gateway-ajustes');
-    await tap(p, 'Olvidar', 300); await tap(p, '¿Seguro?', 800);
-    await p.locator('#gwSt').filter({ hasText: 'Sin emparejar' }).waitFor();
     await p.keyboard.press('Escape'); await p.waitForTimeout(400);
-    await p.locator('#gwN').waitFor();
+    await forget(p);
     await shot(p, 'extra-gateway-aviso');
-    await p.locator('#gwNGo').tap(); await p.waitForTimeout(300);
-    await p.locator('#gwHost').waitFor({ timeout: 10000 });
-    await shot(p, 'extra-gateway-buscar');
-    await p.locator('#gwHost').fill(gwf.host);
-    await tap(p, 'Usar', 500);
+    await p.locator('#gwNGo').tap();
+    await p.getByRole('button', { name: 'Hazlo tú' }).waitFor({ timeout: 10000 });
+    await shot(p, 'extra-gateway-local');
+    await tap(p, 'Prefiero escribir el código', 500);
     await shot(p, 'extra-gateway-codigo');
     await p.getByLabel('Código de 6 cifras', { exact: true }).fill('000000');
     await p.locator('#gwM.err').waitFor();
@@ -546,6 +557,17 @@ async function extraScenes(admin) {
     if (gwf.pairs.at(-1).client_type !== 'screen') throw new Error('el emparejamiento no manda client_type screen');
     await tap(p, 'Listo', 500);
     if (await p.locator('#gwN').isVisible()) throw new Error('el aviso sigue tras emparejar');
+    // «Hazlo tú»: el código lo saca el jota-gw falso
+    await forget(p);
+    await p.locator('#gwNGo').tap();
+    await tap(p, 'Hazlo tú', 300);
+    await p.getByText('Conectada a Jota en green-house').waitFor();
+    await shot(p, 'extra-gateway-hazlo');
+    await tap(p, 'Listo', 500);
+    // ✕: el aviso se cierra y no vuelve mientras el estado no cambie
+    await forget(p);
+    await p.locator('#gwNX').tap(); await p.waitForTimeout(300);
+    if (await p.locator('#gwN').isVisible()) throw new Error('el aviso no se cierra con ✕');
   });
   await run('extra-canjear-admin', async p => {
     await tap(p, 'Ajustes', 1000);
@@ -594,7 +616,8 @@ async function extraScenes(admin) {
   // gateway falso con la tele ya emparejada: el aviso de «Jota no está conectado» solo sale en su escena
   gwf = await startFakeGateway();
   // TV_NAME=Salón: el nombre de la pantalla con el que se hicieron las capturas de referencia
-  srv = await start({ cdpPort: cdp.port, env: { TV_NAME: 'Salón' },
+  // TV_GATEWAY_PORT: el gateway falso es «el de este equipo» (la búsqueda no mira el 8004 ni la tailnet del Mac)
+  srv = await start({ cdpPort: cdp.port, env: { TV_NAME: 'Salón', TV_GATEWAY_PORT: String(gwf.port) },
     files: { 'devices.json': DEVICES, 'access.json': ACCESS, 'gateway.json': { url: gwf.url, key: gwf.key, name: 'green-house' } } });
   try {
     await cdp.waitFor(m => m.method === 'Runtime.addBinding' && m.params.name === '__tvFocus', 10000);
