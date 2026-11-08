@@ -25,6 +25,7 @@ const { createPagePoll } = require('./src/tv/page-poll');
 const { createAndroidTv } = require('./src/tv/android-tv');
 const { createGatewayLink } = require('./src/gateway/link');
 const { createGatewayStore } = require('./src/gateway/store');
+const { createGatewayFeature } = require('./src/features/gateway');
 const createTalk = require('./src/features/talk');
 const { createSpeaker } = require('./src/tv/speaker');
 const { createTalkView } = require('./src/tv/talk-view');
@@ -64,7 +65,8 @@ const sessions = createSessions({ clients: ws.clients, acc: () => acc });
 const { devOf, meOf } = sessions;
 let cdp = null;
 // el ambiente lo pone el reposo, que se crea más abajo (solo se pide al difundir, cuando ya existe)
-const tv = createTvState({ cdpUp: () => !!(cdp && cdp.ready && cdp.session), clients: ws.clients, ambient: () => idle.ambient() });
+const tv = createTvState({ cdpUp: () => !!(cdp && cdp.ready && cdp.session), clients: ws.clients, ambient: () => idle.ambient(),
+  gateway: () => gw.status() });
 const { state, publicState, broadcast } = tv;
 
 // ───────────────────────── Chrome (CDP): lo que pasa en la pestaña activa se reparte entre las capacidades
@@ -199,8 +201,9 @@ const idle = createIdle({
 // J Gateway (voz): la conexión (src/gateway/link.js) guarda a qué gateway y con qué clave (gateway.json) y si funciona;
 // sin dirección o sin clave todo se comporta como un Gateway caído
 const gw = createGatewayLink({ store: createGatewayStore(path.join(CFG.STATE_DIR, 'gateway.json')),
-  envUrl: CFG.GATEWAY_URL, envKey: CFG.GATEWAY_KEY, agent: CFG.AGENT, log });
+  envUrl: CFG.GATEWAY_URL, envKey: CFG.GATEWAY_KEY, agent: CFG.AGENT, log, onChange: () => broadcast() });
 gwKey = gw.key;
+const gateway = createGatewayFeature({ link: gw, name: CFG.NAME, log });
 gw.check();
 const speaker = createSpeaker({ runtimeDir: CFG.XDG_RUNTIME_DIR, cmd: CFG.SPEAKER_CMD, log });
 // la conversación en la tele (public/tv-agent.js, se inyecta una vez por página). `context` se lee en cada pintada:
@@ -242,7 +245,7 @@ const netflixCommands = netflix.commands.map(c => ({ ...c, run: (/** @type {any}
 } }));
 // con la tele por ADB, lo que necesita la pantalla pone antes J-Screen delante (encender o volver de Tele)
 const screen = tele ? (/** @type {any[]} */ l) => tele.withScreen(l, createTele.SCREEN) : (/** @type {any[]} */ l) => l;
-for (const list of [talk.commands, netflixCommands, youtube.commands, stage.commands, keyboard.commands, control.commands, spotify.commands, idle.commands,
+for (const list of [talk.commands, gateway.commands, netflixCommands, youtube.commands, stage.commands, keyboard.commands, control.commands, spotify.commands, idle.commands,
   createAccessCommands({ acc, meOf }), tv.commands, ...(tele ? [tele.commands] : [])]) commands.register(screen(list));
 
 /** Una orden del mando (sock), de la API o del MCP (ctx.dev), con los permisos de su dispositivo. */

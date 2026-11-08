@@ -72,6 +72,8 @@ function createGatewayLink({ store, envUrl = '', envKey = '', agent, log, makeCl
   /** Comprueba que la conexión funciona (abre la sesión si hace falta). */
   async function check() { if (!client) return status; await ensure(); return status; }
 
+  function manual() { if (envUrl) return envUrl; const c = store.load(); return c.manual ? c.url : ''; }
+
   rebuild();
 
   return {
@@ -88,8 +90,12 @@ function createGatewayLink({ store, envUrl = '', envKey = '', agent, log, makeCl
     use(c) { store.save({ url: c.url, key: c.key, name: c.name || '', manual: !!c.manual }); rebuild(); return check(); },
     /** Olvida la clave (la dirección escrita a mano se conserva). */
     forget() { store.save({ key: '', name: '' }); rebuild(); },
-    /** Lo que puede ver el mando: nunca la clave ni la dirección. */
+    /** Lo que ven todos los mandos: nunca la clave ni la dirección. */
     status: () => ({ status, name }),
+    /** Para el admin: además, el equipo y si la dirección se escribió a mano. */
+    info() { const u = envUrl || store.load().url; let host = ''; try { host = u ? new URL(u).hostname : ''; } catch {} return { status, name, host, manual: !!manual() }; },
+    /** La dirección escrita a mano (screen.env o el mando), o ''. Si la hay, es la única que se usa. */
+    manual,
     /** La clave vigente, para que el log la tache. */
     key: () => key,
   };
