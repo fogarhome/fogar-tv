@@ -194,3 +194,16 @@ test('los logs no llevan la clave ni texto', async () => {
     assert.doesNotMatch(lines.join('\n'), /clave-super-secreta|secreto-hablado/);
   } finally { c.close(); await f.stop(); }
 });
+
+test('1008 por la clave → rejected; 1008 por otra cosa (agente no permitido) no', async () => {
+  const f1 = await fake(ws => ws.close(1008, 'Clave de cliente invalida o inactiva.'));
+  const f2 = await fake(ws => ws.close(1008, "Agent 'x' not permitted for this client."));
+  const c1 = mk(f1), c2 = mk(f2), e1 = [], e2 = [];
+  c1.on(ev => e1.push(ev.type)); c2.on(ev => e2.push(ev.type));
+  try {
+    assert.equal(await c1.ensure(), false);
+    assert.equal(await c2.ensure(), false);
+    assert.deepEqual(e1, ['rejected']);
+    assert.deepEqual(e2, []);
+  } finally { c1.close(); c2.close(); await f1.stop(); await f2.stop(); }
+});

@@ -23,7 +23,8 @@ const { createPointer, createAudio, createPairScreen } = require('./src/tv/devic
 const { readTokens } = require('./src/tv/tokens');
 const { createPagePoll } = require('./src/tv/page-poll');
 const { createAndroidTv } = require('./src/tv/android-tv');
-const { createGatewayClient } = require('./src/gateway/client');
+const { createGatewayLink } = require('./src/gateway/link');
+const { createGatewayStore } = require('./src/gateway/store');
 const createTalk = require('./src/features/talk');
 const { createSpeaker } = require('./src/tv/speaker');
 const { createTalkView } = require('./src/tv/talk-view');
@@ -54,7 +55,8 @@ const { ROOT, PUB, PORT, CDP_PORT, DEBUG, NO_POINTER, SELF } = CFG;
 // ───────────────────────── base: registro, conexiones de los mandos y estado de la tele
 let acc = null; // el acceso se crea un poco más abajo; quien lo usa antes, lo hace al llamar
 // registro con redacción: el token maestro, la clave del Gateway, los ?t= y los Bearer nunca llegan al journal
-const log = createLog({ secrets: () => [...(acc ? [acc.masterToken()] : []), ...(CFG.GATEWAY_KEY ? [CFG.GATEWAY_KEY] : [])], debug: DEBUG });
+let gwKey = () => CFG.GATEWAY_KEY;                          // la clave vigente del Gateway (la cambia gw al crearse)
+const log = createLog({ secrets: () => [...(acc ? [acc.masterToken()] : []), ...(gwKey() ? [gwKey()] : [])], debug: DEBUG });
 // antes de leer nada: la carpeta de estado (0700) con lo que hubiera en las ubicaciones antiguas
 prepareStateDir(CFG, log.info);
 const ws = createWs();
@@ -194,10 +196,12 @@ const idle = createIdle({
   onFocusOk: (src, b) => (src === 'netflix' ? netflix.play({ id: String(b.items[0].id), title: b.items[0].title })
     : spotify.spotify({ a: b ? (b.state === 'playing' ? 'pause' : 'play') : 'playpause' })), nfxRecent: () => { const l = netflix.last(); return l ? { at: l.at, items: nfxWatch.forIdleLast(l) } : null; },
 });
-// J Gateway (voz): sin TV_GATEWAY_URL el cliente no se crea y todo se comporta como un Gateway caído
-const gw = CFG.GATEWAY_URL
-  ? createGatewayClient({ url: CFG.GATEWAY_URL, key: CFG.GATEWAY_KEY, agent: CFG.AGENT, log })
-  : { ensure: async () => false, send() {}, on: () => () => {}, audio() {}, end() {}, isReady: () => false, close() {} };
+// J Gateway (voz): la conexión (src/gateway/link.js) guarda a qué gateway y con qué clave (gateway.json) y si funciona;
+// sin dirección o sin clave todo se comporta como un Gateway caído
+const gw = createGatewayLink({ store: createGatewayStore(path.join(CFG.STATE_DIR, 'gateway.json')),
+  envUrl: CFG.GATEWAY_URL, envKey: CFG.GATEWAY_KEY, agent: CFG.AGENT, log });
+gwKey = gw.key;
+gw.check();
 const speaker = createSpeaker({ runtimeDir: CFG.XDG_RUNTIME_DIR, cmd: CFG.SPEAKER_CMD, log });
 // la conversación en la tele (public/tv-agent.js, se inyecta una vez por página). `context` se lee en cada pintada:
 // `page` (URL, escenario, reposo) decide el formato (src/tv/agent-form.js: app de contenido → píldora) y `playback`

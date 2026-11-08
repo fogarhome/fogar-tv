@@ -52,8 +52,8 @@ function loadConfig(env = process.env, { hostname = os.hostname() } = {}) {
     HOME_URL: env.TV_HOME_URL || SELF + '/idle.html',          // la pantalla en reposo
     STATE_DIR,                                                  // todo el estado: token, *.json y stage/
     STAGE_DIR: path.join(STATE_DIR, 'stage'),
-    GATEWAY_URL: (env.TV_GATEWAY_URL || '').trim(),             // J Gateway (voz): ws://<host>:8004/ws/stream; vacío = sin voz
-    GATEWAY_KEY: (env.TV_GATEWAY_KEY || '').trim(),             // clave del cliente en el Gateway (nunca a logs ni al repo)
+    GATEWAY_URL: (env.TV_GATEWAY_URL || '').trim(),             // J Gateway escrito a mano: ws://<host>:8004/ws/stream; manda sobre gateway.json
+    GATEWAY_KEY: (env.TV_GATEWAY_KEY || '').trim(),             // shortcut: clave antigua hasta emparejar con el gateway nuevo; luego, solo gateway.json
     SPEAKER_CMD: speakerCmd(env.TV_SPEAKER_CMD),   // altavoz de la tele (stdin = PCM16 24 kHz mono); vacío = pw-cat
     ADB: (env.TV_ADB || '').trim(),                             // tele Google TV por ADB (ip:5555); vacío = sin tele nativa
     INPUT: (env.TV_INPUT || '').trim(),                         // inputId de TV Input Framework donde está J-Screen (HDMI)
