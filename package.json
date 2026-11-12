@@ -1,7 +1,7 @@
 {
-  "name": "jota-screen",
+  "name": "fogar-tv",
   "private": true,
-  "description": "Herramientas de desarrollo de jota-screen (lint, tipos y pruebas). El servidor tiene sus dependencias en remote/.",
+  "description": "Herramientas de desarrollo de fogar-tv (lint, tipos y pruebas). El servidor tiene sus dependencias en remote/.",
   "engines": {
     "node": ">=22"
   },
