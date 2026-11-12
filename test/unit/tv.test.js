@@ -200,7 +200,7 @@ test('tokens de la tele: la isla los lleva delante y tv-island.js no repite sus 
   const PUB = path.join(__dirname, '..', '..', 'remote', 'public');
   const src = islandSource(PUB);
   assert.ok(src.startsWith('var __TV_TOKENS='), 'empieza por los tokens');
-  assert.ok(src.includes('--tv-accent:#c3b7e3'));
+  assert.ok(src.includes('--tv-accent:#d6cfc5'));
   // y los iconos de trazo de la isla (los de las fichas del agente), detrás de los tokens
   const icons = JSON.parse(src.match(/\nvar __TV_ICONS=(\{.*\});\n/)[1]);
   assert.deepEqual(Object.keys(icons), ['timer', 'music']);

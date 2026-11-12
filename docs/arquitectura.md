@@ -117,10 +117,10 @@ remote/
     mando/features/       ambient, controls, trackpad, keyboard, go, agent, voice, pcm-player, mic-worklet, spotify, spotify-lists, spotify-state, pair, admin, settings, idle
     mando/styles/mando.css  estilos del mando (v3: glifos flotantes, luces en órbita, voz, ahora suena y teclado)
     tv-agent.js           paneles vivos del agente: cristal, orbe y fichas (la pinta talk-view.js)
-    fonts/                fuentes propias de la capa del agente (Fraunces, OFL), mandadas como bytes con la fuente
+    fonts/                Unbounded y Figtree (OFL, de fogar-brand): shared/fonts.css; la capa del agente lleva Figtree como bytes
     idle.html, idle.css, idle-app.js   pantalla en reposo (sin nada en línea)
-    shared/tokens-tv.css  tokens Jota Dusk de la tele (reposo e isla)
-    shared/tokens-mando.css  tokens Jota Dusk del mando (oscuro y claro), alineados con los de la tele
+    shared/tokens-tv.css  tokens de Fogar para la tele (reposo, escenario e isla) y su escala a 3 m
+    shared/tokens-mando.css  tokens de Fogar para el mando (oscuro y claro), alineados con los de la tele
     tv-island.js          isla de Live Activities (reposo y, por CDP, cualquier web)
     tv-stage.js           runtime de las páginas del escenario: tv.onData, tv.emit, tv.close
     stage.css, tpl-tasks.html, tpl-reminder.html, tpl-slides.html   plantillas del escenario
@@ -270,9 +270,9 @@ al cambiar de documento; la foto siguiente trae el de la página nueva y la memb
 una transición). Se quitan al ocultarla. La capa va en la capa superior (popover manual) y el host se
 mueve, nunca se recrea, al entrar o salir de pantalla completa: dentro del elemento a pantalla completa si admite hijos
 (un `<div>`, como los reproductores de YouTube o Netflix: lo de fuera queda inerte y la membrana no recibiría el puntero),
-y en body con un `<video>` a pantalla completa (se ve, pero no se puede arrastrar: queda el gesto del mando). Fuentes: Fraunces de `public/fonts/` (OFL) mandada como bytes
-(`FontFace` desde un ArrayBuffer, nombre propio `TV Fraunces`), así se ve igual con `font-src 'none'`; Inter no está
-vendorizada: la de palo seco es la del sistema en todas partes.
+y en body con un `<video>` a pantalla completa (se ve, pero no se puede arrastrar: queda el gesto del mando). Fuentes: Figtree de `public/fonts/` (OFL) mandada como bytes
+(`FontFace` desde un ArrayBuffer, nombre propio `TV Figtree`), así se ve igual con `font-src 'none'`. La capa no titula:
+no lleva Unbounded.
 
 ### Cambiar de pestaña con la capa abierta (Netflix va en la suya)
 
@@ -437,8 +437,8 @@ Nunca se reinicia solo. A mano, lo mismo: `systemctl --user restart fogar-tv-spo
 - La **isla** no puede cargar CSS dentro de webs ajenas (su CSP, su red): el servidor le antepone los tokens de
   `shared/tokens-tv.css` como texto (`__TV_TOKENS`), y por eso ese fichero debe tener un solo bloque `:root{…}` de
   declaraciones simples. La isla se relee en cada inyección; el reposo, no (va por estáticos).
-- El mando tiene sus propios tokens en `shared/tokens-mando.css` (mismos valores de base que la tele: tinta, malva,
-  cielo, Fraunces y ease-salon); las plantillas del escenario (`stage.css`) importan los de la tele. `tokens-tv.css` es de la
+- El mando tiene sus propios tokens en `shared/tokens-mando.css` (mismos valores de base que la tele: noche, hueso,
+  Unbounded y Figtree, y ease-salon); las plantillas del escenario (`stage.css`) importan los de la tele. `tokens-tv.css` es de la
   tele (reposo, escenario e isla).
 - **Ambiente del mando**: con el reposo en pantalla, el mensaje `state` lleva `amb` (perfil y dos colores `[h, s, l]` de
   la carátula, de `idle.js`, que avisa con `onAmbient` solo si cambian). `mando/features/ambient.js` decide el color de

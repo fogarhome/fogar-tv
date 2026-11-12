@@ -107,24 +107,24 @@ function createPlaybackWatch({ dwellMs = PLAYBACK_DWELL_MS, minArea = PLAYBACK_M
   };
 }
 
-// ── código de emparejar en la tele: se pinta encima de lo que haya (también a pantalla completa), en Jota Dusk: `o.tok`
+// ── código de emparejar en la tele: se pinta encima de lo que haya (también a pantalla completa), en Fogar: `o.tok`
 // son los tokens de la tele (shared/tokens-tv.css, como a la isla), puestos en el propio elemento porque la web de debajo
 // no los tiene. Las medidas, en --u (1 px de la tele de 1920×1080)
 function pairInPage(o) {
   const old = document.getElementById('__tvpair'); if (old) old.remove();
   if (!o) return;
   const host = document.fullscreenElement || document.documentElement;
-  // sin tokens (no se pudieron leer), los valores de Jota Dusk de reserva
+  // sin tokens (no se pudieron leer), los valores de Fogar de reserva
   const u = n => `calc(${n} * var(--u, min(calc(100vw / 1920), calc(100vh / 1080))))`;
   const b = document.createElement('div'); b.id = '__tvpair';
-  b.style.cssText = (o.tok || '') + ';position:fixed;inset:0;z-index:2147483647;display:grid;place-items:center;background:rgba(10,8,14,.78);' +
-    'font-family:var(--tv-sans, system-ui, sans-serif);color:var(--tv-text, #ddd6d0);text-align:center;-webkit-font-smoothing:antialiased';
+  b.style.cssText = (o.tok || '') + ';position:fixed;inset:0;z-index:2147483647;display:grid;place-items:center;background:rgba(11,16,18,.78);' +
+    'font-family:var(--tv-letra-texto, system-ui, sans-serif);color:var(--tv-text, #d6cfc5);text-align:center;-webkit-font-smoothing:antialiased';
   const c = document.createElement('div');
-  c.style.cssText = `background:var(--tv-surface, #1d1825);border-radius:${u(32)};padding:${u(44)} ${u(64)};box-shadow:var(--tv-shadow-float, 0 12px 40px rgba(0,0,0,.45))`;
-  const k = document.createElement('div'); k.textContent = 'Nuevo mando'; k.style.cssText = `font-size:${u(22)};letter-spacing:.18em;text-transform:uppercase;color:var(--tv-accent, #c3b7e3);font-weight:500`;
-  const n = document.createElement('div'); n.textContent = o.name + ' quiere conectarse'; n.style.cssText = `font-size:${u(28)};margin-top:${u(10)};color:var(--tv-text-soft, #bab2c4)`;
+  c.style.cssText = `background:var(--tv-surface, #1a2325);border-radius:${u(32)};padding:${u(44)} ${u(64)};box-shadow:var(--tv-shadow-float, 0 24px 48px -24px rgba(0,0,0,.6))`;
+  const k = document.createElement('div'); k.textContent = 'Nuevo mando'; k.style.cssText = `font-size:${u(22)};letter-spacing:.18em;text-transform:uppercase;color:var(--tv-accent, #d6cfc5);font-weight:500`;
+  const n = document.createElement('div'); n.textContent = o.name + ' quiere conectarse'; n.style.cssText = `font-size:${u(28)};margin-top:${u(10)};color:var(--tv-text-soft, #a3acb3)`;
   const d = document.createElement('div'); d.textContent = o.code.split('').join(' '); d.style.cssText = `font-size:${u(120)};font-weight:500;letter-spacing:.06em;margin:${u(22)} 0 ${u(6)};font-variant-numeric:tabular-nums`;
-  const h = document.createElement('div'); h.textContent = 'Escribe este código en el mando'; h.style.cssText = `font-size:${u(22)};color:var(--tv-text-soft, #bab2c4)`;
+  const h = document.createElement('div'); h.textContent = 'Escribe este código en el mando'; h.style.cssText = `font-size:${u(22)};color:var(--tv-text-soft, #a3acb3)`;
   c.append(k, n, d, h); b.appendChild(c); host.appendChild(b);
   b.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 220 });
 }

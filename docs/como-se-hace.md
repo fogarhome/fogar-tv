@@ -123,14 +123,17 @@ ninguna carpeta de `public/` lo tape. Pruebas: `test/transport.test.js` (contrat
 
 ## Colores de la tele
 
-Se cambian en `remote/public/shared/tokens-tv.css` (Jota Dusk de la tele): un solo bloque `:root{…}` de declaraciones
+Se cambian en `remote/public/shared/tokens-tv.css` (Fogar para la tele, de `fogar-brand`): un solo bloque `:root{…}` de declaraciones
 simples, sin nada fuera. El reposo lo enlaza (`idle.html`) y la isla lo recibe del servidor delante de
 `tv-island.js` (`src/tv/tokens.js`). No poner colores sueltos en `tv-island.js` (`test/unit/tv.test.js` lo vigila).
 Las plantillas del escenario (`stage.css`) importan `tokens-tv.css` y sacan de ahí sus nombres de siempre (`--fg`, `--acc`…);
-el mando tiene los suyos (`shared/tokens-mando.css`). Las fuentes (Fraunces e Inter, OFL) están en `public/fonts/` y
-las declara `shared/fonts.css`: nada se pide a Google.
+el mando tiene los suyos (`shared/tokens-mando.css`). Las fuentes (Unbounded y Figtree, OFL, de `fogar-brand/fuentes`) están
+en `public/fonts/` y las declara `shared/fonts.css`: nada se pide a Google. Unbounded solo titula; Figtree hace el resto,
+también las cifras (tabulares). El acento es hueso: disco lleno solo para play, aro para lo activo.
 
-Tamaños de la tele (se leen a 3 m): todo en `--u` (1 px de la tele de 1920×1080). Ningún texto por debajo de 26u
+Tamaños de la tele (se leen a 3 m): todo en `--u` (1 px de la tele de 1920×1080), con la escala de `tokens-tv.css`
+(`--tv-reloj` 380, `--tv-cifra` 96, `--tv-titular` 56, `--tv-destacado` 44, `--tv-texto` 36, `--tv-secundario` 30,
+`--tv-metadato` 26; sin unidad: se multiplican por `--u` o por la `--s` del reposo). Ningún texto por debajo de 26u
 (24u solo en mayúsculas con `letter-spacing` de .14em o más), barras de progreso de 8u y, si un texto puede no caber,
 `line-clamp` a 2 o 3 líneas antes que «…» a media palabra. Nada fuera del área segura (5 % del ancho, 6 % del alto) y
 sin `:hover` ni textos de teclado («Esc para…»): la tele no tiene ratón ni teclado. Como los

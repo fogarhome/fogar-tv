@@ -11,7 +11,7 @@ import { setTitle } from '../ui/status.js';
  * oscuro y a 4,54:1 o más en claro.
  */
 export const LIMITS = {
-  mando: { oscuro: [0, 0.26], claro: [0.11, 1] },   // luces al 24 % / 16 % sobre #211b2a / #f6f3f0
+  mando: { oscuro: [0, 0.26], claro: [0.11, 1] },   // luces al 24 % / 16 %, medidas sobre la base de antes (#211b2a / #f6f3f0): se recalculan con el tope por luminancia en la fase 4
   sp: { oscuro: [0, 0.18], claro: [0.17, 1] },      // ahora suena: luces al 40 % sobre #1a1420, 20 % sobre #f6f3f0
 };
 const MALVA = '#7c6aae', CIELO = '#6e8cc4';

@@ -1,19 +1,34 @@
-/* Jota Dusk para la tele: los valores que comparten el reposo (idle.html), el escenario (stage.css) y la isla de Live
-   Activities (tv-island.js). --u: 1 px de la tele de 1920×1080 (en cualquier pantalla todo se mide en múltiplos de ella).
+/* Fogar para la tele (fogar-brand/marca: paleta, tipografía y espacio), los valores que comparten el reposo (idle.html),
+   el escenario (stage.css) y la isla de Live Activities (tv-island.js). Lo propio de la tele (TVC Decisión - Reloj,
+   acento y tokens de la tele), pendiente de subir a fogar-brand:
+   - hueso-tele #d6cfc5 para el texto (luminancia 0,63 frente a 0,80 de hueso: quema menos) y tenue-tele #a3acb3 para el
+     secundario (hueso-tenue no llega a 4,5:1 sobre la luz del fondo vivo);
+   - el acento es hueso: un disco lleno solo para la acción principal (play), un aro para lo activo;
+   - la escala a 3 m: tamaños en múltiplos de --u (1 px de la tele de 1920×1080). Van sin unidad para multiplicarlos por
+     --u o por la --s del reposo (--u por el ajuste de su celda). Nada baja de 26 (24 solo en mayúsculas espaciadas).
    Un solo bloque :root de declaraciones simples: el servidor lo lee tal cual y se lo inyecta a la isla (src/tv/tokens.js). */
 :root{
-  --tv-text:#ddd6d0;
-  --tv-text-soft:#bab2c4;
-  --tv-accent:#c3b7e3;
-  --tv-surface:#1d1825;
-  --tv-veil:rgba(246,243,240,.08);
-  --tv-track:rgba(246,243,240,.16);
-  --tv-track-2:rgba(246,243,240,.12);
+  --tv-text:#d6cfc5;
+  --tv-text-soft:#a3acb3;
+  --tv-accent:#d6cfc5;
+  --tv-on-accent:#0b1012;
+  --tv-bg:#0b1012;
+  --tv-surface:#1a2325;
+  --tv-veil:rgba(236,230,220,.08);
+  --tv-track:rgba(236,230,220,.16);
+  --tv-track-2:rgba(236,230,220,.12);
   --tv-track-radius:3px;
-  --tv-shadow-float:0 0 0 1px rgba(246,243,240,.08),0 12px 40px rgba(0,0,0,.45);
-  --tv-serif:"Fraunces",Georgia,serif;
-  --tv-sans:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --tv-shadow-float:inset 0 0 0 1px rgba(236,230,220,.08),0 24px 48px -24px rgba(0,0,0,.6);
+  --tv-letra-titular:"Unbounded",system-ui,sans-serif;
+  --tv-letra-texto:"Figtree",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   --u:min(calc(100vw / 1920), calc(100vh / 1080));
+  --tv-reloj:380;
+  --tv-cifra:96;
+  --tv-titular:56;
+  --tv-destacado:44;
+  --tv-texto:36;
+  --tv-secundario:30;
+  --tv-metadato:26;
   --tv-ease:cubic-bezier(.32,.72,0,1);
   --tv-pulse:1.6s;
   --tv-tick:1s;

@@ -33,7 +33,7 @@ test('estáticos: los tokens de la tele (shared/tokens-tv.css) se sirven como CS
   assert.match(r.headers.get('content-type'), /^text\/css/);
   assert.equal(r.headers.get('cache-control'), 'no-store');
   assert.equal(r.headers.get('content-security-policy'), null);
-  assert.match(await r.text(), /--tv-accent:#c3b7e3/);
+  assert.match(await r.text(), /--tv-accent:#d6cfc5/);
   assert.match(await (await s.get('/idle.html')).text(), /<link rel="stylesheet" href="\/shared\/tokens-tv\.css">/);
 });
 

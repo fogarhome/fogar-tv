@@ -1,24 +1,25 @@
-/* Plantillas del escenario (tpl-*.html y lo que pinte el agente con tv_present): Jota Dusk como el reposo. Los nombres
+/* Plantillas del escenario (tpl-*.html y lo que pinte el agente con tv_present): Fogar como el reposo. Los nombres
    de siempre (--bg, --fg, --mut, --acc…) siguen valiendo para el HTML del agente, pero salen de los tokens de la tele.
    Medidas en --u (1 px de la tele de 1920×1080). */
 @import url(/shared/fonts.css);
 @import url(/shared/tokens-tv.css);
 :root{
-  --bg:#211b2a;--fg:var(--tv-text);--mut:var(--tv-text-soft);--line:var(--tv-track-2);
+  --bg:var(--tv-bg);--fg:var(--tv-text);--mut:var(--tv-text-soft);--line:var(--tv-track-2);
   --acc:var(--tv-accent);--ok:#9fd8b8;--warn:#e8b26a;
   --ease:var(--tv-ease);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;overflow:hidden;cursor:default}
 body{
-  font:500 calc(28 * var(--u))/1.35 var(--tv-sans);color:var(--fg);
+  font:500 calc(28 * var(--u))/1.35 var(--tv-letra-texto);font-variant-numeric:tabular-nums;color:var(--fg);
   /* las dos luces del reposo (malva y cielo), quietas */
   background:radial-gradient(calc(1200 * var(--u)) calc(700 * var(--u)) at 78% -10%,rgba(124,106,174,.22),transparent 60%),
              radial-gradient(calc(900 * var(--u)) calc(600 * var(--u)) at -10% 110%,rgba(110,140,196,.14),transparent 55%),var(--bg);
   -webkit-font-smoothing:antialiased;
 }
-/* títulos en Fraunces (corte de display: van grandes), el resto en Inter */
-h1,.big{font-family:var(--tv-serif);font-weight:420;letter-spacing:-.015em}
+/* títulos en Unbounded (solo titula: es ancha, tracking apretado), el resto en Figtree; .big lleva cifras: Figtree */
+h1{font-family:var(--tv-letra-titular);font-weight:400;letter-spacing:-.035em}
+.big{font-weight:500;letter-spacing:-.02em}
 .mut{color:var(--mut)}
 @keyframes rise{from{opacity:0;transform:translateY(calc(18 * var(--u)))}to{opacity:1;transform:none}}
 @keyframes fade{from{opacity:0}to{opacity:1}}

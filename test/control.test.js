@@ -139,7 +139,7 @@ test('Live Activities: encima de una web, la isla se inyecta por CDP con los tok
   const n = cdp.calls.length;
   assert.equal((await cmd({ t: 'activity', id: 'pasta', title: 'Pasta isla', seconds: 600 })).ok, 1);
   const e = await cdp.waitFor(m => m.method === 'Runtime.evaluate' && m.params.expression.includes('"title":"Pasta isla"') && cdp.calls.indexOf(m) >= n);
-  assert.match(e.params.expression, /var __TV_TOKENS="[^"]*--tv-accent:#c3b7e3/);
+  assert.match(e.params.expression, /var __TV_TOKENS="[^"]*--tv-accent:#d6cfc5/);
   assert.match(e.params.expression, /window\.TVIsland\.render\(/);
   assert.ok(e.params.expression.indexOf('__TV_TOKENS=') < e.params.expression.indexOf('if (window.TVIsland) return;'), 'los tokens van antes que la isla');
   await cmd({ t: 'activity', op: 'clear' });

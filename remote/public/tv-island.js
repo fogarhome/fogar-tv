@@ -1,7 +1,7 @@
 // «Isla» de Live Activities: píldora negra arriba en el centro que se expande cuando algo cambia.
 // Funciona en el reposo y, inyectada por CDP, encima de cualquier web (también a pantalla completa).
 // Solo usa createElement/textContent (algunas webs, como YouTube, prohíben innerHTML con Trusted Types).
-// Los colores y medidas son los tokens de Jota Dusk (public/shared/tokens-tv.css): el servidor los antepone como texto en
+// Los colores y medidas son los tokens de Fogar para la tele (public/shared/tokens-tv.css): el servidor los antepone como texto en
 // __TV_TOKENS (src/tv/tokens.js) y aquí van en :host, dentro del shadow DOM, sin pedir nada a la red desde la web ajena.
 (function () {
   if (window.TVIsland) return; // ya inyectada en esta página: solo se vuelve a llamar a render()
@@ -12,7 +12,7 @@
   const CSS = `
 :host{all:initial;${TOK}}
 .row{position:fixed;top:max(${u(72)}, 6vh);left:50%;transform:translateX(-50%);transition:opacity .8s,left .55s var(--tv-ease);display:flex;align-items:flex-start;gap:${u(10)};
-  font-family:var(--tv-sans);
+  font-family:var(--tv-letra-texto);font-variant-numeric:tabular-nums;
   -webkit-font-smoothing:antialiased;font-feature-settings:"tnum" 1;color:var(--tv-text)}
 /* con el panel del agente abierto (a la derecha, hasta ${u(640)} más su margen): centrada en lo que queda a la izquierda */
 .row.side{left:calc((100vw - max(${u(96)}, 5vw) - ${u(672)}) / 2)}
@@ -31,12 +31,12 @@
 .s{font-size:0;opacity:0;color:var(--tv-text-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:opacity .4s,font-size .55s}
 .exp .s{font-size:${u(26)};opacity:1;margin-top:${u(4)}}
 /* la cifra siempre en el color del texto: un acento oscuro no se lee sobre la isla (el acento queda para anillo y barra) */
-.v{flex:none;font-family:var(--tv-serif);font-size:${u(28)};font-weight:400;color:var(--tv-text);letter-spacing:-.01em;display:flex;align-items:center;gap:${u(8)};transition:font-size .55s}
+.v{flex:none;font-size:${u(28)};font-weight:500;color:var(--tv-text);letter-spacing:-.01em;display:flex;align-items:center;gap:${u(8)};transition:font-size .55s}
 .exp .v{font-size:${u(48)};font-weight:380}
 .ring{width:${u(32)};height:${u(32)};transform:rotate(-90deg);transition:width .55s,height .55s}
 .exp .ring{width:${u(52)};height:${u(52)}}
 .ring circle{fill:none;stroke-width:3.2}
-.ring .bg{stroke:rgba(246,243,240,.14)}.ring .fg{stroke:var(--a);stroke-linecap:round;transition:stroke-dashoffset calc(var(--tv-tick) * .9) linear}
+.ring .bg{stroke:rgba(236,230,220,.14)}.ring .fg{stroke:var(--a);stroke-linecap:round;transition:stroke-dashoffset calc(var(--tv-tick) * .9) linear}
 .bar{position:absolute;left:${u(18)};right:${u(18)};bottom:${u(10)};height:${u(3)};border-radius:var(--tv-track-radius);background:var(--tv-track-2);opacity:0;transition:opacity .4s}
 .exp .bar.on{opacity:1}
 .bar i{display:block;height:100%;width:0;border-radius:var(--tv-track-radius);background:var(--a);transition:width calc(var(--tv-tick) * .9) linear}
