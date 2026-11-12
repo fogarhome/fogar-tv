@@ -301,7 +301,7 @@ async function adminScenes(theme, admin) {
     await shot(p, T('hoja-agente-parar'));
     await tap(p, 'Parar'); await shot(p, T('hoja-agente-parado'));
   });
-  // voz: mantener el orbe con el micrófono falso. vstart se contesta aquí (sin Gateway el servidor diría «no disponible»);
+  // voz: mantener pulsada la línea con el micrófono falso. vstart se contesta aquí (sin Gateway el servidor diría «no disponible»);
   // la parcial y la final las manda el servidor, inyectadas. Un toque corto no manda nada y abre el teclado.
   await run('hoja-agente-voz', async p => {
     await tap(p, 'Hablar con Fogar');

@@ -14,12 +14,13 @@ import { openSheet, closeSheet } from '../ui/sheets.js';
 import { voice, audioCtx, ensureAudioCtx, outSel, interruptOn } from './voice.js';
 import { createPcmPlayer } from './pcm-player.js';
 import { talkForm } from './talkform.js';
+import { lineInit, lineStage } from './linea.js';
 
 const QUIT_MS = 5000;                                   // lo que tarda la tele en quitar la respuesta cuando no sonó allí
 const STOPPED = 'Parado.';
 /** La voz de la respuesta cuando es «en el móvil»: va sobre el AudioContext de voice.js. */
 const player = createPcmPlayer(() => audioCtx() || ensureAudioCtx(), () => acts());
-let mic = false;                                        // true: el orbe graba (hay micrófono y HTTPS)
+let mic = false;                                        // true: la línea graba (hay micrófono y HTTPS)
 let out = 'tv';                                         // dónde suena la respuesta en curso
 let quit = false, quitT = 0;                            // «Quitar de la tele» disponible (la tele aún enseña la respuesta)
 let talking = false;                                    // Fogar responde con voz (del primer token a `silent`, `stopped` o `error`)
@@ -71,10 +72,11 @@ function noQuit() { clearTimeout(quitT); quit = false; }
 /** Para lo que suene en el móvil si toca: al interrumpir, o si no hay nada sonando. */
 function cut() { if (interruptOn() || !player.playing()) player.stop(); }
 
-/** Estado de la vista: 'idle' (pídeme algo), 'rec' (grabando con el orbe), 'wait' (un momento) o 'done' (respuesta). */
+/** Estado de la vista: 'idle' (pídeme algo), 'rec' (grabando con la línea), 'wait' (un momento) o 'done' (respuesta). */
 function stage(st) {
   const S = $('#agS');
   S.dataset.st = st;
+  lineStage(st);
   $('#shade').classList.toggle('think', st === 'wait' || st === 'rec');
   $('#agSt').textContent = st === 'wait' ? 'Un momento' : st === 'done' ? 'Fogar' : st === 'rec' ? 'Te escucho… suelta para enviar' : 'Pídeme algo';   // en reposo nadie escucha todavía
   if (st !== 'done') noQuit();
@@ -192,7 +194,7 @@ export const agent = {
   msgs: { talk: onTalk },
   sheets: { agS: {
     open() {
-      const agin = $('#agin'); agin.value = ''; if (!mic) agin.focus(); $('#shade').classList.add('vz');   // con micro, sin teclado encima del orbe
+      const agin = $('#agin'); agin.value = ''; if (!mic) agin.focus(); $('#shade').classList.add('vz');   // con micro, sin teclado encima dla línea
       if ($('#agS').dataset.st === 'wait') stage('wait');   // se cerró mientras pensaba: las luces siguen creciendo
     },
     close() { voice.close(); $('#shade').classList.remove('vz', 'think'); },
@@ -202,6 +204,7 @@ export const agent = {
     const agin = $('#agin');
     stage('idle');
     talkForm.init();
+    lineInit();
     agin.addEventListener('keydown', e => {
       if (e.key !== 'Enter' || e.isComposing) return;
       e.preventDefault(); const v = agin.value.trim();
@@ -214,7 +217,7 @@ export const agent = {
     $('#agStop').addEventListener('click', stop);
     $('#agRetry').addEventListener('click', () => { buzz(8); if (lastAsk) { ask(lastAsk); $('#agStop').focus(); } });   // se oculta: el foco pasa a Parar (sin sacar el teclado)
     $('#agHide').addEventListener('click', () => { buzz(7); noQuit(); acts(); cmd({ t: 'hide' }); });
-    // sin micrófono propio (http): el orbe enfoca el campo y el teclado del móvil trae el suyo
+    // sin micrófono propio (http): la línea enfoca el campo y el teclado del móvil trae el suyo
     if (!mic) $('#agOrb').addEventListener('click', () => { buzz(8); agin.focus(); });
     $('#agX').addEventListener('click', () => { buzz(7); closeSheet(); });
     $('#agC').addEventListener('click', e => {

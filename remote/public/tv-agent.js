@@ -4,7 +4,7 @@
 // Dos formatos, los decide el servidor (src/tv/agent-form.js): `panel` (columna a la derecha con los 2 últimos turnos y las
 // fichas de las herramientas) y `pill` (se ve contenido: arriba en el centro, solo el último turno). Si cambia con la capa
 // abierta, aquí se transforma en cualquiera de los dos sentidos (MORPH: el contenido sale, la membrana viaja con sus muelles
-// a la caja nueva, el orbe la acompaña con FLIP y entra el contenido en su forma nueva).
+// a la caja nueva, la línea la acompaña con FLIP y entra el contenido en su forma nueva).
 // Arrastre con el puntero de la tele (el ratón de verdad, que mueve el trackpad del mando): SOLO la membrana visible
 // recibe el puntero (el resto de la capa no captura nada). Píldora arrastrada hacia la derecha → panel; panel arrastrado
 // hacia el centro o hacia arriba → píldora. Mientras se arrastra, el contenido y la membrana siguen al dedo con resistencia
@@ -22,6 +22,13 @@
 // (sin entradas ni palabras que vuelvan a revelarse). Con `shown` ({ id: [tú, Fogar] }, lo que enseñaba la pestaña que se
 // deja, de revealed()) se restauran esas palabras y el resto se revela como siempre: nace igual que se veía allí.
 // hide(true) quita la capa en seco (la pestaña que se deja).
+// La línea viva (shared/linea-viva.js, que src/tv/tokens.js pone delante) va en la cabecera en lugar del orbe, como en el
+// A3 «Rincón vivo» del lienzo de la tele: escucha, piensa, herramienta, habla, la recta si falla y la palabra al acabar.
+// Nace del logo: la palabra se dibuja en la cabecera al tamaño del logo, se deshace en su sitio (LINE.hold) y luego la
+// línea y el cristal crecen con un solo muelle crítico de 0,4 s; el contenido entra al 90 % del recorrido. Al cerrar, al
+// revés: sale el contenido, el cristal se recoge sobre la línea (que vuelve a escribir «Fogar») y la opacidad cae solo al
+// final. El foco de la línea es una luz debajo del cristal (nunca encima: el texto no pasaría 4,5:1). Con reducir
+// movimiento (o calma, o noche), la forma quieta de cada estado y fundidos de 200 ms al abrir y 120 ms al cerrar.
 // Voz sincronizada (`voice` en la foto, del turno actual; ver src/features/voice-sync.js): la respuesta deja de ir a
 // WORD_MS y sale frase a frase al ritmo de la voz (la frase en curso entera, en tenue) y lo ya dicho se ilumina palabra a
 // palabra. Sin anclas aún, en espera (no se enseña). Al acabar o cortarse la voz, todo a la vista e iluminado.
@@ -59,8 +66,8 @@
       B: { blur: 20, sat: 1, filter: true },
       C: { blur: 0, sat: 1, filter: false, tint: 0.97 },
     },
-    // noche: lámina opaca, sin cristal, sin halo y sin brillos; orbe gris (luz y sombra del degradado)
-    night: { sheet: '#0c0c0c', tint: 1, orb: ['#8a8a8a', '#3a3a3a'] },
+    // noche: lámina opaca, sin cristal, sin halo y sin brillos (la línea, en el gris del texto de noche)
+    night: { sheet: '#0c0c0c', tint: 1 },
     // brillos de la carátula en dos esquinas (a, b), reflejo arriba y sombra abajo. `color`: parte del color de la carátula
     // en el brillo (el resto es tinta), para que una carátula blanca no aclare el fondo del texto
     glow: { a: 0.08, b: 0.06, color: 0.4, sheen: 0.02, shade: 0.10 },
@@ -70,11 +77,12 @@
       day: { main: '#ddd6d0', you: '#c3b7e3', soft: '#d0c9d9', old: '#a39cad' },
       night: { main: '#8a8a8a', you: '#808080', soft: '#808080', old: '#6e6e6e' },
     },
-    warn: '#e3a46f',               // ámbar de los fallos
-    warnOrb: ['#f6dcc2', '#a8683a'], // orbe en error: luz y sombra del degradado (el ámbar va en medio)
-    ink: '#14101a',                // tinta del «!» sobre ámbar (ficha y orbe): ≥ 3:1 en todo el degradado
-    orb: ['#7c6aae', '#6e8cc4'],   // malva y cielo, sin carátula
-    orbLight: '#efe9fb',           // brillo del orbe
+    warn: '#e3a46f',               // ámbar de los fallos (también la línea, recta, cuando algo falla)
+    ink: '#14101a',                // tinta del «!» sobre ámbar de la ficha: ≥ 3:1
+    lights: ['#7c6aae', '#6e8cc4'], // malva y cielo de los brillos sin carátula (hasta la fase 4)
+    // la línea viva (fogar-brand): hueso-tele en reposo, contra al escuchar, pensar y usar una herramienta, y la llama al
+    // hablar (chispa, llama y ascua de arriba abajo). `foco`: su luz, debajo del cristal, como mucho al 42 %
+    line: { rest: '#d6cfc5', contra: '#7cc792', speak: ['#ffe1b8', '#ee6a2c', '#b8361a'], foco: 0.42 },
     media: {                       // tarjeta de contenido (Netflix): su rojo y la tinta del degradado de lectura sobre la imagen
       red: '#e50914', redOn: '#ff2a35', shade: '16,12,22', fade: [0.95, 0.78], play: 0.45,
     },
@@ -88,17 +96,18 @@
   const FLUSH_MS = 1200;           // con live:false, lo que falte sale en este tiempo como mucho
   const MIN_TICK_MS = 40;          // paso mínimo del revelado (al vaciar la cola salen varias palabras por paso)
   const LONG_REPLY = 120;          // caracteres a partir de los que la respuesta va con letra algo menor
-  const FADE_MS = 650;             // fundido de cierre hacia el orbe
-  const REMOVE_SAFETY_MS = 2000;   // si el rAF no corre (pestaña oculta), la capa se quita igual tras este tiempo
+  const REMOVE_SAFETY_MS = 3000;   // si el rAF no corre (pestaña oculta), la capa se quita igual tras este tiempo
   const LOG_KEEP = 8;              // frases en la región accesible
   const VOICE_TICK_MS = 50;        // con voz, cada cuánto se mira por dónde va (solo se toca el DOM si cambia)
   const VOICE_FADE_MS = 150;       // la palabra dicha pasa de tenue a iluminada en esto
   const VOICE_ANCHORS_MAX = 200;   // anclas de la voz que se aceptan (las últimas)
   const SENTENCE_END = /[.!?…:]["'»)\]]*$/; // palabra que cierra frase (con su cierre de comillas o paréntesis)
   const WORD_DONE = /[\s.,;:!?¡¿…»"')]$/;  // la respuesta en directo acaba en palabra entera (si no, la última espera)
-  const SPRING = {                 // muelles por borde: crece rápido y con algo de rebote, encoge despacio
-    grow: { k: 230, c: 21 },
-    shrink: { k: 105, c: 16 },
+  // un solo muelle para la línea y el cristal (A3): amortiguamiento 1 y respuesta de 0,4 s (ω = 2π / 0,4 ≈ 15,7)
+  const ONE = { k: 15.7 * 15.7, c: 2 * 15.7 };
+  const SPRING = {                 // muelles por borde: los mismos para crecer y encoger
+    grow: ONE,
+    shrink: ONE,
     calm: { k: 300, c: 2 * Math.sqrt(300) }, // críticamente amortiguado: sin rebote
     // panel → píldora: el viaje es largo (medio ancho de pantalla), así que muelles más blandos y casi sin rebote para que
     // dure ~900 ms sin latigazos; los que encogen, aún más suaves. En calma, críticamente amortiguado
@@ -106,9 +115,16 @@
   };
   const RADIUS_U = { pill: 70, open: 64, rest: 48 }; // radio de las esquinas (en --u): píldora, escuchando/pensando, resto
   // pulso de la membrana (amp, 0–1): lo que suma cada evento, cuánto queda tras 1 s y el mínimo por estado (escucha late)
-  // `voice`: el pulso con tu voz a tope (level 1), mientras escucha: el orbe crece hasta 1 + voice·ORB_SCALE
+  // `voice`: el pulso con tu voz a tope (level 1), mientras escucha
   const PULSE = { gain: 0.4, word: 0.6, event: 1, keep: 0.05, rest: 0.01, think: 0.05, voice: 0.5, listen: { base: 0.14, depth: 0.06, hz: 2.6 } };
-  const ORB_SCALE = 0.28;          // cuánto crece el orbe con el pulso
+  // la línea en la cabecera (en --u): ancho y grosor del trazo por forma (el lienzo de la línea es 1000 × 420); `logo`:
+  // de qué tamaño nace (el logo del A3, 300 de 560); `hold`: ms que se deshace la palabra antes de viajar; `on`: recorrido
+  // del cristal a partir del que entra el contenido; `fade`: --u de crecimiento en los que el cristal pasa de 0 a 1;
+  // `out`: ms que tarda en salir el contenido al cerrar (y espera el cristal); `gone`: fundido final de la línea
+  const LINE = { panel: { w: 360, px: 4 }, pill: { w: 200, px: 3.4 }, logo: 300 / 560, hold: 140, on: 0.9, fade: 90, out: 150, gone: 120,
+    // foco: radio (por ancho de la línea), alto/ancho, centro bajo la línea y envolventes (s) de entrada y salida
+    foco: { r: 1040 / 560, ry: 300 / 520, cy: 0.21, in: 0.1, out: 0.067 } };
+  const CALM_MS = { in: 200, out: 120 }; // reducir movimiento: fundidos en lugar del crecimiento
   const RADIUS_RATE = 4;           // 1/s: velocidad con la que el radio va al de su estado
   const MAX_DT = 0.05;             // s: un frame largo (pestaña de fondo) no hace saltar los muelles
   const SUBSTEP_HZ = 120;          // pasos de integración por segundo
@@ -126,7 +142,7 @@
   // con transparencia reducida, más contraste, colores forzados o sin backdrop-filter: lámina opaca (nivel C)
   const FORCE_C_QUERY = '(prefers-reduced-transparency: reduce), (prefers-contrast: more), (forced-colors: active)';
   const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
-  // panel → píldora (ms): sale el contenido, viaja la membrana (muelles) y el orbe (FLIP), y entra la píldora solapada al
+  // panel → píldora (ms): sale el contenido, viaja la membrana (muelles) y la línea (FLIP), y entra la píldora solapada al
   // final del viaje. En calma (o de noche) todo más corto; la membrana ya va críticamente amortiguada
   const MORPH = {
     normal: { out: 250, travel: 900, overlap: 300, in: 300, blur: 6 },
@@ -138,7 +154,7 @@
   const FONT_TEXTO = 'TV Figtree';
   const TEXTO_STACK = `"${FONT_TEXTO}","Figtree",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif`;
   // animaciones de entrada: al acabar, su elemento queda marcado (.sd) y no se repiten
-  const ENTRY_ANIMS = new Set(['wIn', 'wInCalm', 'fadeIn', 'bud', 'draw']);
+  const ENTRY_ANIMS = new Set(['wIn', 'wInCalm', 'bud', 'draw']);
   const CHECK_D = 'M5 12.5l4.5 4.5L19 7.5';
   const SVG_NS = 'http://www.w3.org/2000/svg';
   // primitivas y atributos permitidos en los iconos que manda el servidor (datos, no HTML)
@@ -160,8 +176,6 @@
   // no cambia; `hold`: ms que se mantiene la forma elegida aunque las fotos sigan con la vieja (hasta que el servidor la
   // confirme); `pts`: puntos del gesto que se guardan como mucho
   const DRAG = { start: 8, swap: 150, flick: 0.9, win: 90, flickMin: 40, band: 240, back: 380, hold: 1500, pts: 64 };
-  // estados en los que el orbe respira (en el resto está quieto: una animación infinita repinta sin parar)
-  const BREATHE_STATES = ['listen', 'think'];
   // estilos que el navegador pone a [popover] (tamaño ajustado, margen, borde, fondo Canvas…): el host los anula
   const HOST_CSS = 'position:fixed;inset:0;z-index:2147483647;pointer-events:none;overflow:visible;'
     + 'width:auto;height:auto;max-width:none;max-height:none;margin:0;padding:0;border:0;background:transparent';
@@ -176,7 +190,7 @@
   --u:min(calc(100vw / 1920), calc(100vh / 1080));
   /* área segura contra el sobrebarrido: al menos 5 % del ancho y 6 % del alto */
   --mx:max(${u(SAFE.x.u)}, ${SAFE.x.pct}vw);--my:max(${u(SAFE.y.u)}, ${SAFE.y.pct}vh)}
-.w{--la:${LOOK.orb[0]};--lb:${LOOK.orb[1]};--sheet:${LOOK.sheet};--tint:${LOOK.ctx.idle.tint};--br:${LOOK.ctx.idle.bright};
+.w{--la:${LOOK.lights[0]};--lb:${LOOK.lights[1]};--sheet:${LOOK.sheet};--tint:${LOOK.ctx.idle.tint};--br:${LOOK.ctx.idle.bright};
   --blur:${u(LOOK.tiers.A.blur)};--sat:${LOOK.tiers.A.sat};
   --t-main:${TXT.day.main};--t-you:${TXT.day.you};--t-soft:${TXT.day.soft};--t-old:${TXT.day.old};--warn:${LOOK.warn};--ink:${LOOK.ink};
   font-family:var(--tv-letra-texto);color:var(--t-main);-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
@@ -187,8 +201,16 @@ ${Object.entries(LOOK.tiers).map(([k, v]) => `.w[data-tier=${k}]{--blur:${u(v.bl
 
 /* cristal: dos capas hermanas del contenido, colocadas por el rAF (left/top/width/height y radios). El velo cambia de
    tinte con la página (ctx) sin saltar */
-.halo,.body{position:fixed;left:0;top:0;width:0;height:0;pointer-events:none;transition:opacity .6s var(--tv-ease)}
-.body{transition:opacity .6s var(--tv-ease),background-color .6s var(--tv-ease)}
+.foco,.halo,.body{position:fixed;left:0;top:0;width:0;height:0;pointer-events:none}
+/* la opacidad del cristal la escribe el rAF (sale de su tamaño: nace del logo); en calma, un fundido */
+.body{transition:background-color .6s var(--tv-ease)}
+.w[data-calm] :is(.foco,.halo,.body){transition:opacity ${CALM_MS.in}ms ease-out,background-color .6s var(--tv-ease)}
+.w[data-calm] :is(.foco,.halo,.body).off{transition-duration:${CALM_MS.out}ms}
+/* el foco de la línea: debajo del cristal (lo coge su backdrop-filter) y recortado a su caja */
+.foco{overflow:hidden;opacity:0}
+.foco i{position:absolute;left:0;top:0;border-radius:50%;
+  background:radial-gradient(closest-side,var(--fc),color-mix(in srgb,var(--fc) 35%,transparent) 50%,transparent)}
+.w[data-night] .foco{display:none}
 /* solo la membrana visible recibe el puntero de la tele (para arrastrarla); cerrándose, ya no */
 .body{pointer-events:auto;cursor:grab;touch-action:none}
 .body.off,.w[data-pass] .body{pointer-events:none}
@@ -213,8 +235,9 @@ ${NO_BACKDROP}{-webkit-backdrop-filter:none;backdrop-filter:none}
 
 /* contenido */
 .sheet{position:fixed;box-sizing:border-box;display:flex;min-width:0}
-.sheet>*{animation:fadeIn .6s .25s var(--tv-ease) backwards;transition:opacity .3s}
-.sheet.gone>*{opacity:0}
+/* el contenido entra cuando el cristal ha hecho el 90 % de su recorrido (data-on) y sale el primero al cerrar */
+.st,.tn{transition:opacity 200ms cubic-bezier(.23,1,.32,1)}
+.w:not([data-on]) :is(.st,.tn){opacity:0;transition-duration:${LINE.out}ms}
 .w[data-form=panel] .sheet{right:var(--mx);top:var(--my);width:min(${u(640)}, calc(100vw - 2 * var(--mx)));
   max-height:calc(100vh - 2 * var(--my));flex-direction:column;gap:${u(22)};padding:${u(34)} ${u(44)} ${u(40)}}
 .w[data-form=panel][data-ctx=web] .sheet{width:min(${u(580)}, calc(100vw - 2 * var(--mx)))}
@@ -238,7 +261,7 @@ ${NO_BACKDROP}{-webkit-backdrop-filter:none;backdrop-filter:none}
 .w[data-form=pill] .u{font-size:${u(30)}}
 .u:empty,.j:empty,.hint:empty{display:none}
 .hint{font:400 ${u(26)}/1.3 var(--tv-letra-texto);color:var(--t-soft)}
-/* lo que hace Fogar, en palabras, junto al orbe (a 3 m el orbe solo no se distingue; en calma, sin satélite, es lo único) */
+/* lo que hace Fogar, en palabras, junto a la línea (a 3 m, en calma, la forma quieta no basta) */
 .st{font:400 ${u(26)}/1.3 var(--tv-letra-texto);color:var(--t-soft);margin-left:${u(20)};white-space:nowrap}
 .st:empty{display:none}
 /* el turno anterior se atenúa por color, nunca por opacidad */
@@ -261,27 +284,11 @@ ${NO_BACKDROP}{-webkit-backdrop-filter:none;backdrop-filter:none}
    forwards, así que al acabar su entrada la palabra se queda en el tenue de esta regla */
 .j[data-voice] .wd:not(.said){opacity:.45}
 @keyframes wIn{from{opacity:0;filter:blur(${u(4)})}}
-@keyframes fadeIn{from{opacity:0}}
 
-/* orbe: escucha (anillo), piensa (satélite), error (ámbar con «!»); solo respira mientras escucha o piensa */
-.orbe{position:relative;width:${u(64)};height:${u(64)};flex:none}
-${BREATHE_STATES.map(k => `.w[data-state=${k}] .orbe`).join(',')}{animation:breathe 3.4s ease-in-out infinite}
-.w[data-form=pill] .orbe{width:${u(56)};height:${u(56)}}
-.orbe i{position:absolute;inset:0;border-radius:50%;
-  background:radial-gradient(circle at 34% 28%,${LOOK.orbLight},var(--la) 52%,var(--lb) 125%);
-  box-shadow:0 0 ${u(30)} color-mix(in srgb,var(--la) 55%,transparent),0 0 0 calc(var(--ring, 0) * ${u(26)}) color-mix(in srgb,var(--tv-accent) 30%,transparent)}
-.orbe::after{content:"";position:absolute;left:50%;top:50%;width:${u(16)};height:${u(16)};margin:${u(-8)};border-radius:50%;
-  background:var(--tv-accent);opacity:0;transition:opacity .5s}
-.w[data-state=think] .orbe::after{opacity:1;animation:sat 3.1s linear infinite}
-.w[data-form=pill][data-state=think] .orbe::after{animation-name:sat2}
-.w[data-state=error] .orbe::before{content:"!";position:absolute;inset:0;display:grid;place-items:center;z-index:2;
-  font:500 ${u(28)}/1 var(--tv-letra-texto);color:var(--ink)}
-.w[data-state=error] .orbe i{background:radial-gradient(circle at 34% 28%,${LOOK.warnOrb[0]},var(--warn) 60%,${LOOK.warnOrb[1]});
-  box-shadow:0 0 0 ${u(6)} color-mix(in srgb,var(--warn) 25%,transparent)}
-.w[data-night] .orbe i{background:radial-gradient(circle at 34% 28%,${LOOK.night.orb[0]},${LOOK.night.orb[1]} 70%);box-shadow:none}
-@keyframes breathe{50%{transform:scale(1.06)}}
-@keyframes sat{to{transform:rotate(360deg) translateY(${u(-44)})}}
-@keyframes sat2{to{transform:rotate(360deg) translateY(${u(-38)})}}
+/* la línea viva: un canvas que pinta el rAF; nace al tamaño del logo (transform desde la esquina) y se funde al final */
+.lv{display:block;flex:none;width:${u(LINE.panel.w)};height:${u(LINE.panel.w * 0.42)};transform-origin:0 0}
+.w[data-form=pill] .lv{width:${u(LINE.pill.w)};height:${u(LINE.pill.w * 0.42)}}
+.lv.off{opacity:0;transition:opacity ${LINE.gone}ms ease-out}
 
 /* fichas de herramienta: icono, título, detalle y giro → check o «!» ámbar */
 .tcs{display:flex;flex-direction:column;align-items:flex-start;gap:${u(12)}}
@@ -373,8 +380,6 @@ ${BREATHE_STATES.map(k => `.w[data-state=${k}] .orbe`).join(',')}{animation:brea
 .w[data-calm] .md[data-press] .mplay::after{animation:none}
 
 /* calma (o noche): nada ondula ni gira deprisa; las palabras entran sin desenfoque */
-.w[data-calm] .orbe,.w[data-calm] .orbe::after{animation:none}
-.w[data-calm][data-state=think] .orbe::after{opacity:0}
 .w[data-calm] .wd{animation-duration:.2s;animation-name:wInCalm;transition:none}
 @keyframes wInCalm{from{opacity:0}}
 .w[data-calm] .spin{animation-duration:2.4s}
@@ -385,7 +390,7 @@ ${BREATHE_STATES.map(k => `.w[data-state=${k}] .orbe`).join(',')}{animation:brea
 
   // ── Estado de la capa
   /** @type {any} */ let host = null;
-  /** @type {any} */ let dom = null;   // { root, w, halo, body, sheet, orb, ring, log, sr, alert }
+  /** @type {any} */ let dom = null;   // { root, w, foco, fi, halo, body, sheet, hd, lv, st, log, sr, alert }
   /** @type {any} */ let last = null;  // última foto saneada
   let open = false, closing = false, closedAt = 0;
   let raf = 0, lastT = 0, removeT = 0, revealT = 0, revealAt = 0, flushBy = 0;
@@ -415,6 +420,14 @@ ${BREATHE_STATES.map(k => `.w[data-state=${k}] .orbe`).join(',')}{animation:brea
   /** @type {any} */ let edge = null;
   const vel = { l: 0, t: 0, r: 0, b: 0 };
   let amp = 0, radius = 0, stillFrames = 0;
+  // la línea: su motor (null si no cargó shared/linea-viva.js: la capa sigue sin ella), su escala (nace al tamaño del logo)
+  // y su velocidad, hasta cuándo espera a viajar, los colores que se pintan (van hacia los del estado) y la envolvente del
+  // foco; `goneAt`: cuándo empezó el fundido final al cerrar; `cost`: lo que tarda por frame (ms, media) el motor y el dibujo
+  /** @type {any} */ let lvEng = null;
+  let lvS = 1, lvV = 0, holdUntil = 0, fa = 0, goneAt = 0, lineDirty = true;
+  /** @type {number[][]} */ let stops = [];
+  /** @type {number[][]} */ let stopsTo = [];
+  const cost = { frames: 0, step: 0, draw: 0 };
   let drift = 0;                    // fuerza de la deriva lenta de las esquinas (0–1): se apaga con la membrana quieta
   const phase = Array.from({ length: 8 }, (_, i) => i * 0.79 + 0.3); // fases fijas: la membrana no depende de Math.random
 
@@ -525,28 +538,37 @@ ${BREATHE_STATES.map(k => `.w[data-state=${k}] .orbe`).join(',')}{animation:brea
       root.addEventListener('animationend', e => { if (ENTRY_ANIMS.has(e.animationName) && e.target && e.target.classList) e.target.classList.add('sd'); });
     }
     const w = el('div', 'w');
-    // el aspecto de la foto ya al nacer (antes de entrar en la página, que calcula estilos): el velo y el satélite del orbe
+    // el aspecto de la foto ya al nacer (antes de entrar en la página, que calcula estilos): el velo y el color de la línea
     // no hacen su transición desde los valores de partida
     if (last) { setData(w, 'ctx', last.ctx); setData(w, 'state', last.state); setData(w, 'tier', tierNow()); setFlag(w, 'data-night', last.night); setFlag(w, 'data-calm', calmNow()); }
+    // restaurada (o en calma) no hay nacimiento: el contenido, ya a la vista
+    setFlag(w, 'data-on', restoring || calmNow());
     // restaurada tras navegar: el cristal ya está (sin fundido de entrada, que dejaría el texto un instante sin cristal)
     const off = restoring ? '' : ' off';
-    const halo = el('div', 'halo' + off), body = el('div', 'body' + off);
+    const halo = el('div', 'halo' + off), body = el('div', 'body' + off), foco = el('div', 'foco'), fi = el('i');
+    foco.appendChild(fi);
     const sheet = el('div', 'sheet');
     const sd = restoring ? ' sd' : ''; // restaurada: la cabecera y el log ya estaban
     sheet.setAttribute('aria-hidden', 'true'); // el texto accesible va en la región role=log
-    const hd = el('div', 'hd' + sd), orb = el('div', 'orbe'), ring = el('i'), st = el('span', 'st');
-    orb.appendChild(ring); hd.append(orb, st);
+    const hd = el('div', 'hd' + sd), lv = el('canvas', 'lv'), st = el('span', 'st');
+    lv.setAttribute('aria-hidden', 'true');
+    if (!restoring && !calmNow()) lv.style.transform = 'scale(' + LINE.logo.toFixed(4) + ')';   // ya al tamaño del logo en el primer frame
+    hd.append(lv, st);
     const log = el('div', 'log' + sd);
     sheet.append(hd, log);
     const sr = el('div', 'sr'); sr.setAttribute('role', 'log'); sr.setAttribute('aria-live', 'polite');
     const alert = el('div', 'sr'); alert.setAttribute('role', 'alert');
-    w.append(halo, body, sheet, sr, alert);
+    w.append(foco, halo, body, sheet, sr, alert);
     root.appendChild(w);
     parent.appendChild(host);
     lift(false);
-    dom = { root, w, halo, body, sheet, hd, orb, ring, st, log, sr, alert };
+    dom = { root, w, foco, fi, halo, body, sheet, hd, lv, st, log, sr, alert };
     grab(body);
     edge = null; amp = 0; radius = 0; drift = 0; curId = null; lastSig = ''; seed = restoring;
+    const born = restoring || calmNow();
+    lvS = born ? 1 : LINE.logo; lvV = 0; fa = 0; goneAt = 0; lineDirty = true; stops = []; stopsTo = [];
+    holdUntil = born ? 0 : performance.now() + LINE.hold;
+    try { const LV = window.FogarLineaViva; lvEng = LV ? LV.make() : null; if (lvEng) lvEng.still('rest'); } catch { lvEng = null; }   // nace escrita: el logo
     turns.clear(); // host nuevo (la página lo quitó, o tras cerrar): los turnos se vuelven a pintar desde la foto
     if (resizeObs) resizeObs.disconnect();
     resizeObs = typeof ResizeObserver === 'function' ? new ResizeObserver(() => wake()) : null;
@@ -658,7 +680,8 @@ ${BREATHE_STATES.map(k => `.w[data-state=${k}] .orbe`).join(',')}{animation:brea
     setFlag(w, 'data-calm', calmNow());
     const label = stateLabel(s);
     if (dom.st.textContent !== label) dom.st.textContent = label;
-    const [la, lb] = s.colors || LOOK.orb;
+    lineState(s);
+    const [la, lb] = s.colors || LOOK.lights;
     if (w.style.getPropertyValue('--la') !== la) w.style.setProperty('--la', la);
     if (w.style.getPropertyValue('--lb') !== lb) w.style.setProperty('--lb', lb);
     const ids = new Set(s.turns.map(t => t.id));
@@ -695,6 +718,21 @@ ${BREATHE_STATES.map(k => `.w[data-state=${k}] .orbe`).join(',')}{animation:brea
       speak(v, t, current && s.live);
     });
   }
+  // la línea según la foto: escucha, piensa (herramienta si hay una ficha en marcha), habla, la recta si falla y, al acabar,
+  // la palabra. En calma, la forma quieta. Los colores van hacia los del estado (de noche, el gris de su texto)
+  function lineState(s) {
+    const t = s.turns[s.turns.length - 1];
+    const k = s.state === 'listen' ? 'listen' : s.state === 'talk' ? 'speak' : s.state === 'error' ? 'line'
+      : s.state === 'think' ? (t && t.tools.some(x => x.status === 'run') ? 'tool' : 'think') : 'rest';
+    const L = LOOK.line, c = s.night ? [TXT.night.main] : k === 'speak' ? L.speak : k === 'line' ? [LOOK.warn] : k === 'rest' ? [L.rest] : [L.contra];
+    stopsTo = [0, 1, 2].map(i => rgb(c[Math.min(i, c.length - 1)]));
+    if (!stops.length || calmNow()) stops = stopsTo.map(x => x.slice());
+    if (dom.w.style.getPropertyValue('--fc') !== c[Math.min(1, c.length - 1)]) dom.w.style.setProperty('--fc', c[Math.min(1, c.length - 1)]);
+    if (!lvEng) return;
+    if (calmNow()) { if (lvEng.state !== k) { lvEng.still(k); lineDirty = true; } }
+    else if (!closing) lvEng.go(k, performance.now() / 1000);
+  }
+  const rgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
   // «Te escucho…» hasta tu primera palabra y «Pensando…» hasta la primera suya (o una ficha, que ya dice qué hace)
   function stateLabel(s) {
     const t = s.turns[s.turns.length - 1];
@@ -739,13 +777,14 @@ ${BREATHE_STATES.map(k => `.w[data-state=${k}] .orbe`).join(',')}{animation:brea
     setData(w, 'morph', 'out');
     later(M.out, () => {
       if (!dom) return;
-      const a = dom.orb.getBoundingClientRect();           // FLIP: dónde está el orbe (donde lo dejó el dedo, si se arrastró)…
+      const a = dom.lv.getBoundingClientRect();            // FLIP: dónde está la línea (donde la dejó el dedo, si se arrastró)…
       dom.sheet.style.transform = '';                      // el contenido, ya oculto, vuelve a su sitio
       setData(w, 'form', to); setData(w, 'morph', 'travel'); morph.phase = 'travel'; traveling = true;
-      const b = dom.orb.getBoundingClientRect();           // …y dónde va en la forma nueva (el orbe es el ancla del paso)
-      if (typeof dom.orb.animate === 'function' && b.width && b.height) {
+      const b = dom.lv.getBoundingClientRect();            // …y dónde va en la forma nueva (la línea es el ancla del paso)
+      lineDirty = true;                                    // otro tamaño: se vuelve a pintar
+      if (typeof dom.lv.animate === 'function' && b.width && b.height) {
         const dx = a.left - b.left, dy = a.top - b.top, k = a.width / b.width;
-        dom.orb.animate([{ transform: `translate(${dx}px, ${dy}px) scale(${k})`, transformOrigin: '0 0' }, { transform: 'none', transformOrigin: '0 0' }],
+        dom.lv.animate([{ transform: `translate(${dx}px, ${dy}px) scale(${k})`, transformOrigin: '0 0' }, { transform: 'none', transformOrigin: '0 0' }],
           { duration: M.travel, easing: MORPH.ease });
       }
       kick(PULSE.event);
@@ -1010,7 +1049,11 @@ ${BREATHE_STATES.map(k => `.w[data-state=${k}] .orbe`).join(',')}{animation:brea
     const settled = step(m, dt, now / 1000);
     write(m, now / 1000);
     if (settled && !morph) traveling = false;
-    if (closing && settled && now - closedAt >= FADE_MS) return finish();
+    // cerrando: asentada sobre la línea, la línea se funde y se quita (en calma, al acabar el fundido del cristal)
+    if (closing && settled) {
+      if (calmNow()) { if (now - closedAt >= CALM_MS.out) return finish(); }
+      else { if (!goneAt) { goneAt = now; dom.lv.classList.add('off'); } if (now - goneAt >= LINE.gone) return finish(); }
+    }
     if (settled && !closing) { if (++stillFrames >= SETTLE.frames && !deferred) return; } else stillFrames = 0;
     raf = requestAnimationFrame(frame);
     // ya nació en su caja: ahora la foto que esperaba. Después de pedir el frame siguiente, para que su wake() no pida otro
@@ -1020,24 +1063,47 @@ ${BREATHE_STATES.map(k => `.w[data-state=${k}] .orbe`).join(',')}{animation:brea
   // LEER: todo lo que fuerza el cálculo de la página, antes de escribir nada
   function read() {
     const U = Math.min(innerWidth / 1920, innerHeight / 1080);
-    const target = closing ? dom.orb.getBoundingClientRect() : dom.sheet.getBoundingClientRect();
+    // la línea (su caja sin la escala con la que nace) y el logo: esa caja al tamaño del logo, desde su esquina
+    const lr = dom.lv.getBoundingClientRect(), k = lvS || 1, lw = lr.width / k, lh = lr.height / k;
+    const logo = { left: lr.left, top: lr.top, right: lr.left + lw * LINE.logo, bottom: lr.top + lh * LINE.logo };
+    const target = closing && !calmNow() ? logo : dom.sheet.getBoundingClientRect();
     // el log se pega abajo (flex-end): lo que sobra sale por arriba y no cuenta en scrollHeight, así que se mide la caja
     const first = Array.prototype.find.call(dom.log.children, c => c.getClientRects().length > 0); // en la píldora, el anterior no se ve
     const over = !closing && !!first && first.getBoundingClientRect().top < dom.log.getBoundingClientRect().top - OVERFLOW_PX * U;
     // área segura (como --mx/--my): el cristal no la invade aunque el muelle se pase; si el contenido ya está fuera, se respeta
     const { x: sx, y: sy } = safeOf(U);
     const safe = { l: Math.min(target.left, sx), t: Math.min(target.top, sy), r: Math.max(target.right, innerWidth - sx), b: Math.max(target.bottom, innerHeight - sy) };
-    return { U, target, over, safe };
+    return { U, target, over, safe, lr, lw, lh, logo };
   }
   // CALCULAR: muelles por borde y radio; devuelve si todo está quieto
   function step(m, dt, time) {
     const T = { l: m.target.left, t: m.target.top, r: m.target.right, b: m.target.bottom };
     if (seed) { edge = { ...T }; vel.l = vel.t = vel.r = vel.b = 0; seed = false; } // restaurada: ya en su caja
     if (drag && drag.on) { edge = { ...T }; vel.l = vel.t = vel.r = vel.b = 0; }      // arrastrando: pegada al contenido
-    if (!edge) { const cx = (T.l + T.r) / 2, cy = (T.t + T.b) / 2; edge = { l: cx, t: cy, r: cx, b: cy }; } // nace del centro
     const calm = calmNow(), n = Math.max(1, Math.ceil(dt * SUBSTEP_HZ)), h = dt / n;
-    let moving = false;
-    for (const k of ['l', 't', 'r', 'b']) {
+    // nace del logo (en calma, ya en su caja: el fundido es la entrada)
+    if (!edge) edge = calm ? { ...T } : { l: m.logo.left, t: m.logo.top, r: m.logo.right, b: m.logo.bottom };
+    // la palabra se deshace en el logo antes de viajar (y al cerrar, el contenido sale antes de recogerse)
+    const held = !calm && time * 1000 < holdUntil;
+    let moving = held;
+    // la línea: su escala con el mismo muelle que el cristal; el motor, a su paso fijo
+    const lt = closing && !calm ? LINE.logo : 1;
+    if (calm) lvS = lt;
+    else if (!held) for (let j = 0; j < n; j++) { lvV += (ONE.k * (lt - lvS) - ONE.c * lvV) * h; lvS += lvV * h; }
+    if (Math.abs(lt - lvS) > 0.001 || Math.abs(lvV) > 0.01) moving = true; else { lvS = lt; lvV = 0; }
+    if (lvEng && !calm) {
+      const c0 = performance.now();
+      lvEng.advance(time);
+      cost.step += (performance.now() - c0 - cost.step) * 0.1;
+      if (!lvEng.settled()) { moving = true; lineDirty = true; }
+    }
+    // el foco: envolvente de entrada (300 ms) y de salida (200 ms); en calma, el fundido es de CSS
+    const ft = open && !closing ? 1 : 0;
+    fa = calm ? ft : fa + (ft - fa) * (1 - Math.exp(-dt / (ft > fa ? LINE.foco.in : LINE.foco.out)));
+    if (Math.abs(ft - fa) > 0.005) moving = true; else fa = ft;
+    // los colores de la línea van hacia los del estado (0,25 s)
+    stops.forEach((c, i) => c.forEach((v, j) => { const d = stopsTo[i][j] - v; if (Math.abs(d) > 0.5) { c[j] = v + d * (1 - Math.exp(-dt / 0.25)); moving = true; lineDirty = true; } else c[j] = stopsTo[i][j]; }));
+    for (const k of held ? [] : ['l', 't', 'r', 'b']) {
       let x = edge[k], vv = vel[k];
       const tg = T[k], grow = k === 'l' || k === 't' ? tg < x : tg > x;
       const S = traveling ? SPRING.travel : SPRING;
@@ -1052,7 +1118,7 @@ ${BREATHE_STATES.map(k => `.w[data-state=${k}] .orbe`).join(',')}{animation:brea
     // al cerrar no hay mínimo: la capa se asienta y se quita al acabar el fundido, no por el temporizador de seguridad
     const floor = calm || closing ? 0 : state === 'listen' ? L.base + L.depth * Math.sin(time * L.hz) : state === 'think' ? PULSE.think : 0;
     if (calm) amp = 0; else if (amp < floor) amp = floor;
-    const want = closing ? (m.target.right - m.target.left) / 2 / m.U
+    const want = closing ? RADIUS_U.rest
       : last && last.form === 'pill' ? RADIUS_U.pill : state === 'listen' || state === 'think' ? RADIUS_U.open : RADIUS_U.rest;
     const rt = want * m.U;
     radius = radius ? radius + (rt - radius) * Math.min(1, dt * RADIUS_RATE) : rt;
@@ -1062,7 +1128,7 @@ ${BREATHE_STATES.map(k => `.w[data-state=${k}] .orbe`).join(',')}{animation:brea
     drift = Math.min(1, Math.max(0, drift + (lively ? 1 : -1) * WOBBLE.fade * dt));
     return !moving && !drag && !backAnim && amp < PULSE.rest && drift === 0;
   }
-  // ESCRIBIR: geometría y radios del cristal, anillo del orbe y difuminado del log
+  // ESCRIBIR: geometría, radios y opacidad del cristal, el foco, la línea y el difuminado del log
   function write(m, time) {
     const mod = calmNow() ? 0 : WOBBLE.tier[dom.w.dataset.tier] || 0, slow = WOBBLE.slow * drift, rx = [], ry = [];
     for (let q = 0; q < 4; q++) {
@@ -1072,15 +1138,40 @@ ${BREATHE_STATES.map(k => `.w[data-state=${k}] .orbe`).join(',')}{animation:brea
       ry.push((radius * (1 + mod * slow * Math.sin(time * (WOBBLE.fy[0] + WOBBLE.fy[1] * q) + phase[q + 4]))).toFixed(1));
     }
     const S = m.safe, l = Math.max(S.l, edge.l), t = Math.max(S.t, edge.t), r = Math.min(S.r, edge.r), b = Math.min(S.b, edge.b);
+    const W = Math.max(1, r - l), H = Math.max(1, b - t), cap = v => Math.min(W / 2, H / 2, v).toFixed(1);
     const g = {
-      left: l.toFixed(1) + 'px', top: t.toFixed(1) + 'px',
-      width: Math.max(1, r - l).toFixed(1) + 'px', height: Math.max(1, b - t).toFixed(1) + 'px',
-      borderRadius: rx.join('px ') + 'px / ' + ry.join('px ') + 'px',
+      left: l.toFixed(1) + 'px', top: t.toFixed(1) + 'px', width: W.toFixed(1) + 'px', height: H.toFixed(1) + 'px',
+      borderRadius: rx.map(cap).join('px ') + 'px / ' + ry.map(cap).join('px ') + 'px',
     };
-    for (const k in g) { dom.body.style[k] = g[k]; dom.halo.style[k] = g[k]; }
-    dom.ring.style.transform = 'scale(' + (1 + amp * ORB_SCALE).toFixed(3) + ')';
-    dom.ring.style.setProperty('--ring', amp.toFixed(2));
+    for (const k in g) { dom.body.style[k] = g[k]; dom.halo.style[k] = g[k]; dom.foco.style[k] = g[k]; }
+    // la opacidad sale del tamaño: el cristal nace del logo y solo se apaga en los últimos LINE.fade, ya del tamaño del logo
+    const calm = calmNow(), w0 = m.logo.right - m.logo.left, tw = m.target.right - m.target.left;
+    const op = calm ? '' : Math.min(1, Math.max(0, (W - w0) / (LINE.fade * m.U))).toFixed(3);
+    if (dom.body.style.opacity !== op) { dom.body.style.opacity = op; dom.halo.style.opacity = op; }
+    // el contenido entra con el cristal al 90 % de su recorrido
+    if (!closing && !dom.w.hasAttribute('data-on') && (tw - w0 <= 0 || (W - w0) / (tw - w0) >= LINE.on)) setFlag(dom.w, 'data-on', true);
+    // el foco: centrado en la línea, debajo del cristal y recortado a él
+    const lw = m.lw * lvS, R = LINE.foco.r * lw, Ry = R * LINE.foco.ry, cx = m.lr.left + lw / 2, cy = m.lr.top + lw * LINE.foco.cy;
+    const fi = dom.fi.style;
+    fi.left = (cx - R - l).toFixed(1) + 'px'; fi.top = (cy - Ry - t).toFixed(1) + 'px'; fi.width = (2 * R).toFixed(1) + 'px'; fi.height = (2 * Ry).toFixed(1) + 'px';
+    dom.foco.style.opacity = (fa * LOOK.line.foco * (0.55 + 0.45 * (lvEng ? lvEng.env : 0.35))).toFixed(3);
+    const tf = lvS === 1 ? '' : 'scale(' + lvS.toFixed(4) + ')';
+    if (dom.lv.style.transform !== tf) dom.lv.style.transform = tf;
+    if (lineDirty) drawLine(m);
     if (dom.log.classList.contains('over') !== m.over) dom.log.classList.toggle('over', m.over);
+  }
+  // la línea en su canvas (al tamaño de su caja por los píxeles del equipo), con los colores de ahora
+  function drawLine(m) {
+    const cv = dom.lv, c = lvEng && typeof cv.getContext === 'function' ? cv.getContext('2d') : null;
+    if (!c || !stops.length) return;
+    const c0 = performance.now(), dpr = window.devicePixelRatio || 1, cw = Math.round(m.lw * dpr), ch = Math.round(m.lh * dpr);
+    if (!cw || !ch) return;
+    if (cv.width !== cw || cv.height !== ch) { cv.width = cw; cv.height = ch; }
+    const f = dom.w.dataset.form === 'pill' ? LINE.pill : LINE.panel, k = cw / 1000;
+    c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, cw, ch); c.setTransform(k, 0, 0, k, 0, 0);
+    lvEng.draw(c, f.px * 1000 / f.w, stops.map(x => 'rgb(' + x.map(Math.round).join(',') + ')'));
+    lineDirty = false;
+    cost.draw += (performance.now() - c0 - cost.draw) * 0.1; cost.frames++;
   }
   // nivel automático: media del tiempo de frame en los primeros frames con la capa abierta (sin los primeros ni los saltos)
   function measureTier(ms) {
@@ -1103,7 +1194,7 @@ ${BREATHE_STATES.map(k => `.w[data-state=${k}] .orbe`).join(',')}{animation:brea
     clearTimeout(removeT); removeT = 0;
     endMorph();
     if (raf) cancelAnimationFrame(raf);
-    raf = 0; closing = false;
+    raf = 0; closing = false; lvEng = null;
     clearTimeout(voiceT); voiceT = 0;
     if (resizeObs) resizeObs.disconnect();
     if (host) host.remove();
@@ -1113,10 +1204,11 @@ ${BREATHE_STATES.map(k => `.w[data-state=${k}] .orbe`).join(',')}{animation:brea
   }
 
   window.TVAgent = {
-    /** Nivel de tu voz (0–1, del servidor cada 100 ms) mientras escucha: el orbe y la membrana lo siguen (sube ya y baja
+    /** Nivel de tu voz (0–1, del servidor cada 100 ms) mientras escucha: la línea y la membrana lo siguen (sube ya y baja
      *  con el decaimiento del pulso). En calma, nada. */
     level(x) {
       if (!dom || !last || last.state !== 'listen' || calmNow()) return;
+      if (lvEng) lvEng.level(x);
       const a = Math.max(0, Math.min(1, Number(x) || 0)) * PULSE.voice;
       if (a > amp) amp = a;
       wake();
@@ -1138,7 +1230,7 @@ ${BREATHE_STATES.map(k => `.w[data-state=${k}] .orbe`).join(',')}{animation:brea
       restoring = fresh && last.enter === 'restore';
       clearTimeout(removeT); removeT = 0;
       ensure();
-      if (closing) { closing = false; dom.sheet.classList.remove('gone'); }
+      if (closing) { closing = false; dom.sheet.classList.remove('gone'); dom.lv.classList.remove('off'); goneAt = 0; holdUntil = 0; }
       dom.halo.classList.remove('off'); dom.body.classList.remove('off');
       setOpen(true);
       const tier = dom.w.dataset.tier;
@@ -1164,7 +1256,10 @@ ${BREATHE_STATES.map(k => `.w[data-state=${k}] .orbe`).join(',')}{animation:brea
       if (dry === true) { finish(); return; }
       closing = true; closedAt = performance.now();
       dom.sheet.classList.add('gone');
+      // primero sale el contenido; luego el cristal se recoge sobre la línea, que vuelve a escribir «Fogar»
+      setFlag(dom.w, 'data-on', false);
       dom.halo.classList.add('off'); dom.body.classList.add('off');
+      if (!calmNow()) { holdUntil = closedAt + LINE.out; if (lvEng) lvEng.go('rest', closedAt / 1000); }
       wake();
       clearTimeout(removeT);
       removeT = setTimeout(finish, REMOVE_SAFETY_MS);
@@ -1184,7 +1279,9 @@ ${BREATHE_STATES.map(k => `.w[data-state=${k}] .orbe`).join(',')}{animation:brea
     // form: la que se ve (durante el paso, la de antes hasta el cambio); morph: fase del paso de forma o ''; drag: se arrastra
     _debug() {
       return { open, tier: dom ? dom.w.dataset.tier : tierNow(), rafRunning: !!raf, topLayer: topLayer() && lifted(),
-        form: dom ? dom.w.dataset.form || '' : '', morph: morph ? morph.phase : '', drag: !!(drag && drag.on) };
+        form: dom ? dom.w.dataset.form || '' : '', morph: morph ? morph.phase : '', drag: !!(drag && drag.on),
+        // la línea: su estado y lo que cuesta por frame (ms, media móvil) mover el motor y pintarla
+        line: lvEng ? lvEng.state : '', cost: { frames: cost.frames, step: +cost.step.toFixed(3), draw: +cost.draw.toFixed(3) } };
     },
   };
   // espera a que el documento tenga raíz (el script de documento nuevo corre antes); la última foto que llegue es la que vale

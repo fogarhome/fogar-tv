@@ -9,7 +9,7 @@
 // bueno): una web donde TVAgent no llega a existir no recibe la fuente entera cada 100 ms. Con hide() se quita al momento
 // (y nada de ese turno la vuelve a sacar hasta el turn() siguiente); onHide avisa de cada ocultación.
 //
-// Cada render lleva una foto completa (`Snap`, ver docs/arquitectura.md) con el estado del orbe derivado aquí, los 2 últimos
+// Cada render lleva una foto completa (`Snap`, ver docs/arquitectura.md) con el estado de la línea viva derivado aquí, los 2 últimos
 // turnos (también en la píldora, que solo enseña el último), las fichas de herramientas y sus iconos.
 // Se cierra `CLOSE_BASE_MS + CLOSE_PER_CHAR_MS × letras de la respuesta` tras el fin.
 // Formato (ronda 3): lo decide agent-form.js (`decideForm`) con la página de context(): override del usuario, lo que pidió
@@ -51,7 +51,7 @@ const KEEP_TURNS = 2;                        // turnos en el panel (el anterior,
 const CLOSE_BASE_MS = 4000;                  // se cierra esto tras el fin real…
 const CLOSE_PER_CHAR_MS = 45;                // …más esto por letra de la respuesta
 const RETRY_HINT = 'Di «otra vez» para reintentar.';   // pista tras un fallo de herramienta (el agente entiende «otra vez»)
-const RECOVER_ON_OK = true;                  // una herramienta posterior que acaba bien despeja el fallo de otra (orbe y pista)
+const RECOVER_ON_OK = true;                  // una herramienta posterior que acaba bien despeja el fallo de otra (línea y pista)
 const SETTLED_STATUS = /** @type {'ok'} */ ('ok');   // ficha sin `result` al cerrar el turno: deja de girar (no 'fail': ni alerta ni pista)
 const COLOR_MAX = 40;                        // caracteres de un color CSS de `context().colors`
 // fichas que ponen otra página (`opens`, de agent-ui.js: tv_open, tv_open_app, tv_present…): al acabar el turno, si no se
@@ -562,9 +562,9 @@ function createTalkView({ cdp, pub, batchMs = 100, log = () => {}, context, onAs
     emitForm(true);
     schedule();
   }
-  /** Estado tras algo que avanza el turno, salvo si ya falló (el orbe se queda en error hasta que se despeje). @param {State} s */
+  /** Estado tras algo que avanza el turno, salvo si ya falló (la línea se queda en la recta de error hasta que se despeje). @param {State} s */
   function advance(s) { if (state !== 'error') state = s; }
-  /** Una herramienta acabó bien tras el fallo de otra: sin pista y el orbe vuelve a lo que toque (el error de error() no se despeja). */
+  /** Una herramienta acabó bien tras el fallo de otra: sin pista y la línea vuelve a lo que toque (el error de error() no se despeja). */
   function recover() {
     if (!RECOVER_ON_OK || cur.error || !cur.hint) return;
     cur.hint = '';
@@ -596,7 +596,7 @@ function createTalkView({ cdp, pub, batchMs = 100, log = () => {}, context, onAs
       schedule();
       emitForm(true);
     },
-    /** Nivel de tu voz (dBFS de un trozo de 100 ms) mientras escucha: el orbe de la tele lo sigue. Sin foto (ni la
+    /** Nivel de tu voz (dBFS de un trozo de 100 ms) mientras escucha: la línea de la tele lo sigue. Sin foto (ni la
      *  conversación a la vista) o con uno aún en vuelo, se salta: el siguiente llega en 100 ms. @param {number} db */
     level(db) {
       if (state !== 'listen' || !painted || !visible() || levelBusy || !cdp.session) return;
@@ -662,7 +662,7 @@ function createTalkView({ cdp, pub, batchMs = 100, log = () => {}, context, onAs
       cur.media = { ...cur.media, state: st };
       schedule();
     },
-    /** Fin de una herramienta con ficha; si falló, pista de reintento y orbe en error. @param {{ id: string, ok: boolean }} e */
+    /** Fin de una herramienta con ficha; si falló, pista de reintento y la línea en error. @param {{ id: string, ok: boolean }} e */
     toolEnd(e) {
       const t = e && cur.tools.find(x => x.id === String(e.id));
       if (!t) return;

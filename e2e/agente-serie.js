@@ -20,7 +20,7 @@
 //              requestFullscreen(). Comprueba: restore tras cada navegación (sin animaciones de entrada, la membrana en su
 //              caja con el cristal ya opaco y sin transiciones, igual que en el documento anterior, hueco ≤ GAP_MAX_MS); el
 //              paso en cada rAF (el log no cambia mientras sale el contenido) (ningún salto de más de MAX_STEP del ancho, termina abrazando
-//              la píldora dentro del área segura en < MORPH_MAX_MS); host y orbe iguales tras la pantalla completa; Figtree
+//              la píldora dentro del área segura en < MORPH_MAX_MS); host y línea iguales tras la pantalla completa; Figtree
 //              (la suya) con font-src 'none'; tras PILL_DWELL se cierra y pausar no la reabre. Vídeo: contenido-<tam>.webm.
 //   esqueleto  reposo → app de contenido que pinta primero un esqueleto: el paso no empieza hasta que se ve el contenido.
 //   web        reposo → web normal: sigue el panel (aunque pase el respiro) y se cierra a su hora normal.
@@ -390,17 +390,17 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     notes.push(`${tag}: fuente pintada en /watch (font-src 'none'): ${font}`);
     if (!font || !/Figtree/i.test(font)) bad.push(`la capa no usa Figtree con font-src 'none' (${font})`);
     // identidad antes y después de la pantalla completa
-    await p.evaluate(() => { const h = document.getElementById('__tvagent'); window.__h = h; window.__o = h.shadowRoot.querySelector('.orbe'); });
+    await p.evaluate(() => { const h = document.getElementById('__tvagent'); window.__h = h; window.__o = h.shadowRoot.querySelector('.lv'); });
     await p.click('video');                       // play() + requestFullscreen() (gesto real)
     await p.waitForFunction(() => document.fullscreenElement, null, { timeout: 3000 }).catch(() => bad.push('no entró a pantalla completa'));
     await sleep(800);
     const ident = await p.evaluate(ENTRY_N => {
       const h = document.getElementById('__tvagent');
-      return { host: h === window.__h, orb: !!h && h.shadowRoot.querySelector('.orbe') === window.__o, top: window.TVAgent._debug().topLayer,
+      return { host: h === window.__h, orb: !!h && h.shadowRoot.querySelector('.lv') === window.__o, top: window.TVAgent._debug().topLayer,
         entry: h ? h.shadowRoot.getAnimations().map(a => a.animationName).filter(n => ENTRY_N.includes(n)).length : -1, form: window.TVAgent._debug().form };
     }, ENTRY);
-    notes.push(`${tag}: tras la pantalla completa host igual ${ident.host}, orbe igual ${ident.orb}, capa superior ${ident.top}, animaciones de entrada ${ident.entry}`);
-    if (!ident.host || !ident.orb) bad.push('la pantalla completa recreó el host o el orbe');
+    notes.push(`${tag}: tras la pantalla completa host igual ${ident.host}, línea igual ${ident.orb}, capa superior ${ident.top}, animaciones de entrada ${ident.entry}`);
+    if (!ident.host || !ident.orb) bad.push('la pantalla completa recreó el host o la línea');
     if (!ident.top) bad.push('a pantalla completa la capa no está en la capa superior');
     if (ident.entry > 0) bad.push(`la pantalla completa reanimó ${ident.entry} entradas`);
     if (ident.form !== 'pill') bad.push('a pantalla completa no es píldora');

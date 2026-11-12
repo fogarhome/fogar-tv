@@ -545,7 +545,7 @@ module.exports = function createTalk({ gw, cfg, media, view = NO_VIEW, speaker =
       if (!turn || turn.voice !== 'rec' || turn.ws !== ws) return;
       const db = dbfs(buf);
       turn.frames = (turn.frames || 0) + 1; turn.peak = Math.max(turn.peak ?? -Infinity, db);
-      v('level', db);                                   // el orbe de la tele sigue la voz (un trozo cada 100 ms)
+      v('level', db);                                   // la línea de la tele sigue la voz (un trozo cada 100 ms)
       gw.audio(buf);
     },
     /** El mando se fue: si estaba grabando o esperando la final, se cancela el turno. */

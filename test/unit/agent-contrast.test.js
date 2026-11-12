@@ -96,8 +96,8 @@ test('contraste en el peor fondo: contexto × día/noche × nivel × fondo', () 
   assert.ok(worst.main >= MAIN && worst.large >= LARGE, JSON.stringify(worst));
 });
 
-test('el «!» de un fallo (ficha y orbe) se lee sobre todo el ámbar: ≥ 3:1 (objeto gráfico, WCAG 1.4.11)', () => {
-  for (const back of [LOOK.warn, ...LOOK.warnOrb]) {
+test('el «!» de un fallo (en su ficha) se lee sobre el ámbar: ≥ 3:1 (objeto gráfico, WCAG 1.4.11)', () => {
+  for (const back of [LOOK.warn]) {
     const r = ratio(hex(LOOK.ink), hex(back));
     assert.ok(r >= LARGE, `tinta ${LOOK.ink} sobre ${back}: ${r.toFixed(2)}:1`);
   }

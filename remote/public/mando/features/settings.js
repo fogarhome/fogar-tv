@@ -69,7 +69,7 @@ export const settings = {
     $('#rScroll').addEventListener('input', e => { cfg.scroll = +e.target.value; $('#vScroll').textContent = x(cfg.scroll); saveCfg(); });
     $('#swNat').addEventListener('click', () => { cfg.natural = !cfg.natural; saveCfg(); refreshSet(); buzz(7); });
     $('#swHap').addEventListener('click', () => { cfg.haptic = !cfg.haptic; saveCfg(); refreshSet(); buzz(12); });
-    // al pulsar el orbe mientras Fogar habla: interrumpir (por defecto) o esperar
+    // al pulsar la línea mientras Fogar habla: interrumpir (por defecto) o esperar
     segOn($('#segIntr'), 'v', v => { cfg.voiceInterrupt = v === '1'; saveCfg(); refreshSet(); buzz(7); });
     segOn($('#segTheme'), 'v', v => { if (cfg.theme === v) return; cfg.theme = v; saveCfg(); applyTheme(); paintAmbient(); refreshSet(); buzz(7); });
     $('#nfProf').addEventListener('change', async e => { buzz(7); refreshSet(); const r = await rpc({ t: 'netflix', op: 'setprofile', profile: e.target.value }); if (!r || r.error) netflixLoad(); });

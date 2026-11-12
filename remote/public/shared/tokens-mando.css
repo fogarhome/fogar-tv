@@ -15,6 +15,7 @@
   --sheet:#12191b;--shade:rgba(5,8,9,.6);--hl:rgba(236,230,220,.06);--grab:rgba(236,230,220,.24);--shadow:rgba(0,0,0,.5);
   --pill-bg:rgba(26,35,37,.94);--rail:rgba(236,230,220,.1);--rail-on:rgba(236,230,220,.14);--rail-thumb:rgba(236,230,220,.5);
   --play-shadow:none;
+  --contra:#7cc792;   /* la línea viva al escuchar y pensar (fogar-brand) */
   /* voz: velo sobre el mando y luces más intensas; ahora suena: fondo más hondo y luces de la carátula al 40 % */
   --veil:linear-gradient(180deg,rgba(11,16,18,.86),rgba(11,16,18,.72) 60%,rgba(11,16,18,.6));--vz-a:.32;--vz-b:.28;
   --sp-bg:#070b0c;--sp-orb:.4;--sp-track:rgba(236,230,220,.18);
@@ -31,6 +32,7 @@
   --sheet:#f1ece4;--shade:rgba(11,16,18,.38);--hl:rgba(11,16,18,.05);--grab:rgba(11,16,18,.2);--shadow:rgba(11,16,18,.18);
   --pill-bg:rgba(250,247,242,.94);--rail:rgba(11,16,18,.08);--rail-on:rgba(11,16,18,.12);--rail-thumb:rgba(11,16,18,.4);
   --play-shadow:none;
+  --contra:#3e8a57;   /* contra oscurecido: ≥ 3:1 como objeto gráfico sobre --bg claro */
   /* variante clara de voz, ahora suena y teclado: derivada de los tokens (sin artboard propio) */
   --veil:linear-gradient(180deg,rgba(241,236,228,.9),rgba(241,236,228,.8) 60%,rgba(241,236,228,.7));--vz-a:.18;--vz-b:.16;
   --sp-bg:#f1ece4;--sp-orb:.2;--sp-track:rgba(11,16,18,.14);

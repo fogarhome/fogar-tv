@@ -146,7 +146,8 @@ test('carga: TVAgent con render/hide/_debug, sin dibujar nada hasta la primera f
   const p = loadPage();
   const A = p.win.TVAgent;
   assert.equal(typeof A.render, 'function'); assert.equal(typeof A.hide, 'function');
-  assert.deepEqual({ ...A._debug() }, { open: false, tier: 'A', rafRunning: false, topLayer: false, form: '', morph: '', drag: false });
+  assert.deepEqual({ ...A._debug() }, { open: false, tier: 'A', rafRunning: false, topLayer: false, form: '', morph: '', drag: false,
+    line: '', cost: { frames: 0, step: 0, draw: 0 } });
   assert.equal(p.doc.body.childNodes.length, 0);
   vm.runInNewContext(SRC, p.win);
   assert.equal(p.win.TVAgent, A, 'segunda inyección: no hace nada');
@@ -187,7 +188,7 @@ test('la misma foto cada 100 ms no recrea nodos; las palabras salen de una en un
   assert.equal(p.doc.mutations, before, 'sin cambios en el DOM con la misma foto');
 });
 
-test('etiqueta de estado junto al orbe: «Te escucho…» hasta tu primera palabra, «Pensando…» hasta la de Fogar o una ficha', () => {
+test('etiqueta de estado junto a la línea: «Te escucho…» hasta tu primera palabra, «Pensando…» hasta la de Fogar o una ficha', () => {
   const p = loadPage();
   const st = () => p.host().shadowRoot.all().find(n => n.className === 'st').textContent;
   const turn = o => [{ id: 1, you: '', youFinal: false, fogar: '', tools: [], error: false, hint: '', ...o }];
@@ -316,24 +317,109 @@ test('fuera de calma, la capa abierta y quieta también para el rAF; escuchando 
   assert.equal(A._debug().rafRunning, true, 'escuchando: late');
 });
 
-test('level(): escuchando, tu voz agranda el orbe; hablando o en calma no hace nada', () => {
-  const p = loadPage();
+// ── La línea viva (shared/linea-viva.js) con un motor falso que apunta lo que le piden, y un canvas cuya caja sigue su
+// escala (nace al tamaño del logo, desde su esquina): la caja de la línea es de 240 × 101 a escala 1
+function fakeLine(win, log) {
+  win.document.rect = { left: 600, top: 80, right: 1200, bottom: 400, width: 600, height: 320 };   // dentro del área segura
+  win.FogarLineaViva = { make: () => {
+    const e = { state: 'line', env: 0.35, go(st) { log.push(['go', st]); e.state = st; }, still(st) { log.push(['still', st]); e.state = st; },
+      level(x) { log.push(['level', x]); }, advance() {}, settled: () => e.state === 'rest' || e.state === 'line', draw() {} };
+    return e;
+  } };
+  const mk = win.document.createElement;
+  win.document.createElement = t => {
+    const n = mk(t);
+    if (t === 'canvas') n.getBoundingClientRect = () => {
+      const k = Number((/scale\(([\d.]+)\)/.exec(n.style.transform || '') || [0, 1])[1]);
+      return { left: 640, top: 110, right: 640 + 240 * k, bottom: 110 + 101 * k, width: 240 * k, height: 101 * k };
+    };
+    return n;
+  };
+}
+
+test('level(): escuchando, tu voz va a la línea; hablando o en calma no hace nada', () => {
+  const log = [];
+  const p = loadPage(SRC, w => fakeLine(w, log));
   const A = p.win.TVAgent;
-  const ring = () => p.host().shadowRoot.all().find(n => n.tagName === 'I');
-  const scale = () => Number(/scale\(([\d.]+)\)/.exec(ring().style.transform)[1]);
   const listen = o => snap({ state: 'listen', turns: [{ ...snap().turns[0], you: '', fogar: '', youFinal: false }], ...o });
-  A.render(listen()); p.advance(500);
-  const quiet = scale();
-  A.level(1); p.advance(16);
-  assert.ok(scale() > quiet + 0.05, `con voz crece (${quiet} → ${scale()})`);
-  p.advance(1500);
-  assert.ok(scale() < quiet + 0.03, 'sin voz vuelve a latir como antes');
-  A.render(snap({ state: 'talk' })); p.advance(500);
-  const talk = scale(); A.level(1); p.advance(16);
-  assert.ok(scale() <= talk + 0.001, 'hablando Fogar, tu nivel no cuenta');
-  A.render(listen({ calm: true })); p.advance(500);
-  A.level(1); p.advance(16);
-  assert.equal(scale(), 1, 'en calma, quieto');
+  A.render(listen()); p.advance(100);
+  A.level(0.8);
+  assert.deepEqual(log.filter(x => x[0] === 'level'), [['level', 0.8]]);
+  A.render(snap({ state: 'talk' })); A.level(1);
+  A.render(listen({ calm: true })); A.level(1);
+  assert.equal(log.filter(x => x[0] === 'level').length, 1, 'hablando Fogar o en calma, tu nivel no cuenta');
+});
+
+test('línea: cada estado de la foto tiene su forma (herramienta si hay una ficha en marcha, la recta si falla); en calma, quieta', () => {
+  const log = [];
+  const p = loadPage(SRC, w => fakeLine(w, log));
+  const A = p.win.TVAgent;
+  const run = { id: 'a', kind: 'tv', title: 'Tele', detail: '', status: 'run' };
+  const t = o => [{ ...snap().turns[0], ...o }];
+  A.render(snap({ state: 'listen' })); A.render(snap({ state: 'think' })); A.render(snap({ state: 'think', turns: t({ tools: [run] }) }));
+  A.render(snap({ state: 'talk' })); A.render(snap({ state: 'error' })); A.render(snap({ state: 'done' }));
+  assert.deepEqual(log[0], ['still', 'rest'], 'nace con la palabra ya escrita (el logo)');
+  assert.deepEqual(log.filter(x => x[0] === 'go').map(x => x[1]), ['listen', 'think', 'tool', 'speak', 'line', 'rest']);
+  assert.equal(A._debug().line, 'rest');
+  A.render(snap({ state: 'listen', calm: true }));
+  assert.deepEqual(log.at(-1), ['still', 'listen']);
+});
+
+test('nacimiento: el cristal sale del logo con la línea, espera LINE.hold, crece sin pasarse y el contenido entra al 90 %', () => {
+  const p = loadPage(SRC, w => fakeLine(w, []));
+  const A = p.win.TVAgent;
+  A.render(snap()); p.advance(16);
+  const body = byCls(p, 'body')[0], w = () => p.host().shadowRoot.all().find(n => cls(n).includes('w'));
+  const lv = byCls(p, 'lv')[0];
+  // la caja del logo: 240 × 101 a 300/560
+  assert.ok(Math.abs(parseFloat(body.style.width) - 240 * 300 / 560) < 1, 'nace del tamaño del logo: ' + body.style.width);
+  assert.equal(body.style.opacity, '0.000', 'del tamaño del logo, invisible');
+  assert.match(lv.style.transform, /scale\(0\.53/);
+  assert.ok(!w().hasAttribute('data-on'), 'sin contenido aún');
+  p.advance(100);
+  assert.ok(Math.abs(parseFloat(body.style.width) - 240 * 300 / 560) < 1, 'se deshace la palabra antes de viajar');
+  let prev = 0, on = 0;
+  for (let i = 0; i < 60; i++) {
+    p.advance(16);
+    const W = parseFloat(body.style.width);
+    assert.ok(W >= prev - 0.05, `un solo muelle crítico: nunca encoge (${prev} → ${W})`);
+    prev = W;
+    if (!on && w().hasAttribute('data-on')) on = W;
+  }
+  assert.ok(on > 0 && on >= 128 + 0.9 * (600 - 128) - 1, 'el contenido entra al 90 % del recorrido: ' + on);
+  assert.ok(Math.abs(prev - 600) < 1 && body.style.opacity === '1.000' && lv.style.transform === '', 'abierta: su caja, opaca y la línea a escala 1');
+});
+
+test('cierre: sale el contenido, el cristal se recoge sobre la línea (que vuelve a la palabra) y la línea se funde al final', () => {
+  const log = [];
+  const p = loadPage(SRC, w => fakeLine(w, log));
+  const A = p.win.TVAgent;
+  A.render(snap({ state: 'listen' })); p.advance(1500);
+  A.hide();
+  const w = p.host().shadowRoot.all().find(n => cls(n).includes('w')), body = byCls(p, 'body')[0], lv = byCls(p, 'lv')[0];
+  assert.ok(!w.hasAttribute('data-on'), 'primero sale el contenido');
+  assert.deepEqual(log.at(-1), ['go', 'rest'], 'la línea vuelve a escribir «Fogar»');
+  const W0 = parseFloat(body.style.width);
+  p.advance(100);
+  assert.equal(parseFloat(body.style.width), W0, 'el cristal espera a que salga el contenido');
+  let seenOff = false;
+  for (let i = 0; i < 120 && p.host(); i++) { p.advance(16); if (cls(lv).includes('off')) seenOff = true; }
+  assert.ok(seenOff, 'la línea se funde al final');
+  assert.equal(p.host(), undefined, 'y la capa se quita antes del temporizador de seguridad');
+});
+
+test('foco: debajo del cristal (antes que el halo y la membrana), recortado a su caja; encendido abierto y apagado al cerrar', () => {
+  const p = loadPage(SRC, w => fakeLine(w, []));
+  const A = p.win.TVAgent;
+  A.render(snap({ state: 'listen' })); p.advance(800);
+  const w = p.host().shadowRoot.all().find(n => cls(n).includes('w'));
+  const order = w.childNodes.map(n => cls(n)[0]);
+  assert.ok(order.indexOf('foco') < order.indexOf('halo') && order.indexOf('halo') < order.indexOf('body'), order.join(' '));
+  const foco = byCls(p, 'foco')[0], body = byCls(p, 'body')[0];
+  assert.equal(foco.style.width, body.style.width); assert.equal(foco.style.borderRadius, body.style.borderRadius);
+  assert.ok(Number(foco.style.opacity) > 0.15, 'encendido: ' + foco.style.opacity);
+  A.hide(); p.advance(400);
+  assert.ok(Number(foco.style.opacity) < 0.02, 'apagado al cerrar: ' + foco.style.opacity);
 });
 
 test('hide() a mitad de turno (escuchando o pensando) termina por la vía normal, antes del temporizador de seguridad', () => {
@@ -748,7 +834,7 @@ test('golpe rápido: se mide en la ventana de los últimos ms antes de soltar y 
   assert.deepEqual(c.told, ['panel']);
 });
 
-test("restore: el cristal nace ya visible (sin la clase off: no hay fundido que deje el texto un instante sin cristal); al abrir, sí funde", () => {
+test("restore: el cristal nace ya visible (sin la clase off: no hay fundido que deje el texto un instante sin cristal); al abrir, nace del logo", () => {
   const p = loadPage();
   p.win.TVAgent.render(snap({ enter: 'restore', live: false, state: 'done' }));
   assert.ok(!cls(byCls(p, 'body')[0]).includes('off') && !cls(byCls(p, 'halo')[0]).includes('off'));
@@ -760,7 +846,7 @@ test("restore: el cristal nace ya visible (sin la clase off: no hay fundido que 
   q.win.TVAgent.render(snap());
   assert.ok(made.some(n => /\bbody\b/.test(n.className)), 'monta la membrana');
   assert.match(SRC, /const off = restoring \? '' : ' off';/);
-  assert.match(SRC, /\.body\{transition:opacity [^}]*background-color/, 'el velo cambia de tinte con transición, no de golpe');
+  assert.match(SRC, /\.body\{transition:background-color/, 'el velo cambia de tinte con transición, no de golpe (la opacidad la escribe el rAF)');
 });
 
 test('pantalla completa de un elemento: el host se mete dentro aunque esté en la capa superior (fuera, todo es inerte); un <video>, no', () => {

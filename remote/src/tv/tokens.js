@@ -16,6 +16,8 @@ const ISLAND_ICONS = JSON.stringify({ timer: KINDS.timer.icon, music: KINDS.musi
 const TOKENS = path.join('shared', 'tokens-tv.css');
 const ISLAND = 'tv-island.js';
 const AGENT = 'tv-agent.js';
+// la línea viva (el motor que comparten la capa del agente y la voz del mando) va delante de la capa
+const LINE = path.join('shared', 'linea-viva.js');
 // fuentes de la capa del agente (de las de shared/fonts.css, solo Figtree y su trozo latin: la capa no titula): la que
 // falte en public/ no se manda (y la capa usa su pila de reserva)
 const AGENT_FONTS = Object.freeze([
@@ -52,12 +54,19 @@ function islandSource(pubDir) {
 }
 
 /**
- * Fuente de la capa del agente (tv-agent.js), con los tokens delante como la isla.
+ * Fuente de la capa del agente (tv-agent.js), con sus fuentes, el motor de la línea viva y los tokens delante.
  * @param {string} pubDir carpeta public/
  * @returns {string}
  */
 function agentSource(pubDir) {
-  return 'var __TV_FONTS=' + JSON.stringify(agentFonts(pubDir)) + ';\n' + withTokens(pubDir, AGENT);
+  return 'var __TV_FONTS=' + JSON.stringify(agentFonts(pubDir)) + ';\n' + lineSource(pubDir) +
+    withTokens(pubDir, AGENT);
+}
+
+/** El motor de la línea viva; si falta en public/ no se manda (la capa sigue sin línea, como sin una fuente). @param {string} pubDir */
+function lineSource(pubDir) {
+  const f = path.join(pubDir, LINE);
+  return fs.existsSync(f) ? fs.readFileSync(f, 'utf8') + ';\n' : '';
 }
 
 /** @type {Map<string, { mtime: number, data: string }>} */

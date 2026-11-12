@@ -218,8 +218,8 @@ function expectedCenter(LOOK) {
   const sheet = hex(LOOK.sheet), k = 1 - 0.5 / 0.55;
   let px = [1, 1, 1].map(x => x * LOOK.ctx.idle.bright);
   px = mix(sheet, LOOK.ctx.idle.tint, px);
-  px = mix(mix(hex(LOOK.orb[0]), LOOK.glow.color, sheet), LOOK.glow.a * k, px);
-  px = mix(mix(hex(LOOK.orb[1]), LOOK.glow.color, sheet), LOOK.glow.b * k, px);
+  px = mix(mix(hex(LOOK.lights[0]), LOOK.glow.color, sheet), LOOK.glow.a * k, px);
+  px = mix(mix(hex(LOOK.lights[1]), LOOK.glow.color, sheet), LOOK.glow.b * k, px);
   px = mix([0, 0, 0], LOOK.glow.shade * (0.5 - 0.38) / (1 - 0.38), px);
   return px.map(x => Math.round(x * 255));
 }

@@ -17,6 +17,7 @@
 <link rel="modulepreload" href="/mando/core/api.js">
 <link rel="modulepreload" href="/mando/core/perms.js">
 <link rel="modulepreload" href="/mando/ui/haptics.js">
+<link rel="modulepreload" href="/mando/features/linea.js">
 <link rel="modulepreload" href="/mando/ui/pill.js">
 <link rel="modulepreload" href="/mando/ui/theme.js">
 <link rel="modulepreload" href="/mando/ui/status.js">
@@ -415,7 +416,7 @@
     <div class="fld"><span>Desplazamiento natural<small>El contenido sigue a tus dedos</small></span><button class="sw" id="swNat" aria-pressed="true" aria-label="Desplazamiento natural"></button></div>
     <div class="fld"><span>Vibración al tocar</span><button class="sw" id="swHap" aria-pressed="true" aria-label="Vibración"></button></div>
     <div class="sh">Voz</div>
-    <div class="fld"><span>Si pulsas el orbe mientras Fogar habla</span><div class="seg" id="segIntr" role="radiogroup" aria-label="Si pulsas el orbe mientras Fogar habla"><button role="radio" data-v="1">Interrumpe</button><button role="radio" data-v="0">Espera a que acabe</button></div></div>
+    <div class="fld"><span>Si pulsas la línea mientras Fogar habla</span><div class="seg" id="segIntr" role="radiogroup" aria-label="Si pulsas la línea mientras Fogar habla"><button role="radio" data-v="1">Interrumpe</button><button role="radio" data-v="0">Espera a que acabe</button></div></div>
     <div class="foot u-tl">Esto solo cambia en este móvil.</div>
   </div>
 
@@ -498,6 +499,7 @@
   </div>
 </div>
 
+<script src="/shared/linea-viva.js"></script>
 <script type="module" src="/mando/app.js"></script>
 </body>
 </html>

@@ -1,14 +1,15 @@
-// Voz (v4): mantener el orbe de «Hablar con Fogar» para hablar. El micrófono del móvil sube en directo al servidor como
+// Voz (v4): mantener pulsada la línea de «Hablar con Fogar» para hablar. El micrófono del móvil sube en directo al servidor como
 // PCM (Float32 LE, 16 kHz, mono, trozos de 100 ms) por el WebSocket del mando: `vstart`, audio binario y `vend`. La vista
 // del agente enseña la frase mientras se dice (`talk` partial) y la respuesta. La respuesta suena en UN solo sitio: la
 // tele (por defecto), este móvil o ninguno (solo texto). No es un módulo del mando: la hoja `agS` es de agent.js, que
 // llama aquí con sus funciones de pintar (una hoja solo puede tener un dueño, ver ui/sheets.js).
-// El micrófono solo existe en una página segura (HTTPS, p. ej. la URL de Tailscale): en http://mando.local el orbe
+// El micrófono solo existe en una página segura (HTTPS, p. ej. la URL de Tailscale): en http://mando.local la línea
 // sigue como antes y enfoca el campo para dictar con el teclado del móvil.
 import { $ } from '../core/dom.js';
 import { cmd, rpc, sendBin } from '../core/api.js';
 import { cfg, saveCfg } from '../core/store.js';
 import { buzz } from '../ui/haptics.js';
+import { lineLevel } from './linea.js';
 
 const OUTS = ['tv', 'phone', 'none'];
 const OUT_LABEL = { tv: 'Responde en la tele', phone: 'Responde en el móvil', none: 'Responde solo con texto' };
@@ -27,12 +28,11 @@ let stream = null;
 let src = null;
 /** @type {AudioWorkletNode | null} */
 let node = null;
-let held = false;                                       // el dedo (o la tecla) sigue sobre el orbe
+let held = false;                                       // el dedo (o la tecla) sigue sobre la línea
 let long = false;                                       // la pulsación ya pasa de TAP_MS (o es de teclado)
 let started = false;                                    // vstart enviado: el audio va al servidor
 let press = 0;                                          // número de la pulsación (lo que llega tarde de otra se ignora)
 let tapT = 0, stopT = 0, flushT = 0;
-let lv = 0;                                             // nivel de tu voz en el orbe (0–1)
 /** @type {Float32Array[]} */
 let pending = [];                                       // los primeros trozos, en memoria hasta saber que no es un toque
 /** @type {{ stage: (st: string) => void, said: (t: string) => void, rep: (t: string, cls?: string) => void, focus: () => void, press?: () => void }} */
@@ -48,7 +48,7 @@ export function ensureAudioCtx() {
   return ctx;
 }
 const out = () => (OUTS.includes(cfg.voiceOut) ? cfg.voiceOut : 'tv');
-/** Ajuste «Al pulsar el orbe mientras Fogar habla»: interrumpir (por defecto) o esperar. */
+/** Ajuste «Al pulsar la línea mientras Fogar habla»: interrumpir (por defecto) o esperar. */
 export const interruptOn = () => cfg.voiceInterrupt !== false;
 /** El selector «dónde suena la respuesta» (voz y texto escrito). */
 export const outSel = out;
@@ -64,13 +64,10 @@ function release() {
   meter(0);
 }
 
-/** El orbe sigue tu voz: crece con el nivel del trozo (-50 dBFS → 0, -10 → 1); sube en 50 ms y baja en 250.
+/** La línea sigue tu voz con el nivel del trozo (-50 dBFS → 0, -10 → 1); sube en 40 ms y baja en 250 (linea.js).
  *  @param {number} x */
 function meter(x) {
-  const o = $('#agOrb');
-  o.style.setProperty('--lvt', x > lv ? '.05s' : '.25s');
-  o.style.setProperty('--lv', x.toFixed(2));
-  lv = x;
+  lineLevel(x);
 }
 /** @param {Float32Array} pcm */
 function level(pcm) {
@@ -80,7 +77,7 @@ function level(pcm) {
 
 /** Un trozo de 100 ms del worklet: en memoria mientras puede ser un toque; luego, al servidor. @param {Float32Array} pcm */
 function chunk(pcm) {
-  if (held) meter(level(pcm));                        // lo que llega tras soltar ya no mueve el orbe
+  if (held) meter(level(pcm));                        // lo que llega tras soltar ya no mueve la línea
   if (started) sendBin(pcm); else pending.push(pcm);
 }
 
@@ -121,7 +118,7 @@ async function start(key = false) {
   }
   if (me !== press || !held) {                          // se soltó (o se cerró la hoja) mientras se pedía el micrófono
     s.getTracks().forEach(t => t.stop());
-    if (me === press && long) { ui.rep('Listo. Mantén el orbe otra vez para hablar.'); ui.stage('idle'); }
+    if (me === press && long) { ui.rep('Listo. Mantén pulsada la línea otra vez para hablar.'); ui.stage('idle'); }
     return;
   }
   stream = s;
@@ -188,13 +185,13 @@ export const voice = {
     if (!held && !started && !node && !stream) return;
     held = false; started = false; press++; release();
   },
-  /** @param {typeof ui} hooks @returns {boolean} true si hay micrófono (el orbe graba) */
+  /** @param {typeof ui} hooks @returns {boolean} true si hay micrófono (la línea graba) */
   init(hooks) {
     ui = hooks;
     if (!canRecord()) return false;
     const b = $('#agOrb'), o = $('#agOut');
     b.setAttribute('aria-label', 'Mantén para hablar con Fogar; toca para escribir');
-    $('#agH').textContent = 'Mantén el orbe para hablar · toca para escribir';
+    $('#agH').textContent = 'Mantén pulsada la línea para hablar · toca para escribir';
     o.hidden = false; paintOut();
     b.addEventListener('pointerdown', e => { e.preventDefault(); b.setPointerCapture(e.pointerId); start(); });
     for (const ev of ['pointerup', 'pointercancel']) b.addEventListener(ev, stop);

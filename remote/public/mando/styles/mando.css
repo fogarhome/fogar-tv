@@ -293,7 +293,7 @@ a.bt{text-decoration:none}
 :root.ambOff .shade.vz::before,:root.ambOff .shade.vz::after{animation-play-state:paused}
 #agS{background:transparent;border:0;padding:0 24px max(24px,env(safe-area-inset-bottom));color:var(--text);max-height:calc(100% - 64px - var(--kb));display:flex;flex-direction:column}
 #agS>*{flex-shrink:0}
-@media (max-height:720px){.vzQ{font-size:28px}.vzOrb{width:72px;height:72px}.vzO{margin-top:16px;gap:8px}.vzIn{margin-top:14px}.vzC{margin-top:8px}}
+@media (max-height:720px){.vzQ{font-size:28px}.vzOrb{height:72px}.vzLine{width:140px;height:59px}.vzO{margin-top:16px;gap:8px}.vzIn{margin-top:14px}.vzC{margin-top:8px}}
 .vzTop{display:flex;align-items:center;justify-content:space-between;height:48px;margin:0 -12px 6px;flex:none}
 .vzTop .b2{width:48px;height:48px}
 .vzTop span{font-size:14px;color:var(--text-soft);padding-right:12px}
@@ -311,16 +311,14 @@ a.bt{text-decoration:none}
 .rep[data-voice] .vw.said{color:var(--text)}
 .vzIn{margin-top:20px;background:var(--pad);border-color:transparent;border-radius:999px;padding:0 20px}
 .vzO{display:flex;flex-direction:column;align-items:center;gap:12px;margin-top:22px;flex:none}
-.vzOrb{width:96px;height:96px;border-radius:999px;border:0;padding:0;cursor:pointer;background:radial-gradient(circle at 35% 30%,#a99ad1 0%,#7c6aae 55%,#6e8cc4 120%);box-shadow:0 0 0 14px rgba(124,106,174,.16),0 0 80px rgba(124,106,174,.55);animation:breathe 3.4s ease-in-out infinite;touch-action:none}
-#agS[data-st=wait] .vzOrb{animation:listen 1.2s ease-in-out infinite}
+.vzOrb{width:176px;height:96px;border-radius:999px;border:0;padding:0;cursor:pointer;background:transparent;display:grid;place-items:center;touch-action:none}
+/* la línea viva (linea.js) en lugar del orbe: el botón es transparente y lo que se ve es la línea, que ya dice el estado */
+.vzLine{display:block;width:168px;height:71px;pointer-events:none}
 @keyframes listen{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
 .vzOrb:focus-visible{outline:2px solid var(--accent-text);outline-offset:3px}
 .vzH{font-size:14px;color:var(--text-soft);text-align:center}
-/* voz con micrófono propio: mantener el orbe para hablar (grabando, late más deprisa) y adónde va la respuesta */
+/* voz con micrófono propio: mantener pulsada la línea para hablar (grabando, la línea escucha) y adónde va la respuesta */
 .vzOrb{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
-#agS[data-st=rec] .vzOrb{animation:listen .8s ease-in-out infinite;box-shadow:0 0 0 22px rgba(124,106,174,.22),0 0 110px rgba(124,106,174,.7)}
-/* tu voz en el orbe (voice.js pone --lv a cada trozo de 100 ms): scale aparte del transform que respira */
-.vzOrb{scale:calc(1 + .14 * var(--lv, 0));transition:scale var(--lvt, .25s) ease-out}
 .vzOut{min-height:48px;margin-top:-10px;padding:0 16px;border:0;background:transparent;color:var(--accent-text);font:500 14px var(--texto);cursor:pointer}
 .vzOut[hidden]{display:none}
 .vzOut:focus-visible{outline:2px solid var(--accent-text);outline-offset:-6px;border-radius:999px}
@@ -603,7 +601,7 @@ a.bt{text-decoration:none}
 
 /* movimiento reducido: luces quietas, orbe sin respirar y sin transiciones */
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}}
-@media (prefers-reduced-motion:reduce){.vzOrb{scale:none}}   /* sin transición iría a saltos de 100 ms */
+
 @media (prefers-reduced-motion:reduce){.spin2,.rep.wait::after,.kbSt.busy i{animation:rmPulse 1.6s ease-in-out infinite!important}}
 @keyframes rmPulse{50%{opacity:.35}}
 
