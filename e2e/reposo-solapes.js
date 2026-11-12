@@ -212,7 +212,7 @@ function check(m) {
     const v = VARIANTS.find(x => x.n === 'ctx1'), ctx = await b.newContext({ viewport: { width: 1920, height: 1080 }, timezoneId: 'Europe/Madrid' }), p = await ctx.newPage();
     await p.clock.setFixedTime(v.now);
     await p.goto(`http://127.0.0.1:${srv.address().port}/`);
-    const cfg = { dimMin: 0, rearrangeMin: 20, layout: 'rotar', calm: true }, hora = () => p.evaluate(() => { const r = document.getElementById('wHora').getBoundingClientRect(); return [r.x, r.y]; }); // eslint-disable-line no-undef
+    const cfg = { dimMin: 0, rearrangeMin: 20, layout: 'rotar', calm: true }, hora = () => p.evaluate(() => { const r = document.getElementById('wHora').getBoundingClientRect(); return [r.x, r.y]; });  
     await p.evaluate(d => { d.now = Date.now(); onData(d); }, { ...v.d(v.now), cfg }); // eslint-disable-line no-undef
     await p.waitForFunction(() => !window.TVIdle.now().moving);
     const h0 = await hora();
