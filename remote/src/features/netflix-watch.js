@@ -276,7 +276,7 @@ function createWatch({ cdp, netflix, store, log = () => {}, onChange = () => {},
     return it ? [idleItem(it)] : [];
   }
 
-  // ───────── tarjetas para la conversación con Jota en la tele (talk-view.js: media)
+  // ───────── tarjetas para la conversación con Fogar en la tele (talk-view.js: media)
   const abs = u => { const p = img(u); return p ? self + p : ''; };
   const sub = it => (it.ep ? [it.ep.s && 'T' + it.ep.s, it.ep.e && 'E' + it.ep.e, it.ep.title].filter(Boolean).join(' · ') : 'Película');
   const left = it => (it.dur ? (it.pos >= 30 ? 'quedan ' + fmtMin(it.dur - it.pos) : (it.ep ? 'siguiente · ' : '') + fmtMin(it.dur)) : '');

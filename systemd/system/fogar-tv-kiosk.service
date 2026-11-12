@@ -1,8 +1,8 @@
-# jota-screen: kiosco (Xorg en tty1 + kiosk-session.sh con Chrome a pantalla completa). Unidad de SISTEMA.
-# scripts/install.sh la genera en ~/.config/jota-screen/generated/ y enseña los comandos sudo para instalarla
+# fogar-tv: kiosco (Xorg en tty1 + kiosk-session.sh con Chrome a pantalla completa). Unidad de SISTEMA.
+# scripts/install.sh la genera en ~/.config/fogar-tv/generated/ y enseña los comandos sudo para instalarla
 # en /etc/systemd/system/ (o lo hace él con --system si hay sudo sin contraseña). No la edites allí.
 [Unit]
-Description=jota-screen: kiosco (Xorg + Chrome)
+Description=fogar-tv: kiosco (Xorg + Chrome)
 After=systemd-user-sessions.service getty@tty1.service
 Conflicts=getty@tty1.service
 

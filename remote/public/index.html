@@ -108,11 +108,11 @@
     </button>
   </header>
 
-  <!-- dónde está la tele (J-Screen o su Google TV) y el encendido; solo con la tele por ADB (features/tele.js) -->
+  <!-- dónde está la tele (Fogar TV o su Google TV) y el encendido; solo con la tele por ADB (features/tele.js) -->
   <div class="srcRow" id="srcRow" hidden>
     <div class="srcSeg" id="srcSeg" role="radiogroup" aria-label="Qué se ve en la tele">
       <span class="ind" id="srcInd" aria-hidden="true"></span>
-      <button type="button" role="radio" aria-checked="true" data-src="j">J-Screen</button>
+      <button type="button" role="radio" aria-checked="true" data-src="j">Fogar TV</button>
       <button type="button" role="radio" aria-checked="false" data-src="tv" tabindex="-1">Tele</button>
     </div>
     <button class="b2 pw2" data-a="pwoff" data-click aria-label="Apagar la tele">
@@ -120,10 +120,10 @@
     </button>
   </div>
 
-  <!-- conexión con Jota (solo administradores): en la columna, entre la cabecera y el trackpad, para no tapar nada; no
+  <!-- conexión con Fogar (solo administradores): en la columna, entre la cabecera y el trackpad, para no tapar nada; no
        bloquea, se cierra con ✕ y no vuelve hasta que cambie el estado -->
   <div class="gwN" id="gwN" role="status" hidden>
-    <span class="gwT" id="gwNT">Jota no está conectado</span>
+    <span class="gwT" id="gwNT">Fogar no está conectado</span>
     <button class="bt big" type="button" id="gwNGo">Conectar</button>
     <button class="bt gwX" type="button" id="gwNX" aria-label="Cerrar el aviso"><svg><use href="#i-x"/></svg></button>
   </div>
@@ -194,7 +194,7 @@
 
     <div class="apps2" id="apps2"></div>
 
-    <button class="jota2" data-a="ag" data-click aria-label="Hablar con Jota">
+    <button class="fogar2" data-a="ag" data-click aria-label="Hablar con Fogar">
       <span class="orb2" aria-hidden="true"></span>
       <span class="jt2"><b>Dime qué quieres ver</b><small>Habla o escribe</small></span>
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
@@ -298,10 +298,10 @@
   <div class="rqb"><button class="bt" data-r="no">Rechazar</button><button class="bt" data-r="member">Miembro</button><button class="bt big" data-r="guest">Invitado</button></div>
 </div>
 
-<!-- conectar la tele con Jota: buscar, elegir, código y resultado -->
-<div class="sheet" id="gwS" role="dialog" aria-label="Conectar con Jota">
+<!-- conectar la tele con Fogar: buscar, elegir, código y resultado -->
+<div class="sheet" id="gwS" role="dialog" aria-label="Conectar con Fogar">
   <div class="grab"></div>
-  <h2 class="rcH">Conectar con Jota</h2>
+  <h2 class="rcH">Conectar con Fogar</h2>
   <p class="gwM" id="gwM" aria-live="polite"></p>
   <div class="gwP" data-s="busy"><div class="spin2"></div></div>
   <div class="gwP" data-s="list" hidden>
@@ -309,12 +309,12 @@
     <div class="tms"><input class="in" id="gwHost" aria-label="Dirección del gateway" placeholder="Dirección del gateway" inputmode="url" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go"><button class="bt dv" id="gwHostGo" type="button">Usar</button></div>
   </div>
   <div class="gwP" data-s="local" hidden>
-    <p class="gwH">Puedo sacar el código yo mismo con <code>jota-gw</code>. Para eso uso el acceso de administrador del gateway de este equipo, solo esta vez.</p>
+    <p class="gwH">Puedo sacar el código yo mismo con <code>fogar-gw</code>. Para eso uso el acceso de administrador del gateway de este equipo, solo esta vez.</p>
     <button class="bt big" id="gwLocal" type="button">Hazlo tú</button>
     <button class="bt ghost" id="gwByCode" type="button">Prefiero escribir el código</button>
   </div>
   <div class="gwP" data-s="code" hidden>
-    <p class="gwH">En el gateway, ejecuta <code>jota-gw pair</code> y escribe aquí el código.</p>
+    <p class="gwH">En el gateway, ejecuta <code>fogar-gw pair</code> y escribe aquí el código.</p>
     <input class="in code" id="gwCode" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="······" autocomplete="one-time-code" aria-label="Código de 6 cifras">
     <button class="bt big" id="gwPair" type="button">Emparejar</button>
   </div>
@@ -356,8 +356,8 @@
   </div>
 </div>
 
-<!-- hablar con Jota: un velo con luces sobre el mando; se escribe o se dicta con el micrófono del teclado -->
-<div class="sheet vzV" id="agS" role="dialog" aria-label="Hablar con Jota">
+<!-- hablar con Fogar: un velo con luces sobre el mando; se escribe o se dicta con el micrófono del teclado -->
+<div class="sheet vzV" id="agS" role="dialog" aria-label="Hablar con Fogar">
   <div class="vzTop"><button class="b2 vzX" id="agX" type="button" aria-label="Cerrar"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button><span>{{TV_NAME}}</span></div>
   <div class="vzSt" id="agSt" aria-live="polite">Pídeme algo</div>
   <div class="vzCard" id="agCard">
@@ -367,9 +367,9 @@
   <div class="vzFh" id="agFh" aria-hidden="true" hidden><span data-f="pill">← Píldora</span><span data-f="panel">Panel →</span></div>
   <div class="vzA"><button class="b2" id="agStop" type="button" hidden>Parar</button><button class="b2" id="agRetry" type="button" hidden>Reintentar</button><button class="b2" id="agHide" type="button" hidden>Quitar de la tele</button><button class="b2" id="agForm" type="button" hidden>Ampliar en la tele</button></div>
   <div class="vzSr" id="agFs" role="status"></div>
-  <input class="in vzIn" id="agin" aria-label="Escribe a Jota" placeholder="Pídele algo a Jota…" autocomplete="off" autocorrect="on" spellcheck="true" enterkeyhint="send">
+  <input class="in vzIn" id="agin" aria-label="Escribe a Fogar" placeholder="Pídele algo a Fogar…" autocomplete="off" autocorrect="on" spellcheck="true" enterkeyhint="send">
   <div class="vzO">
-    <button class="vzOrb" id="agOrb" type="button" aria-label="Escribir o dictar a Jota"></button>
+    <button class="vzOrb" id="agOrb" type="button" aria-label="Escribir o dictar a Fogar"></button>
     <span class="vzH" id="agH">Para dictar, usa el micrófono del teclado</span>
     <button class="vzOut" id="agOut" type="button" hidden aria-label="Dónde suena la respuesta"></button>
   </div>
@@ -390,7 +390,7 @@
     <button class="nv" type="button" data-go="movil"><span class="nvI"><svg><use href="#i-phone"/></svg></span><span class="nvT">Mando<small id="sumMovil"></small></span><svg class="nvC"><use href="#i-fwd"/></svg></button>
     <div class="sh" id="teleSh">La tele</div>
     <button class="nv adm" type="button" data-go="reposo" hidden><span class="nvI"><svg><use href="#i-moon"/></svg></span><span class="nvT">Pantalla en reposo<small id="sumReposo"></small></span><svg class="nvC"><use href="#i-fwd"/></svg></button>
-    <button class="nv adm" type="button" data-go="jota" hidden><span class="nvI"><svg><use href="#i-spark"/></svg></span><span class="nvT">Jota en la tele<small id="sumJota"></small></span><svg class="nvC"><use href="#i-fwd"/></svg></button>
+    <button class="nv adm" type="button" data-go="fogar" hidden><span class="nvI"><svg><use href="#i-spark"/></svg></span><span class="nvT">Fogar en la tele<small id="sumFogar"></small></span><svg class="nvC"><use href="#i-fwd"/></svg></button>
     <button class="nv" type="button" data-go="netflix" id="nfBox" hidden><span class="nvI"><svg><use href="#i-film"/></svg></span><span class="nvT">Netflix<small id="sumNetflix"></small></span><svg class="nvC"><use href="#i-fwd"/></svg></button>
     <div class="adm" hidden>
       <div class="sh">Personas</div>
@@ -415,7 +415,7 @@
     <div class="fld"><span>Desplazamiento natural<small>El contenido sigue a tus dedos</small></span><button class="sw" id="swNat" aria-pressed="true" aria-label="Desplazamiento natural"></button></div>
     <div class="fld"><span>Vibración al tocar</span><button class="sw" id="swHap" aria-pressed="true" aria-label="Vibración"></button></div>
     <div class="sh">Voz</div>
-    <div class="fld"><span>Si pulsas el orbe mientras Jota habla</span><div class="seg" id="segIntr" role="radiogroup" aria-label="Si pulsas el orbe mientras Jota habla"><button role="radio" data-v="1">Interrumpe</button><button role="radio" data-v="0">Espera a que acabe</button></div></div>
+    <div class="fld"><span>Si pulsas el orbe mientras Fogar habla</span><div class="seg" id="segIntr" role="radiogroup" aria-label="Si pulsas el orbe mientras Fogar habla"><button role="radio" data-v="1">Interrumpe</button><button role="radio" data-v="0">Espera a que acabe</button></div></div>
     <div class="foot u-tl">Esto solo cambia en este móvil.</div>
   </div>
 
@@ -443,7 +443,7 @@
     <div class="fld"><span>En el reposo<small>Lo último que usaste, si fue hace menos de 3 h</small></span><button class="sw" id="sgOn" aria-pressed="false" aria-label="Seguir viendo"></button></div>
     <div class="sgSrc" id="sgSrc" role="list" aria-label="Fuentes"></div>
     <div class="sh">Memoria</div>
-    <div class="fld"><span>Empezar de cero al apagar<small>Al apagar la tele, J-Screen vuelve al reposo</small></span><button class="sw" id="idFresh" aria-pressed="true" aria-label="Empezar de cero al apagar"></button></div>
+    <div class="fld"><span>Empezar de cero al apagar<small>Al apagar la tele, Fogar TV vuelve al reposo</small></span><button class="sw" id="idFresh" aria-pressed="true" aria-label="Empezar de cero al apagar"></button></div>
     <div class="fld"><span>Recordar lo que se ve<small>Para Recientes. Se guarda en el servidor de casa</small></span><button class="sw" id="idUsage" aria-pressed="true" aria-label="Recordar lo que se ve"></button></div>
     <div class="sh">Horario y tiempos</div>
     <div class="fld wrap"><span>Hora de dormir<small>Acostarse · levantarse. De noche el reposo queda en negro y tenue</small></span>
@@ -456,8 +456,8 @@
       <option value="0">Nunca</option><option value="5">5 min</option><option value="10">10 min</option><option value="20">20 min</option><option value="30">30 min</option><option value="60">1 h</option></select></div>
   </div>
 
-  <div class="sp" data-p="jota" hidden>
-    <div class="pgH"><button class="pgB" type="button" data-back aria-label="Volver a Ajustes"><svg><use href="#i-back"/></svg></button><div><span class="pgS">La tele</span><h2 class="pgT">Jota en la tele</h2></div></div>
+  <div class="sp" data-p="fogar" hidden>
+    <div class="pgH"><button class="pgB" type="button" data-back aria-label="Volver a Ajustes"><svg><use href="#i-back"/></svg></button><div><span class="pgS">La tele</span><h2 class="pgT">Fogar en la tele</h2></div></div>
     <div class="sh">Conexión</div>
     <div class="fld"><span>Gateway<small id="gwSt">—</small></span><button class="bt dv" id="gwOpen" type="button">Conectar</button></div>
     <div class="fld" id="gwForgetRow" hidden><span>Olvidar este gateway<small>La tele deja de usar su clave</small></span><button class="bt dv" id="gwForget" type="button">Olvidar</button></div>
@@ -490,7 +490,7 @@
     <div class="fld" id="acHrs"><label for="acHours">Duración del acceso<small>Después tendrán que pedirlo otra vez</small></label><select class="sel" id="acHours">
       <option value="1">1 h</option><option value="3">3 h</option><option value="6">6 h</option><option value="12">12 h</option><option value="24">24 h</option><option value="48">2 días</option><option value="168">7 días</option><option value="0">Sin límite</option></select></div>
     <div class="fld"><span>Abrir webs y apps</span><button class="sw" id="acWeb" aria-pressed="true" aria-label="Abrir webs y apps"></button></div>
-    <div class="fld"><span>Hablar con Jota<small>Invitado: solo tele y música, sin tus datos</small></span><div class="seg" id="acAgent" role="radiogroup" aria-label="Hablar con Jota"><button role="radio" data-v="off">No</button><button role="radio" data-v="guest">Invitado</button><button role="radio" data-v="full">Completo</button></div></div>
+    <div class="fld"><span>Hablar con Fogar<small>Invitado: solo tele y música, sin tus datos</small></span><div class="seg" id="acAgent" role="radiogroup" aria-label="Hablar con Fogar"><button role="radio" data-v="off">No</button><button role="radio" data-v="guest">Invitado</button><button role="radio" data-v="full">Completo</button></div></div>
     <div class="fld"><span>Canciones que piden</span><div class="seg" id="acMusic" role="radiogroup" aria-label="Canciones que piden"><button role="radio" data-v="play">Suenan ya</button><button role="radio" data-v="queue">A la cola</button><button role="radio" data-v="off">No</button></div></div>
     <div class="fld"><span>Tu biblioteca de Spotify<small>Playlists, «Me gusta» y recientes</small></span><button class="sw" id="acLib" aria-pressed="false" aria-label="Biblioteca"></button></div>
     <div class="fld"><span>Presentaciones y avisos</span><button class="sw" id="acStage" aria-pressed="false" aria-label="Presentaciones"></button></div>

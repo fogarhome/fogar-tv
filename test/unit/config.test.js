@@ -25,7 +25,7 @@ test('config: sin entorno, valores por defecto del contrato y nada personal', ()
     assert.equal(d.PUBLIC_URL, 'http://127.0.0.1:8787');
     assert.equal(d.ADMIN_URL, 'http://mando.local');
     assert.equal(d.HOME_URL, 'http://127.0.0.1:8787/idle.html');
-    assert.equal(d.STATE_DIR, path.join(home, '.local', 'state', 'jota-screen'));
+    assert.equal(d.STATE_DIR, path.join(home, '.local', 'state', 'fogar-tv'));
     assert.equal(d.STAGE_DIR, path.join(d.STATE_DIR, 'stage'));
     for (const f of Object.values(d.FILES)) assert.equal(path.dirname(f), d.STATE_DIR, f);
     assert.equal(d.AGENT, 'j-assistant');

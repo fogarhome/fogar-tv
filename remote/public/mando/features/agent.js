@@ -1,5 +1,5 @@
-// Hablar con Jota (v3): un velo con luces sobre el mando. Lo que se escribe (o se dicta con el micrófono del teclado) va
-// al J Gateway; la frase entra palabra a palabra, las luces crecen mientras piensa y la respuesta se escribe en directo
+// Hablar con Fogar (v3): un velo con luces sobre el mando. Lo que se escribe (o se dicta con el micrófono del teclado) va
+// al Fogar Gateway; la frase entra palabra a palabra, las luces crecen mientras piensa y la respuesta se escribe en directo
 // por el WebSocket (`talk`: partial y final de la voz, token con lo acumulado, done, error, stopped, hidden).
 // «Parar» mientras piensa, escribe o la respuesta suena (en la tele o aquí: hasta `silent`); «Quitar de la tele» tras la
 // respuesta, ya en silencio, mientras la tele aún la enseña (hasta `hidden`; si no sonó en la tele, como mucho QUIT_MS).
@@ -22,7 +22,7 @@ const player = createPcmPlayer(() => audioCtx() || ensureAudioCtx(), () => acts(
 let mic = false;                                        // true: el orbe graba (hay micrófono y HTTPS)
 let out = 'tv';                                         // dónde suena la respuesta en curso
 let quit = false, quitT = 0;                            // «Quitar de la tele» disponible (la tele aún enseña la respuesta)
-let talking = false;                                    // Jota responde con voz (del primer token a `silent`, `stopped` o `error`)
+let talking = false;                                    // Fogar responde con voz (del primer token a `silent`, `stopped` o `error`)
 let asked = 0;                                          // número de la pregunta: el resultado de una ya sustituida no se pinta
 let lastAsk = '', retry = false;                         // la última pregunta en texto (escrita o ya transcrita) y si se ofrece repetirla
 /** La voz sincronizada de la respuesta en curso (`at`: cuándo llegó, para avanzar la cabeza) o null.
@@ -76,7 +76,7 @@ function stage(st) {
   const S = $('#agS');
   S.dataset.st = st;
   $('#shade').classList.toggle('think', st === 'wait' || st === 'rec');
-  $('#agSt').textContent = st === 'wait' ? 'Un momento' : st === 'done' ? 'Jota' : st === 'rec' ? 'Te escucho… suelta para enviar' : 'Pídeme algo';   // en reposo nadie escucha todavía
+  $('#agSt').textContent = st === 'wait' ? 'Un momento' : st === 'done' ? 'Fogar' : st === 'rec' ? 'Te escucho… suelta para enviar' : 'Pídeme algo';   // en reposo nadie escucha todavía
   if (st !== 'done') noQuit();
   acts();
 }
@@ -123,7 +123,7 @@ function voiceEnd(show) {
   if (rep.dataset.voice !== undefined) delete rep.dataset.voice;
   if (was && show && voxText) { rep.className = 'rep'; rep.textContent = voxText; }
 }
-/** Un error de Jota (en rojo, que no parezca una respuesta); `again`: se ofrece repetir la última pregunta, si la hay.
+/** Un error de Fogar (en rojo, que no parezca una respuesta); `again`: se ofrece repetir la última pregunta, si la hay.
  *  @param {string} msg @param {boolean} [again] */
 function fail(msg, again = true) {
   const rep = $('#rep'); rep.className = 'rep err'; rep.textContent = msg;
@@ -166,8 +166,8 @@ function onTalk(j) {
     quit = true; stage('done'); if (!talking) armQuit(); acts();
     return;
   }
-  if (j.ev === 'silent') { talking = false; if (quit) armQuit(); acts(); return; }   // Jota dejó de hablar
-  if (j.ev === 'error') { talking = false; voiceReset(); player.stop(); voice.abort(); fail(j.error || 'Jota no está disponible.'); return; }
+  if (j.ev === 'silent') { talking = false; if (quit) armQuit(); acts(); return; }   // Fogar dejó de hablar
+  if (j.ev === 'error') { talking = false; voiceReset(); player.stop(); voice.abort(); fail(j.error || 'Fogar no está disponible.'); return; }
   // el turno se paró (aquí o desde otro móvil): el audio se corta; si estaba pensando, «Parado.» (grabando otra frase, nada más)
   if (j.ev === 'stopped') {
     talking = false; voiceEnd(true); player.stop(); noQuit();

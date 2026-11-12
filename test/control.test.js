@@ -145,9 +145,9 @@ test('Live Activities: encima de una web, la isla se inyecta por CDP con los tok
   await cmd({ t: 'activity', op: 'clear' });
 });
 
-test('agente: sin Gateway configurado dice que Jota no está disponible', async () => {
+test('agente: sin Gateway configurado dice que Fogar no está disponible', async () => {
   const r = await cmd({ t: 'ask', text: 'pon algo de jazz' });
-  assert.equal(r.error, 'Jota no está disponible.');
+  assert.equal(r.error, 'Fogar no está disponible.');
   assert.match((await cmd({ t: 'ask', text: '  ' })).error, /vacío/);
 });
 

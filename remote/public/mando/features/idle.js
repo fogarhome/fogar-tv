@@ -1,5 +1,5 @@
 // Pantalla en reposo de la tele (ajustes, solo admin): privacidad (modo visitas), momento, horario (también por día), tiempos,
-// «Seguir viendo» (fuentes; la fila de Spotify es `music`), distribución y el cristal del panel de Jota en la tele.
+// «Seguir viendo» (fuentes; la fila de Spotify es `music`), distribución y el cristal del panel de Fogar en la tele.
 import { $ } from '../core/dom.js';
 import { cmd, rpc } from '../core/api.js';
 import { buzz } from '../ui/haptics.js';

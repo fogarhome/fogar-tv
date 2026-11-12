@@ -1,6 +1,6 @@
 'use strict';
 // @ts-check
-// Cliente del J Gateway (STT local + agente + TTS) por WebSocket: ws://<host>:8004/ws/stream.
+// Cliente del Fogar Gateway (STT local + agente + TTS) por WebSocket: ws://<host>:8004/ws/stream.
 // Una sola sesión, perezosa: solo `ensure()` conecta (handshake → `ready`); no reconecta por su cuenta, quien la necesite
 // vuelve a llamar a `ensure()`. Traduce los mensajes del Gateway a eventos simples (`GwEvent`) y deja el resto a quien escucha.
 // Si el Gateway cierra el handshake con 1008 emite `rejected` (la clave) o `refused` (otra política: el agente no está

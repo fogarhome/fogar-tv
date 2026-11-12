@@ -65,7 +65,7 @@ test('la primera foto lleva la fuente de tv-agent.js (con tokens) y la foto con 
   const s = last(cdp);
   assert.deepEqual(Object.keys(s).sort(), ['calm', 'colors', 'ctx', 'enter', 'form', 'glass', 'icons', 'live', 'night', 'state', 'turns']);
   assert.deepEqual(s, { form: 'panel', ctx: 'idle', state: 'listen', live: true, night: false, calm: false, glass: 'auto', colors: null,
-    turns: [{ id: s.turns[0].id, you: '', youFinal: false, jota: '', tools: [], error: false, hint: '' }], icons: {}, enter: 'open' });
+    turns: [{ id: s.turns[0].id, you: '', youFinal: false, fogar: '', tools: [], error: false, hint: '' }], icons: {}, enter: 'open' });
   v.you('hola', false);
   await step(t);
   assert.ok(!cdp.exprs[1].includes('AGENTE-MINIMO') && cdp.exprs[1].length < 2000, 'las siguientes, cortas');
@@ -84,8 +84,8 @@ test('estado derivado: voz → listen; final → think; herramienta → think; p
   assert.deepEqual(s.turns[0].tools, [{ id: 'c1', kind: 'music', title: 'Reproducir música', detail: 'Spotify', status: 'run' }]);
   assert.deepEqual(s.icons, { music: JSON.parse(JSON.stringify(KINDS.music.icon)) }, 'solo los iconos de los tipos que aparecen');
   v.toolEnd({ id: 'c1', ok: true }); await see();
-  v.jota('Ahí'); await see();
-  v.jota('Ahí va.'); await see();
+  v.fogar('Ahí'); await see();
+  v.fogar('Ahí va.'); await see();
   v.done(); await see();
   assert.deepEqual(states, ['listen', 'listen', 'think', 'think', 'think', 'talk', 'talk', 'done']);
   s = last(cdp);
@@ -110,7 +110,7 @@ test('fallo de herramienta: ficha fail, pista de reintento y el orbe se queda en
   assert.equal(s.turns[0].tools[0].status, 'fail');
   assert.equal(s.turns[0].hint, RETRY_HINT);
   assert.equal(RETRY_HINT, 'Di «otra vez» para reintentar.');
-  v.jota('No he podido conectar con la casa.');
+  v.fogar('No he podido conectar con la casa.');
   v.tool({ id: 'h2', kind: 'home', title: 'Casa', detail: 'Salón' });
   await step(t);
   assert.equal(last(cdp).state, 'error', 'ni el token ni otra herramienta lo sacan de error');
@@ -133,15 +133,15 @@ test('fallo despejado: otra herramienta que acaba bien quita la pista y el orbe 
   await step(t);
   let s = last(cdp);
   assert.deepEqual([s.state, s.turns[0].hint, s.turns[0].tools.map(x => x.status)], ['think', '', ['fail', 'ok']]);
-  v.jota('Listo.'); v.done(); await step(t);
+  v.fogar('Listo.'); v.done(); await step(t);
   assert.equal(last(cdp).state, 'done', 'el agente se recuperó solo');
   // con texto ya dicho vuelve a talk; tras error() nada lo despeja
-  v.turn('panel'); v.you('otra', true); v.jota('Voy');
+  v.turn('panel'); v.you('otra', true); v.fogar('Voy');
   v.tool({ id: 'a', kind: 'web', title: 'W', detail: '' }); v.toolEnd({ id: 'a', ok: false });
   v.tool({ id: 'b', kind: 'web', title: 'W', detail: '' }); v.toolEnd({ id: 'b', ok: true });
   await step(t);
   assert.equal(last(cdp).state, 'talk');
-  v.error('Jota no está disponible.'); v.tool({ id: 'c', kind: 'web', title: 'W', detail: '' }); v.toolEnd({ id: 'c', ok: true });
+  v.error('Fogar no está disponible.'); v.tool({ id: 'c', kind: 'web', title: 'W', detail: '' }); v.toolEnd({ id: 'c', ok: true });
   await step(t);
   s = last(cdp);
   assert.deepEqual([s.state, s.turns.at(-1).error], ['error', true]);
@@ -154,13 +154,13 @@ test('fichas sin result: dejan de girar al cerrar (done, error/down), al Parar y
   // el Gateway cae con una herramienta en marcha
   let { cdp, v } = make();
   v.turn('panel'); v.you('abre', true); v.tool(card('c1'));
-  v.error('Jota no está disponible.'); await step(t);
+  v.error('Fogar no está disponible.'); await step(t);
   let s = last(cdp);
   assert.deepEqual([s.state, s.live, statuses(s)], ['error', false, [[tv.SETTLED_STATUS]]]);
   assert.equal(s.turns[0].hint, '', 'cerrar sin result no es un fallo de herramienta: sin pista');
   // done con la ficha aún girando
   ({ cdp, v } = make());
-  v.turn('panel'); v.you('abre', true); v.tool(card('c1')); v.jota('Hecho.'); v.done(); await step(t);
+  v.turn('panel'); v.you('abre', true); v.tool(card('c1')); v.fogar('Hecho.'); v.done(); await step(t);
   s = last(cdp);
   assert.deepEqual([s.state, statuses(s)], ['done', [['ok']]]);
   // Parar con la ficha en marcha y pedir otra cosa: el turno anterior no gira
@@ -183,18 +183,18 @@ test('error(): la respuesta es el error, state error y turno marcado; toolEnd/to
   v.tool({ id: 'x', kind: 'web', title: 'T', detail: '' });          // sin turno abierto: se ignora
   v.turn('panel'); v.you('hola', true);
   v.tool({ id: 'y', kind: 'desconocido', title: 'T', detail: '' });   // tipo fuera de KINDS: se ignora
-  v.error('Jota no está disponible.');
+  v.error('Fogar no está disponible.');
   await step(t);
   const s = last(cdp);
   assert.equal(s.state, 'error');
   assert.equal(s.live, false);
-  assert.deepEqual([s.turns.at(-1).jota, s.turns.at(-1).error, s.turns.at(-1).tools], ['Jota no está disponible.', true, []]);
+  assert.deepEqual([s.turns.at(-1).fogar, s.turns.at(-1).error, s.turns.at(-1).tools], ['Fogar no está disponible.', true, []]);
 });
 
 test(`panel: ${KEEP_TURNS} turnos con id creciente (el último es el actual); la píldora lleva los mismos (la página enseña el último)`, async t => {
   t.mock.timers.enable({ apis: ['setTimeout'] });
   const { cdp, v } = make();
-  for (let i = 1; i <= 3; i++) { v.turn('panel'); v.you('p' + i, true); v.jota('r' + i); v.done(); }
+  for (let i = 1; i <= 3; i++) { v.turn('panel'); v.you('p' + i, true); v.fogar('r' + i); v.done(); }
   v.turn('panel'); v.done();                                             // cancelado sin nada: no cuenta
   v.turn('panel', { voice: true }); v.you('p4', false);
   await step(t);
@@ -203,12 +203,12 @@ test(`panel: ${KEEP_TURNS} turnos con id creciente (el último es el actual); la
   assert.deepEqual(s.turns.map(x => x.you), ['p3', 'p4']);
   assert.ok(s.turns[1].id > s.turns[0].id);
   v.done();
-  v.turn('island'); v.you('p5', true); v.jota('r5');
+  v.turn('island'); v.you('p5', true); v.fogar('r5');
   await step(t);
   s = last(cdp);
   assert.equal(s.form, 'pill');
   // también los KEEP_TURNS: así el log no cambia en el mismo frame que la forma (el anterior se pliega en el viaje del paso)
-  assert.deepEqual(s.turns.map(x => x.you + ':' + x.jota), ['p4:', 'p5:r5']);
+  assert.deepEqual(s.turns.map(x => x.you + ':' + x.fogar), ['p4:', 'p5:r5']);
   assert.deepEqual(snapshot({ form: 'pill', ctx: 'video', state: 'done', live: false, look: /** @type {any} */ ({}), turns: s.turns.concat({ ...s.turns[1], id: 99 }) }).turns.length, KEEP_TURNS);
 });
 
@@ -217,7 +217,7 @@ test('cierre: 4000 + 45 × letras de la respuesta tras done (y no antes)', async
   const { cdp, v } = make();
   const hides = () => cdp.exprs.filter(e => e.includes('TVAgent.hide()')).length;
   const reply = 'Mañana, sol y 24 grados.';
-  v.turn('panel'); v.you('¿tiempo?', true); v.jota(reply); v.done();
+  v.turn('panel'); v.you('¿tiempo?', true); v.fogar(reply); v.done();
   await step(t);
   const ms = CLOSE_BASE_MS + CLOSE_PER_CHAR_MS * reply.length;
   assert.equal(ms, 4000 + 45 * reply.length);
@@ -235,7 +235,7 @@ test('contexto (ronda 2): ctx sigue a la página en cada foto, igual que noche, 
   await step(t);
   assert.deepEqual([last(cdp).ctx, last(cdp).colors], ['music', ['#649ab4', '#f5c089']]);
   c.now = ctxOf({ ctx: 'video', night: true, calm: true, glass: 'C', colors: null });
-  v.jota('Buenas');
+  v.fogar('Buenas');
   await step(t);
   const s = last(cdp);
   assert.deepEqual([s.ctx, s.night, s.calm, s.glass, s.colors], ['video', true, true, 'C', null], 'el tinte ya no se fija al turno');
@@ -267,7 +267,7 @@ test('reset() y una página sin TVAgent reinyectan la fuente', async t => {
   v.turn('panel'); v.you('a', true);
   await step(t);
   cdp.has = false;
-  v.jota('b'); await step(t); await flushMicro();
+  v.fogar('b'); await step(t); await flushMicro();
   assert.equal(injects(), 2, 'la página cambió sin aviso: un reintento con la fuente');
   cdp.has = true;
   v.reset(); await step(t);
@@ -275,7 +275,7 @@ test('reset() y una página sin TVAgent reinyectan la fuente', async t => {
 });
 
 test('snapshot(): copia los turnos (la foto no cambia si luego cambia el turno) e ignora iconos de tipos desconocidos', () => {
-  const turn = { id: 1, you: 'a', youFinal: true, jota: '', tools: [{ id: 't', kind: 'web', title: 'W', detail: '', status: 'run' }], error: false, hint: '' };
+  const turn = { id: 1, you: 'a', youFinal: true, fogar: '', tools: [{ id: 't', kind: 'web', title: 'W', detail: '', status: 'run' }], error: false, hint: '' };
   const look = { ctx: 'web', night: false, calm: false, glass: 'auto', colors: null };
   const s = snapshot({ form: 'panel', ctx: 'web', state: 'think', live: true, look, turns: [turn] });
   turn.tools[0].status = 'ok'; turn.you = 'b';
@@ -309,12 +309,12 @@ test('script por documento: con la capa a la vista, la fuente (una vez) y la úl
   assert.equal(s1.enter, 'restore');
   assert.equal(s1.turns.at(-1).you, 'hola');
   assert.equal(last(cdp).enter, 'open', 'la foto normal entra con su animación');
-  v.jota('Ahí va'); await step(t); await settle();
+  v.fogar('Ahí va'); await step(t); await settle();
   sc = scripts(cdp);
   assert.equal(sc.length, 3, 'la fuente no se vuelve a registrar; la foto sí');
-  assert.equal(snapOf(sc[2].source).turns.at(-1).jota, 'Ahí va');
+  assert.equal(snapOf(sc[2].source).turns.at(-1).fogar, 'Ahí va');
   assert.deepEqual(removed(cdp), ['2'], 'la foto vieja se quita después de poner la nueva');
-  v.jota('Ahí va'); await step(t); await settle();
+  v.fogar('Ahí va'); await step(t); await settle();
   assert.equal(scripts(cdp).length, 3, 'la misma foto no se registra otra vez');
   v.hide(); await settle();
   assert.deepEqual(removed(cdp).sort(), ['1', '2', '3'], 'al cerrar se quitan la foto y la fuente');
@@ -339,7 +339,7 @@ test('reset() con la capa a la vista: la foto siguiente va en modo restore (y la
   await step(t);
   v.reset(); await step(t);
   assert.equal(last(cdp).enter, 'restore');
-  v.jota('x'); await step(t);
+  v.fogar('x'); await step(t);
   assert.equal(last(cdp).enter, 'open');
 });
 
@@ -358,7 +358,7 @@ test('reset() justo después de cerrar: se quita otra vez (el script pudo restau
 });
 
 
-// ── Ronda 3: el formato lo decide la página (agent-form.js), Jota (layout) y el usuario (arrastre)
+// ── Ronda 3: el formato lo decide la página (agent-form.js), Fogar (layout) y el usuario (arrastre)
 const IDLE = { url: 'http://127.0.0.1:8787/idle.html', stage: null, idle: true };
 const WEB = { url: 'https://cocina.example/paella', stage: null, idle: false };
 const NETFLIX = { url: 'https://www.netflix.com/browse', stage: null, idle: false };
@@ -402,7 +402,7 @@ test('navegar a una app de contenido: la píldora llega cuando la página nueva 
   await step(t, 100); await step(t);
   assert.equal(last(m.cdp).form, 'pill');
   assert.deepEqual(forms, ['panel:true', 'pill:true']);
-  play(m, false); m.v.jota('Ahí la tienes.'); await step(t);
+  play(m, false); m.v.fogar('Ahí la tienes.'); await step(t);
   assert.equal(last(m.cdp).form, 'pill', 'pausar (o no reproducir) no devuelve el panel');
 });
 
@@ -415,7 +415,7 @@ test('web normal: sigue el panel; un vídeo grande que avanza la pasa a píldora
   assert.equal(m.v.watching(), true, 'capa a la vista: page-poll vigila');
   play(m, true); await step(t, MORPH_DELAY_MS); await step(t);
   assert.equal(last(m.cdp).form, 'pill');
-  play(m, false); m.v.jota('Listo.'); await step(t);
+  play(m, false); m.v.fogar('Listo.'); await step(t);
   assert.equal(last(m.cdp).form, 'pill');
   m.v.done(); m.v.turn('panel'); m.v.you('y otra cosa', true); await step(t);
   assert.equal(last(m.cdp).form, 'panel', 'turno nuevo en una web sin vídeo: panel otra vez');
@@ -439,13 +439,13 @@ test('reproducción: pausar durante el respiro lo cancela; una capa oculta (Para
 test('espera a la página: un turno que abre algo no se cierra mientras la página nueva no esté pintada; luego, el cierre normal', async t => {
   t.mock.timers.enable({ apis: ['setTimeout', 'Date'] });
   const m = make({ page: IDLE, playback: false });
-  const jota = 'La tienes en pantalla.', normal = CLOSE_BASE_MS + CLOSE_PER_CHAR_MS * jota.length;
+  const fogar = 'La tienes en pantalla.', normal = CLOSE_BASE_MS + CLOSE_PER_CHAR_MS * fogar.length;
   m.v.turn('panel'); m.v.you('abre la receta', true);
   m.v.tool({ id: 'w', kind: 'web', title: 'Abrir en la tele', detail: 'cocina.example', opens: true }); m.v.toolEnd({ id: 'w', ok: true });
   await step(t);
   m.cdp.has = false;                                 // la página nueva aún no tiene la capa (no pintada)
   m.c.now = { ...m.c.now, page: WEB }; m.v.reset();
-  m.v.jota(jota); m.v.done();
+  m.v.fogar(fogar); m.v.done();
   await step(t); await settle();
   assert.equal(m.v.awaiting(), true);
   await step(t, normal + 500);
@@ -462,13 +462,13 @@ test('espera a la página: un turno que abre algo no se cierra mientras la pági
 test('espera a la página sin fichas (Gateway sin tool_calls_enabled): la arma la navegación del servidor durante el turno', async t => {
   t.mock.timers.enable({ apis: ['setTimeout', 'Date'] });
   const m = make({ page: IDLE, playback: false });
-  const jota = 'Ahí la tienes.', normal = CLOSE_BASE_MS + CLOSE_PER_CHAR_MS * jota.length;
+  const fogar = 'Ahí la tienes.', normal = CLOSE_BASE_MS + CLOSE_PER_CHAR_MS * fogar.length;
   m.v.navigating();                                  // sin turno abierto: no cuenta
   m.v.turn('panel'); m.v.you('ponme esta serie', true);
-  m.v.navigating();                                  // control.nav: Jota abre la app (sin evento de herramienta)
+  m.v.navigating();                                  // control.nav: Fogar abre la app (sin evento de herramienta)
   await step(t);
   m.cdp.has = false; m.c.now = { ...m.c.now, page: WEB }; m.v.reset();
-  m.v.jota(jota); m.v.done();
+  m.v.fogar(fogar); m.v.done();
   await step(t); await settle();
   assert.equal(m.v.awaiting(), true, 'espera a la página aunque no haya fichas');
   await step(t, normal + 500);
@@ -478,7 +478,7 @@ test('espera a la página sin fichas (Gateway sin tool_calls_enabled): la arma l
   await step(t, AFTER_PAINT_MIN_MS + 100);
   assert.equal(hidesOf(m.cdp), 1);
   // turno siguiente sin navegar: no hereda la espera
-  m.v.turn('panel'); m.v.you('gracias', true); m.v.jota('De nada.'); m.v.done();
+  m.v.turn('panel'); m.v.you('gracias', true); m.v.fogar('De nada.'); m.v.done();
   await step(t); await settle();
   assert.equal(m.v.awaiting(), false);
 });
@@ -490,7 +490,7 @@ test('espera a la página: si nunca se pinta, vence en AWAIT_PAGE_MS; ya pintada
   m.v.tool({ id: 'w', kind: 'web', title: 'Abrir en la tele', detail: 'cocina.example', opens: true }); m.v.toolEnd({ id: 'w', ok: true });
   await step(t);
   m.cdp.has = false; m.c.now = { ...m.c.now, page: WEB }; m.v.reset();
-  m.v.jota('Ya está.'); m.v.done();
+  m.v.fogar('Ya está.'); m.v.done();
   await step(t, AWAIT_PAGE_MS - 100);
   assert.equal(hidesOf(m.cdp), 0);
   await step(t, 200);
@@ -502,7 +502,7 @@ test('espera a la página: si nunca se pinta, vence en AWAIT_PAGE_MS; ya pintada
     n.v.tool({ id: 'k', kind, title: 'T', detail: '', opens: kind === 'web' }); n.v.toolEnd({ id: 'k', ok });
     await step(t);
     n.cdp.has = painted; n.c.now = { ...n.c.now, page: WEB }; n.v.reset(); await step(t); await settle();
-    n.v.jota('Vale.'); n.v.done();
+    n.v.fogar('Vale.'); n.v.done();
     assert.equal(n.v.awaiting(), false, `${kind} ${ok ? 'bien' : 'fallida'}${painted ? ', ya pintada' : ''}: no espera`);
     await step(t, CLOSE_BASE_MS + CLOSE_PER_CHAR_MS * 5 + 100);
     assert.equal(hidesOf(n.cdp), 1);
@@ -512,19 +512,19 @@ test('espera a la página: si nunca se pinta, vence en AWAIT_PAGE_MS; ya pintada
 test('espera a la página de contenido: pintada → píldora → PILL_DWELL y se cierra; nada la reabre', async t => {
   t.mock.timers.enable({ apis: ['setTimeout'] });
   const m = make({ page: IDLE, playback: false });
-  const jota = 'Ahí la tienes.';
+  const fogar = 'Ahí la tienes.';
   m.v.turn('panel'); m.v.you('ponme esta serie', true);
   m.v.tool({ id: 'n', kind: 'video', title: 'Abrir en la tele', detail: 'Netflix', opens: true }); m.v.toolEnd({ id: 'n', ok: true });
   await step(t);
   m.cdp.has = false; m.c.now = { ...m.c.now, page: NETFLIX }; m.v.reset();
-  m.v.jota(jota); m.v.done(); await step(t); await settle();
+  m.v.fogar(fogar); m.v.done(); await step(t); await settle();
   assert.equal(m.v.awaiting(), true);
   m.cdp.has = true; m.v.reset(); await step(t); await settle();
   assert.equal(m.v.awaiting(), true, 'pintada, con el paso en el respiro: sigue esperando');
   await step(t, MORPH_DELAY_MS); await step(t);
   assert.equal(last(m.cdp).form, 'pill');
   assert.equal(m.v.awaiting(), false);
-  await step(t, PILL_DWELL_BASE_MS + PILL_DWELL_PER_CHAR_MS * jota.length - 300);
+  await step(t, PILL_DWELL_BASE_MS + PILL_DWELL_PER_CHAR_MS * fogar.length - 300);
   assert.equal(hidesOf(m.cdp), 0, 'la píldora se queda su rato');
   await step(t, 400);
   assert.equal(hidesOf(m.cdp), 1, 'y se cierra');
@@ -561,11 +561,11 @@ test('userForm (talkform / arrastre): los dos sentidos, ya; vale para el conteni
 test('userForm sobre contenido tras acabar el turno: el cierre usa los tiempos normales desde el cambio', async t => {
   t.mock.timers.enable({ apis: ['setTimeout'] });
   const m = make({ page: NETFLIX, playback: false });
-  const jota = 'Vale.';
-  m.v.turn('panel'); m.v.you('x', true); m.v.jota(jota); m.v.done(); await step(t);
+  const fogar = 'Vale.';
+  m.v.turn('panel'); m.v.you('x', true); m.v.fogar(fogar); m.v.done(); await step(t);
   await step(t, 1000);
   m.v.userForm('panel'); await step(t);
-  await step(t, CLOSE_BASE_MS + CLOSE_PER_CHAR_MS * jota.length - 300);
+  await step(t, CLOSE_BASE_MS + CLOSE_PER_CHAR_MS * fogar.length - 300);
   assert.equal(hidesOf(m.cdp), 0);
   await step(t, 400);
   assert.equal(hidesOf(m.cdp), 1);
@@ -593,7 +593,7 @@ test('el binding del arrastre se pone una vez por sesión CDP (Runtime.addBindin
   m.v.turn('panel'); m.v.you('x', true); await step(t); await settle();
   const binds = () => m.cdp.calls.filter(x => x.method === 'Runtime.addBinding');
   assert.deepEqual(binds().map(x => x.name), [FORM_BINDING]);
-  m.v.jota('a'); await step(t); await settle();
+  m.v.fogar('a'); await step(t); await settle();
   m.v.hide(); await settle(); m.v.turn('panel'); m.v.you('y', true); await step(t); await settle();
   assert.equal(binds().length, 1, 'misma sesión: no se repite');
   m.cdp.session = { otra: 1 }; m.v.reset(); await step(t); await settle();
@@ -610,11 +610,11 @@ test('agentLayout (tv_open con layout): vale al llegar a esa página y mientras 
   await go(t, m, { url: 'https://fotos.example/album/1', stage: null, idle: false }); await step(t, MORPH_DELAY_MS); await step(t);
   assert.equal(last(m.cdp).form, 'pill', 'en la web que abrió con layout pill');
   m.v.done(); m.v.turn('panel'); m.v.you('la siguiente', true); await step(t);
-  assert.equal(last(m.cdp).form, 'pill', 'turno nuevo en el mismo sitio: sigue lo que pidió Jota');
+  assert.equal(last(m.cdp).form, 'pill', 'turno nuevo en el mismo sitio: sigue lo que pidió Fogar');
   await go(t, m, { url: 'https://otra.example/', stage: null, idle: false });
   m.v.done(); m.v.turn('panel'); m.v.you('z', true); await step(t);
   assert.equal(last(m.cdp).form, 'panel', 'otro sitio: se pierde');
-  // Jota pide panel en una app de contenido: manda sobre el contenido (y devuelve la píldora al panel)
+  // Fogar pide panel en una app de contenido: manda sobre el contenido (y devuelve la píldora al panel)
   await go(t, m, NETFLIX); await step(t, MORPH_DELAY_MS); await step(t);
   assert.equal(last(m.cdp).form, 'pill');
   m.v.agentLayout('panel', 'https://netflix.com/title/1'); await step(t, MORPH_DELAY_MS); await step(t);
@@ -647,10 +647,10 @@ test('pausar en el respiro con la espera a la página: el paso se cancela y la e
   t.mock.timers.enable({ apis: ['setTimeout', 'Date'] });
   const WEB2 = { url: 'https://b.example/video', stage: null, idle: false };
   const m = make({ ctx: 'web', page: WEB, playback: false });
-  const jota = 'Ahí lo tienes.', normal = CLOSE_BASE_MS + CLOSE_PER_CHAR_MS * jota.length;
+  const fogar = 'Ahí lo tienes.', normal = CLOSE_BASE_MS + CLOSE_PER_CHAR_MS * fogar.length;
   m.v.turn('panel'); await step(t, 200);
   m.v.tool({ id: 'o', kind: 'web', title: 'Abrir', detail: 'b.example', opens: true }); await step(t);
-  m.v.toolEnd({ id: 'o', ok: true }); m.v.jota(jota);
+  m.v.toolEnd({ id: 'o', ok: true }); m.v.fogar(fogar);
   m.c.now = { ...m.c.now, page: WEB2, playback: true };   // la página nueva arranca un vídeo grande
   m.v.reset(); m.v.done();
   await step(t, 150); await settle();                       // pintada → respiro hacia la píldora
@@ -736,7 +736,7 @@ test('otra pestaña con la conversación ya cerrada (Netflix va en la suya): al 
   const m = make({ page: IDLE, playback: false });
   m.v.reset();
   assert.equal(m.cdp.exprs.length, 0, 'sin haber pintado nunca, nada que quitar');
-  m.v.turn('panel'); m.v.you('hola', true); m.v.jota('Hola.'); m.v.done();
+  m.v.turn('panel'); m.v.you('hola', true); m.v.fogar('Hola.'); m.v.done();
   await step(t);
   m.v.hide(); await step(t);
   await step(t, 60_000);                             // mucho después del cierre
@@ -790,13 +790,13 @@ test('pestaña en blanco (about:blank mientras carga la de verdad): ni se sondea
   t.mock.timers.enable({ apis: ['setTimeout', 'Date'] });
   const BLANK = { url: 'about:blank', stage: null, idle: false };
   const m = make({ page: NETFLIX, playback: false });            // desde una app: ya en píldora
-  const jota = 'Hecho.';
+  const fogar = 'Hecho.';
   m.v.turn('panel'); m.v.you('pon Netflix', true); await step(t);
   m.v.navigating();                                               // la orden netflix, sin fichas
   m.c.now = { ...m.c.now, page: BLANK }; m.v.reset({ tab: true }); // netflix.front: pestaña nueva en blanco al frente
   await step(t); await settle();
   assert.equal(probes(m.cdp), 0, 'about:blank no se sondea');
-  m.v.jota(jota); m.v.done(); await step(t); await settle();
+  m.v.fogar(fogar); m.v.done(); await step(t); await settle();
   assert.equal(m.v.awaiting(), true);
   // Chrome ya dice la URL nueva pero el documento sigue en blanco: la sonda contesta «blank» y no cuenta
   m.cdp.probe = tv.PAINT_BLANK;
@@ -816,13 +816,13 @@ test('pestaña en blanco (about:blank mientras carga la de verdad): ni se sondea
 test('espera vencida (la sonda llegó a su tope) y luego la página de verdad: la espera se vuelve a armar y el cierre cuenta AFTER_PAINT_MIN_MS desde su pintada', async t => {
   t.mock.timers.enable({ apis: ['setTimeout', 'Date'] });
   const m = make({ page: NETFLIX, playback: false });
-  const jota = 'Hecho.', normal = CLOSE_BASE_MS + CLOSE_PER_CHAR_MS * jota.length;
+  const fogar = 'Hecho.', normal = CLOSE_BASE_MS + CLOSE_PER_CHAR_MS * fogar.length;
   m.v.turn('panel'); m.v.you('pon Netflix', true); await step(t);
   m.v.navigating();
   m.cdp.probe = false;                                            // sin contenido que se reconozca: vence (cuenta, pero «débil»)
   m.c.now = { ...m.c.now, page: { ...NETFLIX, url: 'https://www.netflix.com/SwitchProfile' } }; m.v.reset();
   await step(t); await settle();
-  m.v.jota(jota); m.v.done(); await step(t); await settle();
+  m.v.fogar(fogar); m.v.done(); await step(t); await settle();
   assert.equal(m.v.awaiting(), false, 'ya «pintada» por el tope');
   await step(t, 1500); await settle();
   let release;
@@ -842,7 +842,7 @@ test('espera vencida (la sonda llegó a su tope) y luego la página de verdad: l
   n.v.turn('panel'); n.v.you('pon Netflix', true); await step(t);
   n.v.navigating(); n.c.now = { ...n.c.now, page: { ...NETFLIX, url: 'https://www.netflix.com/browse?x=1' } }; n.v.reset();
   await step(t); await settle();
-  n.v.jota(jota); n.v.done(); await step(t); await settle();
+  n.v.fogar(fogar); n.v.done(); await step(t); await settle();
   await step(t, 1000);
   n.c.now = { ...n.c.now, page: { ...NETFLIX, url: 'https://www.netflix.com/title/1' } }; n.v.reset(); await step(t); await settle();
   assert.equal(n.v.awaiting(), false);
@@ -853,12 +853,12 @@ test('espera vencida (la sonda llegó a su tope) y luego la página de verdad: l
 test('reset({ tab, from }): pregunta a la pestaña que se deja qué palabras enseña ya y las manda en la foto del cambio (`shown`)', async t => {
   t.mock.timers.enable({ apis: ['setTimeout'] });
   const m = make({ page: NETFLIX, playback: false });
-  m.v.turn('panel'); m.v.you('vuelve', true); m.v.jota('Vale, te dejo la serie a medias'); await step(t); await settle();
+  m.v.turn('panel'); m.v.you('vuelve', true); m.v.fogar('Vale, te dejo la serie a medias'); await step(t); await settle();
   const id = last(m.cdp).turns.at(-1).id;
   const asked = [];
   const from = async (method, p) => { asked.push(p.expression); return { result: { value: { [id]: [1, 3], x: ['a'] } } }; };
   const n = m.cdp.exprs.length;
-  m.v.jota('Vale, te dejo la serie a medias y vuelvo');           // una tanda pendiente: espera a la foto del cambio
+  m.v.fogar('Vale, te dejo la serie a medias y vuelvo');           // una tanda pendiente: espera a la foto del cambio
   m.cdp.session = { otra: 1 };
   const p = m.v.reset({ tab: true, from });
   assert.ok(asked[0].includes('revealed'), 'pregunta a la que se deja');
@@ -867,7 +867,7 @@ test('reset({ tab, from }): pregunta a la pestaña que se deja qué palabras ens
   assert.deepEqual([first.tab, first.enter, first.shown], [true, 'restore', { [id]: [1, 3] }], 'lo que allí se veía, saneado');
   await step(t); await settle();
   const next = last(m.cdp);
-  assert.ok(!('shown' in next) && !('tab' in next) && next.turns.at(-1).jota.endsWith('vuelvo'), 'luego, la de ahora');
+  assert.ok(!('shown' in next) && !('tab' in next) && next.turns.at(-1).fogar.endsWith('vuelvo'), 'luego, la de ahora');
   // la que se deja no contesta: no se espera más de FROM_WAIT_MS y se pinta sin `shown`
   const q = make({ page: NETFLIX, playback: false });
   q.v.turn('panel'); q.v.you('hola', true); await step(t); await settle();
@@ -906,7 +906,7 @@ test('tarjeta de contenido: puesta en el reposo, al pasar a una web ajena sigue 
   await step(t);
   assert.equal(last(m.cdp).turns.at(-1).media.items[0].img, card.items[0].img, 'en el reposo, con su miniatura');
   m.c.now = ctxOf({ ctx: 'web', page: WEB });
-  m.v.jota('Hecho, ya suena');
+  m.v.fogar('Hecho, ya suena');
   await step(t);
   assert.equal(last(m.cdp).turns.at(-1).media.items[0].img, '', 'en la web, sin ella');
   assert.equal(last(m.cdp).turns.at(-1).media.items[0].title, 'Lofi', 'el resto de la tarjeta sigue');
@@ -928,10 +928,10 @@ test('20 tokens en 50 ms producen una sola llamada a render', async t => {
   await step(t);
   const n = cdp.exprs.length;
   let reply = '';
-  for (let i = 0; i < 20; i++) { reply += 'pal' + i + ' '; v.jota(reply); t.mock.timers.tick(2.5); }
+  for (let i = 0; i < 20; i++) { reply += 'pal' + i + ' '; v.fogar(reply); t.mock.timers.tick(2.5); }
   await step(t);
   assert.equal(cdp.exprs.length - n, 1);
-  assert.equal(last(cdp).turns.at(-1).jota, reply);
+  assert.equal(last(cdp).turns.at(-1).fogar, reply);
 });
 
 test('la isla de actividades: a la vista con el panel (dim(1)), apartada bajo la píldora (dim(0)); hide() la quita ya, avisa a onHide y descarta lo pendiente', async t => {
@@ -942,7 +942,7 @@ test('la isla de actividades: a la vista con el panel (dim(1)), apartada bajo la
   v.turn('panel'); v.you('hola', true);
   await step(t);
   assert.ok(cdp.exprs.at(-1).includes('window.TVIsland&&window.TVIsland.dim(1,true)'), 'panel: la isla se ve, a su izquierda');
-  v.turn('island'); v.you('hola', true); v.jota('buenas'); v.done();
+  v.turn('island'); v.you('hola', true); v.fogar('buenas'); v.done();
   await step(t);
   assert.equal(last(cdp).form, 'pill');
   assert.ok(cdp.exprs.at(-1).includes('window.TVIsland&&window.TVIsland.dim(0,false)') && cdp.exprs.at(-1).includes('window.__tvIslandDim=[0,false]'), 'píldora: ocupa su sitio (y queda apuntado para una isla que llegue después)');
@@ -962,11 +962,11 @@ test('la isla de actividades: a la vista con el panel (dim(1)), apartada bajo la
 test('tras hide(), un done o error tardío del mismo turno no vuelve a sacar la capa', async t => {
   t.mock.timers.enable({ apis: ['setTimeout'] });
   const { cdp, v } = make();
-  v.turn('panel'); v.you('hola', true); v.jota('buenas');
+  v.turn('panel'); v.you('hola', true); v.fogar('buenas');
   await step(t);
   v.hide(); await settle();
   const n = cdp.exprs.length;
-  v.done(); v.jota('más'); v.error('x');
+  v.done(); v.fogar('más'); v.error('x');
   await step(t, 60_000);
   assert.equal(cdp.exprs.length, n, 'nada más en la tele');
   v.turn('panel'); v.you('nueva', true);
@@ -1010,7 +1010,7 @@ test('ocultar devuelve la isla de actividades a 1 aunque TVAgent.hide falle', ()
 test('voice: va en la foto solo con voz, saneada (≤ VOICE_ANCHORS_MAX anclas, números finitos ≥ 0) y con la cabeza al día', async t => {
   t.mock.timers.enable({ apis: ['setTimeout', 'Date'] });
   const { cdp, v } = make();
-  v.turn('panel'); v.jota('Hola. Qué tal.');
+  v.turn('panel'); v.fogar('Hola. Qué tal.');
   await step(t);
   assert.ok(!('voice' in last(cdp)), 'sin voz, la foto no la lleva');
   const anchors = Array.from({ length: 250 }, (_, i) => [i * 10, i]);
@@ -1021,7 +1021,7 @@ test('voice: va en la foto solo con voz, saneada (≤ VOICE_ANCHORS_MAX anclas, 
   assert.deepEqual(s.voice.anchors[0], [500, 50]);
   assert.deepEqual([s.voice.rate, s.voice.upto, s.voice.text], [62, 1000, 14]);
   assert.equal(s.voice.head, 0, 'la cabeza avanza hasta la foto: -100 + 100 ms del lote');
-  v.jota('Hola. Qué tal estás.'); await step(t, 2000);
+  v.fogar('Hola. Qué tal estás.'); await step(t, 2000);
   assert.equal(last(cdp).voice.head, 1000, 'nunca pasa de upto');
   for (const bad of [{ anchors: [], rate: 0, head: 0, upto: 0, text: 0 }, { anchors: [], rate: 62, head: Infinity, upto: 0, text: 0 }, { rate: 62 }, 'x']) {
     assert.equal(tv.cleanVoice(bad), null);

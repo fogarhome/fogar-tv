@@ -1,6 +1,6 @@
 'use strict';
 // Formato de la capa del agente (remote/src/tv/agent-form.js): la tabla de prioridades de formFor/decideForm, las apps
-// de contenido por sufijo de host (sin falsos positivos) y la clave del contenido (alcance del override y de lo de Jota).
+// de contenido por sufijo de host (sin falsos positivos) y la clave del contenido (alcance del override y de lo de Fogar).
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -15,7 +15,7 @@ const IDLE = { url: 'http://127.0.0.1:8787/idle.html', idle: true };
 const WEB = { url: 'https://cocina.example/paella' };
 const NF = { url: 'https://www.netflix.com/browse' };
 
-test('formFor: tabla completa de prioridades (usuario > Jota > contenido > reproducción > panel)', () => {
+test('formFor: tabla completa de prioridades (usuario > Fogar > contenido > reproducción > panel)', () => {
   const rows = [
     // [página, playback, override, agentLayout] → [form, by]
     [IDLE, false, null, null, 'panel', 'default'],
@@ -42,7 +42,7 @@ test('formFor: tabla completa de prioridades (usuario > Jota > contenido > repro
     assert.equal(formFor(o), form);
     assert.ok(FORMS.includes(form) && FORM_SOURCES.includes(by));
   }
-  assert.deepEqual([...FORCED_SOURCES], ['user', 'agent'], 'solo usuario y Jota devuelven la píldora al panel');
+  assert.deepEqual([...FORCED_SOURCES], ['user', 'agent'], 'solo usuario y Fogar devuelven la píldora al panel');
   assert.equal(OVERRIDE_SCOPE, 'content');
 });
 
@@ -80,7 +80,7 @@ test('contentKey: reposo, escenario, app (por su entrada: un salto de host dentr
   assert.equal(contentKey({ url: 'x' }), '');
 });
 
-test('layout de Jota: tv_open / tv_open_app del MCP lo aceptan (mismos valores que FORMS) y lo pasan a la orden nav', () => {
+test('layout de Fogar: tv_open / tv_open_app del MCP lo aceptan (mismos valores que FORMS) y lo pasan a la orden nav', () => {
   const mcp = fs.readFileSync(path.join(__dirname, '..', '..', 'mcp', 'server.js'), 'utf8');
   assert.deepEqual(new Function('return ' + mcp.match(/const LAYOUTS = (\[[^\]]*\]);/)[1])(), [...FORMS]);
   assert.match(mcp, /tool\('tv_open',[\s\S]*?\{ url: [^\n]*, layout \},\n\s*async \(\{ url, layout \}\) => out\(await cmd\(\{ t: 'nav', url, \.\.\.\(layout \? \{ layout \} : \{\}\) \}\)/);
@@ -123,7 +123,7 @@ test('opensPage: las herramientas con ficha que ponen otra página (el cierre es
     ['tv_idle', { op: 'set' }], ['tv_state', {}], ['HassTurnOn', { name: 'luz' }], ['xtv_open', { url: 'a' }]]) assert.equal(opensPage(n, a), false, n);
 });
 
-test('tv_click_at: la membrana de la conversación deja pasar el clic de Jota y lo recupera después (también si falla)', async () => {
+test('tv_click_at: la membrana de la conversación deja pasar el clic de Fogar y lo recupera después (también si falla)', async () => {
   const createControl = require(path.join(REMOTE, 'src', 'features', 'control'));
   const seen = [];
   let fail = false;

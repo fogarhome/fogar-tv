@@ -37,7 +37,7 @@ function loadConfig(env = process.env, { hostname = os.hostname() } = {}) {
   const PORT = Number(env.TV_PORT) || 8787;
   const SELF = `http://127.0.0.1:${PORT}`;
   const NAME = (env.TV_NAME || '').trim() || 'Pantalla';
-  const STATE_DIR = path.resolve(env.TV_STATE_DIR || path.join(HOME, '.local', 'state', 'jota-screen'));
+  const STATE_DIR = path.resolve(env.TV_STATE_DIR || path.join(HOME, '.local', 'state', 'fogar-tv'));
   return Object.freeze({
     ROOT,
     PUB: path.join(ROOT, 'public'),
@@ -52,12 +52,12 @@ function loadConfig(env = process.env, { hostname = os.hostname() } = {}) {
     HOME_URL: env.TV_HOME_URL || SELF + '/idle.html',          // la pantalla en reposo
     STATE_DIR,                                                  // todo el estado: token, *.json y stage/
     STAGE_DIR: path.join(STATE_DIR, 'stage'),
-    GATEWAY_URL: (env.TV_GATEWAY_URL || '').trim(),             // J Gateway escrito a mano: ws://<host>:8004/ws/stream; manda sobre gateway.json
-    GATEWAY_PORT: Number(env.TV_GATEWAY_PORT) || 8004,           // puerto del J Gateway al buscarlo (este equipo, tailnet) y por defecto
+    GATEWAY_URL: (env.TV_GATEWAY_URL || '').trim(),             // Fogar Gateway escrito a mano: ws://<host>:8004/ws/stream; manda sobre gateway.json
+    GATEWAY_PORT: Number(env.TV_GATEWAY_PORT) || 8004,           // puerto del Fogar Gateway al buscarlo (este equipo, tailnet) y por defecto
     GATEWAY_KEY: (env.TV_GATEWAY_KEY || '').trim(),             // shortcut: clave antigua hasta emparejar con el gateway nuevo; luego, solo gateway.json
     SPEAKER_CMD: speakerCmd(env.TV_SPEAKER_CMD),   // altavoz de la tele (stdin = PCM16 24 kHz mono); vacío = pw-cat
     ADB: (env.TV_ADB || '').trim(),                             // tele Google TV por ADB (ip:5555); vacío = sin tele nativa
-    INPUT: (env.TV_INPUT || '').trim(),                         // inputId de TV Input Framework donde está J-Screen (HDMI)
+    INPUT: (env.TV_INPUT || '').trim(),                         // inputId de TV Input Framework donde está Fogar TV (HDMI)
     TDT: (env.TV_TDT || '').trim(),                             // inputId de la TDT (antena); vacío = sin canales
     AGENT: (env.TV_AGENT || '').trim() || 'j-assistant',        // agente del Gateway
     ADMIN_URL: adminUrl(env, PORT, hostname),

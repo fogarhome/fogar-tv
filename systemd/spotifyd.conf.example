@@ -1,5 +1,5 @@
-# Plantilla de spotifyd para jota-screen. scripts/install.sh la rellena en
-# ~/.config/jota-screen/spotifyd.conf si no tienes ya ~/.config/spotifyd/spotifyd.conf.
+# Plantilla de spotifyd para fogar-tv. scripts/install.sh la rellena en
+# ~/.config/fogar-tv/spotifyd.conf si no tienes ya ~/.config/spotifyd/spotifyd.conf.
 # El nombre del altavoz no va aquí: scripts/spotifyd-run.sh lo pasa con --device-name
 # (TV_SPOTIFY_DEVICE o TV_NAME), para que coincida con el que busca el servidor.
 [global]

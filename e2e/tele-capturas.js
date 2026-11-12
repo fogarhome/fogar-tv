@@ -51,7 +51,7 @@ const timer = { id: 't1', kind: 'timer', title: 'Pasta', subtitle: 'escurrir y s
 const music = { id: 'm1', kind: 'music', title: 'Midnight City', subtitle: 'M83', icon: '🎵', accent: '#c3b7e3', progress: 0.4, updated: now };
 const live = { id: 'l1', kind: 'live', title: 'Partido', subtitle: 'Segunda parte', icon: '⚽', accent: '#8fa8d8', updated: now };
 const PANEL = { form: 'panel', ctx: 'idle', state: 'talk', live: false, night: false, calm: true, glass: 'A', colors: null, icons: {},
-  turns: [{ id: 1, you: 'Pon un temporizador de diez minutos para la pasta', youFinal: true, jota: 'Hecho, diez minutos. Te aviso cuando termine.', tools: [], error: false, hint: '' }] };
+  turns: [{ id: 1, you: 'Pon un temporizador de diez minutos para la pasta', youFinal: true, fogar: 'Hecho, diez minutos. Te aviso cuando termine.', tools: [], error: false, hint: '' }] };
 
 const errs = [];
 async function stage(b, vp, s) {

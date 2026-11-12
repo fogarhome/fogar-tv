@@ -1,4 +1,4 @@
-// Conversación con Jota en la tele («paneles vivos»): una lámina de cristal que crece con lo que se dice,
+// Conversación con Fogar en la tele («paneles vivos»): una lámina de cristal que crece con lo que se dice,
 // encima de cualquier web (también a pantalla completa). La inyecta el servidor por CDP una vez por página
 // (src/tv/talk-view.js) y luego llama a render(SNAP) cada ~100 ms y a hide(). SNAP: ver docs/arquitectura.md.
 // Dos formatos, los decide el servidor (src/tv/agent-form.js): `panel` (columna a la derecha con los 2 últimos turnos y las
@@ -19,7 +19,7 @@
 // (.sd) para que mover el host o sacarlo y volverlo a meter en la capa superior no las repita.
 // Al cambiar de pestaña (Netflix va en la suya) la primera foto trae además `tab`: lo que se quedó pintado en esta pestaña
 // es de antes (otro estado, otra forma, quizá fundiéndose), así que se retira en seco y se restaura igual que tras navegar
-// (sin entradas ni palabras que vuelvan a revelarse). Con `shown` ({ id: [tú, Jota] }, lo que enseñaba la pestaña que se
+// (sin entradas ni palabras que vuelvan a revelarse). Con `shown` ({ id: [tú, Fogar] }, lo que enseñaba la pestaña que se
 // deja, de revealed()) se restauran esas palabras y el resto se revela como siempre: nace igual que se veía allí.
 // hide(true) quita la capa en seco (la pestaña que se deja).
 // Voz sincronizada (`voice` en la foto, del turno actual; ver src/features/voice-sync.js): la respuesta deja de ir a
@@ -241,7 +241,7 @@ ${NO_BACKDROP}{-webkit-backdrop-filter:none;backdrop-filter:none}
 .w[data-form=pill] .u{font-size:${u(30)}}
 .u:empty,.j:empty,.hint:empty{display:none}
 .hint{font:400 ${u(26)}/1.3 var(--tv-sans);color:var(--t-soft)}
-/* lo que hace Jota, en palabras, junto al orbe (a 3 m el orbe solo no se distingue; en calma, sin satélite, es lo único) */
+/* lo que hace Fogar, en palabras, junto al orbe (a 3 m el orbe solo no se distingue; en calma, sin satélite, es lo único) */
 .st{font:400 ${u(26)}/1.3 var(--tv-sans);color:var(--t-soft);margin-left:${u(20)};white-space:nowrap}
 .st:empty{display:none}
 /* el turno anterior se atenúa por color, nunca por opacidad */
@@ -396,7 +396,7 @@ ${BREATHE_STATES.map(k => `.w[data-state=${k}] .orbe`).join(',')}{animation:brea
   // `voiceId` (nunca retrocede)
   let voiceAt = 0, voiceT = 0, voiceSaid = 0;
   /** @type {number | null} */ let voiceId = null;
-  /** @type {Map<number, any>} */ const turns = new Map(); // turn.id → { el, you, jota, tcs, tools, hint, said, sm }
+  /** @type {Map<number, any>} */ const turns = new Map(); // turn.id → { el, you, fogar, tcs, tools, hint, said, sm }
   /** @type {number | null} */ let curId = null; // turno actual a la vista (al cambiar, se limpia el aviso y se aplica el nivel medido)
   let lastSig = '';                 // última foto (JSON): la misma foto no despierta el rAF
   // nivel medido para glass:'auto' (se recuerda en la página); `autoNext` espera al turno siguiente para aplicarse
@@ -475,7 +475,7 @@ ${BREATHE_STATES.map(k => `.w[data-state=${k}] .orbe`).join(',')}{animation:brea
       glass: TIERS.includes(s.glass) ? s.glass : 'auto',
       colors: Array.isArray(s.colors) && s.colors.length === 2 && s.colors.every(c => typeof c === 'string' && COLOR_RE.test(c)) ? s.colors : null,
       turns: turnsIn.filter(t => t && Number.isFinite(t.id)).map(t => ({
-        id: t.id, you: str(t.you), youFinal: !!t.youFinal, jota: str(t.jota), error: !!t.error, hint: str(t.hint),
+        id: t.id, you: str(t.you), youFinal: !!t.youFinal, fogar: str(t.fogar), error: !!t.error, hint: str(t.hint),
         tools: (Array.isArray(t.tools) ? t.tools : []).filter(x => x && x.id != null).map(x => ({
           id: String(x.id), kind: str(x.kind), title: str(x.title), detail: str(x.detail),
           status: x.status === 'ok' || x.status === 'fail' ? x.status : 'run',
@@ -680,20 +680,20 @@ ${BREATHE_STATES.map(k => `.w[data-state=${k}] .orbe`).join(',')}{animation:brea
       if (current && s.voice) voicePaint(v, t);
       else {
         const spoke = voiceEnd(v);
-        setWords(v.jota, t.jota, false, current && s.live && !WORD_DONE.test(t.jota));
-        if (spoke) flushLine(v.jota);
+        setWords(v.fogar, t.fogar, false, current && s.live && !WORD_DONE.test(t.fogar));
+        if (spoke) flushLine(v.fogar);
       }
-      v.jota.el.classList.toggle('sm', small(v, t, current, s.live));
+      v.fogar.el.classList.toggle('sm', small(v, t, current, s.live));
       if (v.hint.textContent !== t.hint) v.hint.textContent = t.hint;
       syncTools(v, t.tools, s.icons);
       syncMedia(v, s.form === 'panel' ? t.media : null);   // en la píldora no se ve: ni se construye (ni pide sus imágenes)
       // un turno que ya no es el actual se enseña entero; al restaurar, también el actual (lo ya dicho no se revela otra vez),
       // o, si viene de otra pestaña (`shown`), lo que allí ya se veía (el resto se revela como siempre)
-      if (!current) flushLine(v.you), flushLine(v.jota);
+      if (!current) flushLine(v.you), flushLine(v.fogar);
       else if (restoring) {
         const k = s.shown ? s.shown[t.id] : undefined;
-        if (!s.shown) flushLine(v.you), flushLine(v.jota);
-        else if (Array.isArray(k)) showUpTo(v.you, k[0]), showUpTo(v.jota, k[1]);
+        if (!s.shown) flushLine(v.you), flushLine(v.fogar);
+        else if (Array.isArray(k)) showUpTo(v.you, k[0]), showUpTo(v.fogar, k[1]);
       }
       speak(v, t, current && s.live);
     });
@@ -702,7 +702,7 @@ ${BREATHE_STATES.map(k => `.w[data-state=${k}] .orbe`).join(',')}{animation:brea
   function stateLabel(s) {
     const t = s.turns[s.turns.length - 1];
     if (s.state === 'listen' && !(t && t.you)) return 'Te escucho…';
-    if (s.state === 'think' && !(t && (t.jota || t.tools.length))) return 'Pensando…';
+    if (s.state === 'think' && !(t && (t.fogar || t.tools.length))) return 'Pensando…';
     return '';
   }
   // cambia el turno actual: el aviso de un fallo anterior ya no vale y el nivel medido entra ahora (no a media frase)
@@ -714,14 +714,14 @@ ${BREATHE_STATES.map(k => `.w[data-state=${k}] .orbe`).join(',')}{animation:brea
   }
   function makeTurn() {
     const e = el('div', 'tn');
-    const you = line('p', 'u'), tcs = el('div', 'tcs'), jota = line('p', 'j'), hint = el('p', 'hint'), md = el('div', 'md');
-    e.append(you.el, tcs, jota.el, hint, md);
-    return { el: e, you, jota, tcs, hint, md, media: '', tools: new Map(), said: { you: false, jota: false, fails: new Set() }, sm: null };
+    const you = line('p', 'u'), tcs = el('div', 'tcs'), fogar = line('p', 'j'), hint = el('p', 'hint'), md = el('div', 'md');
+    e.append(you.el, tcs, fogar.el, hint, md);
+    return { el: e, you, fogar, tcs, hint, md, media: '', tools: new Map(), said: { you: false, fogar: false, fails: new Set() }, sm: null };
   }
   // un turno que llega ya como anterior (p. ej. al reabrir la capa) se anunció cuando era el actual: no se repite. Al
   // restaurar tras navegar, el actual tampoco (salvo lo que aún no era final: la respuesta en directo)
   function hush(v, t, liveNow) {
-    v.said.you = !liveNow || t.youFinal; v.said.jota = !liveNow;
+    v.said.you = !liveNow || t.youFinal; v.said.fogar = !liveNow;
     for (const x of t.tools) if (x.status === 'fail') v.said.fails.add(x.id);
   }
   // forma: directa al montar (o restaurar), y con paso animado si cambia con la capa abierta (el paso lleva la forma
@@ -769,8 +769,8 @@ ${BREATHE_STATES.map(k => `.w[data-state=${k}] .orbe`).join(',')}{animation:brea
   // letra menor para una respuesta larga: el turno actual lo decide una vez, al verlo por primera vez (en directo, grande,
   // para que no encoja a media lectura); un turno anterior, por su largo
   function small(v, t, current, live) {
-    if (!current) return t.jota.length > LONG_REPLY;
-    if (v.sm == null) v.sm = !live && t.jota.length > LONG_REPLY;
+    if (!current) return t.fogar.length > LONG_REPLY;
+    if (v.sm == null) v.sm = !live && t.fogar.length > LONG_REPLY;
     return v.sm;
   }
   // una línea de palabras: `want` es lo que hay que enseñar, `spans` lo que ya se ve; con voz, `said` palabras dichas y
@@ -809,13 +809,13 @@ ${BREATHE_STATES.map(k => `.w[data-state=${k}] .orbe`).join(',')}{animation:brea
   // la respuesta con voz: en el DOM, las frases hasta la que se dice ahora (entera); `said` en las palabras ya dichas.
   // Las clases solo se tocan cuando cambia el número de palabras o de dichas
   function voicePaint(v, t) {
-    const vo = last.voice, ln = v.jota;
+    const vo = last.voice, ln = v.fogar;
     if (voiceId !== t.id) { voiceId = t.id; voiceSaid = 0; }
     const head = Math.min(vo.head + performance.now() - voiceAt, vo.upto);
     const on = vo.anchors.length > 0 && head >= vo.anchors[0][0];
-    if (on) voiceSaid = Math.max(voiceSaid, charAt(vo.anchors, vo.rate, head, t.jota.length));
-    const c = voiceSaid, ws = [...t.jota.matchAll(/\S+/g)];
-    const n = ws.length - (last.live && !WORD_DONE.test(t.jota) ? 1 : 0);   // la última, a medias, espera
+    if (on) voiceSaid = Math.max(voiceSaid, charAt(vo.anchors, vo.rate, head, t.fogar.length));
+    const c = voiceSaid, ws = [...t.fogar.matchAll(/\S+/g)];
+    const n = ws.length - (last.live && !WORD_DONE.test(t.fogar) ? 1 : 0);   // la última, a medias, espera
     let vis = 0;
     if (on) {
       let k = 0;
@@ -829,7 +829,7 @@ ${BREATHE_STATES.map(k => `.w[data-state=${k}] .orbe`).join(',')}{animation:brea
     setFlag(ln.el, 'data-voice', true);
     if (on) ln.voiced = true;
     const before = ln.spans.length;
-    setWords(ln, vis ? t.jota.slice(0, ws[vis - 1].index + ws[vis - 1][0].length) : '', false, false);
+    setWords(ln, vis ? t.fogar.slice(0, ws[vis - 1].index + ws[vis - 1][0].length) : '', false, false);
     while (ln.spans.length < ln.want.length) { showNext(ln); kick(PULSE.word); }
     if (said === ln.said && ln.spans.length === before) return;
     ln.said = said;
@@ -837,7 +837,7 @@ ${BREATHE_STATES.map(k => `.w[data-state=${k}] .orbe`).join(',')}{animation:brea
   }
   // sin voz (no la hubo, acabó o se cortó): fuera el tenue. Devuelve si llegó a sonar (entonces, todo a la vista ya)
   function voiceEnd(v) {
-    const ln = v.jota, spoke = ln.voiced;
+    const ln = v.fogar, spoke = ln.voiced;
     ln.voiced = false; ln.said = -1;
     setFlag(ln.el, 'data-voice', false);
     return spoke;
@@ -955,7 +955,7 @@ ${BREATHE_STATES.map(k => `.w[data-state=${k}] .orbe`).join(',')}{animation:brea
   // ── Accesibilidad: frases finales en role=log (no palabra a palabra) y fallos en role=alert
   function speak(v, t, live) {
     if (t.youFinal && t.you && !v.said.you) { v.said.you = true; say('Tú: ' + t.you); }
-    if (!live && t.jota && !v.said.jota) { v.said.jota = true; if (t.error) warn(t.jota); else say('Jota: ' + t.jota); }
+    if (!live && t.fogar && !v.said.fogar) { v.said.fogar = true; if (t.error) warn(t.fogar); else say('Fogar: ' + t.fogar); }
     for (const x of t.tools) if (x.status === 'fail' && !v.said.fails.has(x.id)) { v.said.fails.add(x.id); warn('No se pudo: ' + x.title + (t.hint ? '. ' + t.hint : '')); }
   }
   function say(text) {
@@ -967,7 +967,7 @@ ${BREATHE_STATES.map(k => `.w[data-state=${k}] .orbe`).join(',')}{animation:brea
   // ── Revelado palabra a palabra: un solo temporizador para toda la capa; primero tu frase, luego la respuesta
   function queue() {
     const v = last && last.turns.length ? turns.get(last.turns[last.turns.length - 1].id) : null;
-    return v ? (last.voice ? [v.you] : [v.you, v.jota]) : [];   // con voz, la respuesta va a su ritmo (voiceTick)
+    return v ? (last.voice ? [v.you] : [v.you, v.fogar]) : [];   // con voz, la respuesta va a su ritmo (voiceTick)
   }
   // el paso se recalcula con cada foto, pero solo se adelanta (si llegara antes cada 100 ms, nunca saldría ninguna palabra)
   function schedule() {
@@ -1172,15 +1172,15 @@ ${BREATHE_STATES.map(k => `.w[data-state=${k}] .orbe`).join(',')}{animation:brea
       clearTimeout(removeT);
       removeT = setTimeout(finish, REMOVE_SAFETY_MS);
     },
-    // la membrana deja pasar el puntero (on) o vuelve a recibirlo: el servidor la aparta mientras Jota pulsa por
+    // la membrana deja pasar el puntero (on) o vuelve a recibirlo: el servidor la aparta mientras Fogar pulsa por
     // coordenadas (tv_click_at), que tiene que llegar a la web aunque caiga debajo del panel o de la píldora
     pass(on) { if (dom) setFlag(dom.w, 'data-pass', !!on); return true; },
-    // palabras que se ven ya de cada turno ({ id: [tú, Jota] }; null sin capa o cerrándose): el servidor se lo pregunta a
+    // palabras que se ven ya de cada turno ({ id: [tú, Fogar] }; null sin capa o cerrándose): el servidor se lo pregunta a
     // la pestaña que se deja para que la nueva nazca igual (`shown`)
     revealed() {
       if (!dom || closing) return null;
       const o = {};
-      for (const [id, v] of turns) o[id] = [v.you.spans.length, v.jota.spans.length];
+      for (const [id, v] of turns) o[id] = [v.you.spans.length, v.fogar.spans.length];
       return o;
     },
     // topLayer: la capa está en la capa superior (se ve encima de un vídeo a pantalla completa); sin popover, false

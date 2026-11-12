@@ -1,6 +1,6 @@
 'use strict';
 // @ts-check
-// Reloj de la voz de Jota: qué carácter de la respuesta se está diciendo en cada ms de audio. El Gateway manda el texto y
+// Reloj de la voz de Fogar: qué carácter de la respuesta se está diciendo en cada ms de audio. El Gateway manda el texto y
 // el PCM sin tiempos por palabra, así que se escuchan las pausas del audio y se emparejan con la puntuación del texto.
 // Puro (sin E/S): `text(t)` con la respuesta acumulada, `pcm(buf)` con cada trozo de PCM16 LE 24 kHz mono del turno.
 // - Ventanas de 20 ms: silencio si su RMS < max(SILENCE_FLOOR, SILENCE_REL × mediana del RMS de voz visto hasta ahora).

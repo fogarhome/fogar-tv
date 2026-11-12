@@ -112,7 +112,7 @@ const pointer = createPointer({ script: path.join(ROOT, 'pointer.py'), display: 
 const pipewire = createAudio({ runtimeDir: CFG.XDG_RUNTIME_DIR });
 // con TV_ADB la tele Google TV por ADB: su volumen es el único (PipeWire se deja al 100 % al arrancar)
 const androidTv = CFG.ADB ? createAndroidTv({ addr: CFG.ADB, input: CFG.INPUT, tdt: CFG.TDT, log }) : null;
-if (androidTv && !CFG.INPUT) log.info('tele: TV_ADB puesto pero TV_INPUT vacío: nunca se verá J-Screen delante (pon TV_INPUT en screen.env)');
+if (androidTv && !CFG.INPUT) log.info('tele: TV_ADB puesto pero TV_INPUT vacío: nunca se verá Fogar TV delante (pon TV_INPUT en screen.env)');
 const audio = androidTv || pipewire;
 // con la capa del agente a la vista sondea también sin mandos: de ahí sale el paso del panel a la píldora
 const pagePoll = createPagePoll({ cdp, state, broadcast, watched: () => ws.clients().size > 0,
@@ -181,7 +181,7 @@ const youtube = createYoutube({ cdp, nav: u => control.nav(u), key: k => keyboar
     setTimeout(() => talkView.mediaState('press'), 650).unref?.();
     await pause(900);   // con menos no llega a verse en el reposo (probado en la tele: con 400 ms salió ya sobre YouTube)
   } });
-// tv_open / tv_open_app con `layout`: Jota elige el formato de la conversación para la página que abre. Abrir la misma
+// tv_open / tv_open_app con `layout`: Fogar elige el formato de la conversación para la página que abre. Abrir la misma
 // URL (o recargar) es un documento nuevo sin cambio de URL: onPage no lo ve y se avisa desde aquí
 const control = createControl({ cdp, state, broadcast, key: keyboard.key, audio, cfg: CFG, leaveStage: () => stage.leave(), netflix,
   onLayout: (url, layout) => talkView.agentLayout(layout, url), onNavigate: () => talkView.navigating(), onReload: () => { pagePoll.reset(); talkView.reset(); } });
@@ -198,7 +198,7 @@ const idle = createIdle({
   onFocusOk: (src, b) => (src === 'netflix' ? netflix.play({ id: String(b.items[0].id), title: b.items[0].title })
     : spotify.spotify({ a: b ? (b.state === 'playing' ? 'pause' : 'play') : 'playpause' })), nfxRecent: () => { const l = netflix.last(); return l ? { at: l.at, items: nfxWatch.forIdleLast(l) } : null; },
 });
-// J Gateway (voz): la conexión (src/gateway/link.js) guarda a qué gateway y con qué clave (gateway.json) y si funciona;
+// Fogar Gateway (voz): la conexión (src/gateway/link.js) guarda a qué gateway y con qué clave (gateway.json) y si funciona;
 // sin dirección o sin clave todo se comporta como un Gateway caído
 const gw = createGatewayLink({ store: createGatewayStore(path.join(CFG.STATE_DIR, 'gateway.json')),
   envUrl: CFG.GATEWAY_URL, envKey: CFG.GATEWAY_KEY, agent: CFG.AGENT, log, onChange: () => broadcast() });
@@ -243,7 +243,7 @@ const netflixCommands = netflix.commands.map(c => ({ ...c, run: (/** @type {any}
   if (m && (m.op === 'open' || m.op === 'play')) talkView.navigating();
   return c.run(m, ctx);
 } }));
-// con la tele por ADB, lo que necesita la pantalla pone antes J-Screen delante (encender o volver de Tele)
+// con la tele por ADB, lo que necesita la pantalla pone antes Fogar TV delante (encender o volver de Tele)
 const screen = tele ? (/** @type {any[]} */ l) => tele.withScreen(l, createTele.SCREEN) : (/** @type {any[]} */ l) => l;
 for (const list of [talk.commands, gateway.commands, netflixCommands, youtube.commands, stage.commands, keyboard.commands, control.commands, spotify.commands, idle.commands,
   createAccessCommands({ acc, meOf }), tv.commands, ...(tele ? [tele.commands] : [])]) commands.register(screen(list));

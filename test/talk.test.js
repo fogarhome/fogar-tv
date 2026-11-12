@@ -18,7 +18,7 @@ function make({ ensure = true, media = 0, turnIdleMs, slowEnsure = false, finalM
   };
   // la vista falsa avisa de que se oculta como la real: al momento con hide(), y por tiempo cuando la prueba llama a hidden()
   let onHide = () => {};
-  const view = Object.fromEntries(['turn', 'you', 'jota', 'done', 'error', 'tool', 'toolEnd'].map(k => [k, (...a) => views.push([k, ...a])]));
+  const view = Object.fromEntries(['turn', 'you', 'fogar', 'done', 'error', 'tool', 'toolEnd'].map(k => [k, (...a) => views.push([k, ...a])]));
   view.hide = () => { views.push(['hide']); onHide(); };
   view.onHide = fn => { onHide = fn; };
   view.voice = x => voices.push(x);                       // la voz sincronizada, aparte: no cambia la secuencia de `views`
@@ -59,7 +59,7 @@ test('ask full: send lleva askPrefix + texto; los tokens llegan acumulados y ask
   assert.deepEqual(t.msgs, [
     { t: 'talk', ev: 'token', text: 'Hecho, ' }, { t: 'talk', ev: 'token', text: 'Hecho, jazz.' }, { t: 'talk', ev: 'done', reply: 'Hecho, jazz.' },
   ]);
-  assert.deepEqual(t.views.map(v => v[0]), ['turn', 'you', 'jota', 'jota', 'done']);
+  assert.deepEqual(t.views.map(v => v[0]), ['turn', 'you', 'fogar', 'fogar', 'done']);
   assert.deepEqual(t.views[1], ['you', 'pon jazz', true]);
   assert.equal(t.talk.busy(), false);
 });
@@ -91,23 +91,23 @@ test('ask vacío: error y sin turno', async () => {
 
 test('Gateway no disponible (ensure false): error, el móvil lo ve y busy vuelve a false', async () => {
   const t = make({ ensure: false });
-  assert.deepEqual(await t.ask('hola'), { error: 'Jota no está disponible.' });
-  assert.deepEqual(t.msgs, [{ t: 'talk', ev: 'error', error: 'Jota no está disponible.' }]);
+  assert.deepEqual(await t.ask('hola'), { error: 'Fogar no está disponible.' });
+  assert.deepEqual(t.msgs, [{ t: 'talk', ev: 'error', error: 'Fogar no está disponible.' }]);
   assert.equal(t.talk.busy(), false);
   assert.equal(t.sent.length, 0);
   // la tele abre su propio intercambio antes del error: no se mezcla con la conversación anterior
-  assert.deepEqual(t.views, [['turn', 'panel', { voice: false }], ['you', 'hola', true], ['error', 'Jota no está disponible.']]);
+  assert.deepEqual(t.views, [['turn', 'panel', { voice: false }], ['you', 'hola', true], ['error', 'Fogar no está disponible.']]);
 });
 
-test('down o turn_error a mitad del turno: ev:error «Jota no está disponible.» y busy false', async () => {
+test('down o turn_error a mitad del turno: ev:error «Fogar no está disponible.» y busy false', async () => {
   for (const ev of [{ type: 'down' }, { type: 'turn_error', turnId: 'a', message: 'x' }]) {
     const t = make();
     const p = t.ask('hola'); await t.tick();
     t.gw.emit({ type: 'turn_start', turnId: 'a', seq: 1 });
     t.gw.emit({ type: 'token', turnId: 'a', text: 'Ho' });
     t.gw.emit(ev);
-    assert.deepEqual(await p, { error: 'Jota no está disponible.' });
-    assert.deepEqual(t.msgs.at(-1), { t: 'talk', ev: 'error', error: 'Jota no está disponible.' });
+    assert.deepEqual(await p, { error: 'Fogar no está disponible.' });
+    assert.deepEqual(t.msgs.at(-1), { t: 'talk', ev: 'error', error: 'Fogar no está disponible.' });
     assert.equal(t.talk.busy(), false);
     assert.equal(t.views.at(-1)[0], 'error');
   }
@@ -165,8 +165,8 @@ test('turno sin eventos: a turnIdleMs falla como down y libera busy; cada evento
   t.gw.emit({ type: 'token', turnId: 'a', text: 'x' });
   await new Promise(r => setTimeout(r, 40));
   assert.equal(t.talk.busy(), true, 'el token reinició el plazo');
-  assert.deepEqual(await p, { error: 'Jota no está disponible.' });
-  assert.deepEqual(t.msgs.at(-1), { t: 'talk', ev: 'error', error: 'Jota no está disponible.' });
+  assert.deepEqual(await p, { error: 'Fogar no está disponible.' });
+  assert.deepEqual(t.msgs.at(-1), { t: 'talk', ev: 'error', error: 'Fogar no está disponible.' });
   assert.equal(t.views.at(-1)[0], 'error');
   assert.equal(t.talk.busy(), false);
 });
@@ -176,7 +176,7 @@ test('turn_end sin turn_start previo: no engancha, y el plazo libera el turno', 
   const p = t.ask('hola'); await t.tick();
   t.gw.emit({ type: 'turn_end', turnId: 'z' });
   assert.equal(t.talk.busy(), true);
-  assert.deepEqual(await p, { error: 'Jota no está disponible.' });
+  assert.deepEqual(await p, { error: 'Fogar no está disponible.' });
   assert.equal(t.talk.busy(), false);
 });
 
@@ -372,13 +372,13 @@ test('vstart de otro móvil (o un ask) durante un turno: BUSY y su audio no se r
 
 test('vstart con Gateway caído: error, ev:error al móvil y busy libre; down a mitad de grabación igual', async () => {
   const t = make({ ensure: false });
-  assert.deepEqual(await t.vcmd({ t: 'vstart' }), { error: 'Jota no está disponible.' });
-  assert.deepEqual(t.msgs, [{ t: 'talk', ev: 'error', error: 'Jota no está disponible.' }]);
+  assert.deepEqual(await t.vcmd({ t: 'vstart' }), { error: 'Fogar no está disponible.' });
+  assert.deepEqual(t.msgs, [{ t: 'talk', ev: 'error', error: 'Fogar no está disponible.' }]);
   assert.equal(t.talk.busy(), false);
   const u = make();
   await u.vcmd({ t: 'vstart' });
   u.gw.emit({ type: 'down' });
-  assert.deepEqual(u.msgs.at(-1), { t: 'talk', ev: 'error', error: 'Jota no está disponible.' });
+  assert.deepEqual(u.msgs.at(-1), { t: 'talk', ev: 'error', error: 'Fogar no está disponible.' });
   assert.equal(u.talk.busy(), false);
 });
 
@@ -481,7 +481,7 @@ test('el altavoz se corta si el turno falla o se cancela, y un error suyo no tum
   v.gw.emit({ type: 'turn_start', turnId: 'a', seq: 1 });
   v.gw.emit({ type: 'token', turnId: 'a', text: 'x' });
   v.gw.emit({ type: 'turn_error', turnId: 'a' });
-  assert.deepEqual(await q, { error: 'Jota no está disponible.' });
+  assert.deepEqual(await q, { error: 'Fogar no está disponible.' });
   assert.equal(v.spk[v.spk.length - 1][0], 'stop');
 });
 
@@ -628,7 +628,7 @@ test('stop con turno en vuelo: gw.cancel, ev:stopped, ask {error:"Parado."}, alt
   assert.equal(t.spk.filter(c => c[0] === 'write').length, writes, 'ni más audio');
 });
 
-test('stop mientras Jota aún habla (turno acabado): corta el audio y oculta, sin gw.cancel; sin nada, solo oculta', async () => {
+test('stop mientras Fogar aún habla (turno acabado): corta el audio y oculta, sin gw.cancel; sin nada, solo oculta', async () => {
   const t = make({ audioTailMs: 500 });
   const p = t.ask('hola', undefined, 'tv'); await t.tick();
   t.gw.emit({ type: 'turn_start', turnId: 'a', seq: 1 }); t.gw.emit(aud(1, 1));
@@ -681,7 +681,7 @@ test('vstart con interrupt durante un turno: lo para (sin ocultar) y empieza la 
   assert.ok(t.sent.at(-1).endsWith('dos'));
 });
 
-test('vstart con interrupt mientras Jota habla corta el audio; sin interrupt: BUSY y el audio sigue', async () => {
+test('vstart con interrupt mientras Fogar habla corta el audio; sin interrupt: BUSY y el audio sigue', async () => {
   const t = make({ audioTailMs: 500 });
   const p = t.ask('uno', undefined, 'tv'); await t.tick();
   t.gw.emit({ type: 'turn_start', turnId: 'a', seq: 1 }); t.gw.emit(aud(1, 1));
@@ -784,7 +784,7 @@ test('interrumpir desde el mismo móvil no le manda ev:stopped (al dueño de otr
   assert.ok(!omsgs.some(m => m.ev === 'stopped'));
 });
 
-test('ev:silent al móvil cuando Jota deja de hablar: tras onIdle (tv), tras la estimación (phone), en turn_end sin audio; none no', async () => {
+test('ev:silent al móvil cuando Fogar deja de hablar: tras onIdle (tv), tras la estimación (phone), en turn_end sin audio; none no', async () => {
   const t = make({ audioTailMs: 20 });
   const p = t.ask('hola', undefined, 'tv'); await t.tick();
   t.gw.emit({ type: 'turn_start', turnId: 'a', seq: 1 }); t.gw.emit(aud(1, 1, 2));
@@ -908,7 +908,7 @@ test('parado antes de su turn_start: las herramientas del fantasma no llegan a l
   u.gw.emit({ type: 'token', turnId: 'b', text: 'Listo.' }); u.gw.emit({ type: 'turn_end', turnId: 'b' });
   assert.deepEqual(await w, { ok: 1, reply: 'Listo.' });
   const after = u.views.slice(u.views.findIndex(v => v[0] === 'tool'));
-  assert.deepEqual(after.slice(0, 3).map(v => v[0]), ['tool', 'toolEnd', 'jota'], 'fichas delante del texto');
+  assert.deepEqual(after.slice(0, 3).map(v => v[0]), ['tool', 'toolEnd', 'fogar'], 'fichas delante del texto');
   assert.deepEqual(after[1], ['toolEnd', { id: 'c1', ok: true }]);
 });
 
@@ -922,7 +922,7 @@ test('un tool del turno rearma el plazo sin eventos (arm), como un token', async
   assert.equal((await p).ok, 1);
 });
 
-// ───────── formato de la capa en la tele (ronda 3): talkform, ev:'form' y el `layout` que pide Jota
+// ───────── formato de la capa en la tele (ronda 3): talkform, ev:'form' y el `layout` que pide Fogar
 
 test('talkform: con permiso agent y solo quien puede parar (el móvil que preguntó o el agente completo); sin turno, cualquiera', async () => {
   const t = make();
@@ -973,7 +973,7 @@ test('el móvil del intercambio se reconecta (otra conexión, mismo dispositivo)
   const subs = new Set();
   const gw = { ensure: async () => true, send() {}, audio() {}, end() {}, cancel() {}, on: f => { subs.add(f); return () => subs.delete(f); }, emit: ev => subs.forEach(f => f(ev)) };
   let onForm = () => {}, can = true, now = 'panel';
-  const view = { turn() {}, you() {}, jota() {}, done() {}, error() {}, onForm: fn => { onForm = fn; }, form: () => ({ form: now, canSwitch: can }),
+  const view = { turn() {}, you() {}, fogar() {}, done() {}, error() {}, onForm: fn => { onForm = fn; }, form: () => ({ form: now, canSwitch: can }),
     userForm: f => ({ ok: 1, form: f }) };
   const talk = createTalk({ gw, cfg: { NAME: 'S' }, media: () => 0, view });
   const cmds = createCommands({ permsOf: () => PERMS.guest }); cmds.register(talk.commands);

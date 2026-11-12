@@ -140,7 +140,7 @@ function loadPage(src = SRC, prep = null) {
 }
 
 const snap = o => ({ form: 'panel', ctx: 'idle', state: 'talk', live: true, night: false, calm: false, glass: 'A', colors: null, icons: {},
-  turns: [{ id: 1, you: '¿Qué tiempo hace mañana?', youFinal: true, jota: 'Mañana sol y veinticuatro grados. ', tools: [], error: false, hint: '' }], ...o });
+  turns: [{ id: 1, you: '¿Qué tiempo hace mañana?', youFinal: true, fogar: 'Mañana sol y veinticuatro grados. ', tools: [], error: false, hint: '' }], ...o });
 
 test('carga: TVAgent con render/hide/_debug, sin dibujar nada hasta la primera foto, y no se reinyecta', () => {
   const p = loadPage();
@@ -187,10 +187,10 @@ test('la misma foto cada 100 ms no recrea nodos; las palabras salen de una en un
   assert.equal(p.doc.mutations, before, 'sin cambios en el DOM con la misma foto');
 });
 
-test('etiqueta de estado junto al orbe: «Te escucho…» hasta tu primera palabra, «Pensando…» hasta la de Jota o una ficha', () => {
+test('etiqueta de estado junto al orbe: «Te escucho…» hasta tu primera palabra, «Pensando…» hasta la de Fogar o una ficha', () => {
   const p = loadPage();
   const st = () => p.host().shadowRoot.all().find(n => n.className === 'st').textContent;
-  const turn = o => [{ id: 1, you: '', youFinal: false, jota: '', tools: [], error: false, hint: '', ...o }];
+  const turn = o => [{ id: 1, you: '', youFinal: false, fogar: '', tools: [], error: false, hint: '', ...o }];
   p.win.TVAgent.render(snap({ state: 'listen', turns: [] }));
   assert.equal(st(), 'Te escucho…', 'sin turno aún');
   p.win.TVAgent.render(snap({ state: 'listen', turns: turn({ you: 'Pon' }) }));
@@ -199,7 +199,7 @@ test('etiqueta de estado junto al orbe: «Te escucho…» hasta tu primera palab
   assert.equal(st(), 'Pensando…', 'también en calma (donde no hay satélite)');
   p.win.TVAgent.render(snap({ state: 'think', turns: turn({ you: 'Pon la tele', youFinal: true, tools: [{ id: 'a', kind: 'tv', title: 'Tele', detail: '', status: 'run' }] }) }));
   assert.equal(st(), '', 'una ficha ya dice qué hace');
-  p.win.TVAgent.render(snap({ state: 'think', turns: turn({ you: 'Hola', youFinal: true, jota: 'Hola' }) }));
+  p.win.TVAgent.render(snap({ state: 'think', turns: turn({ you: 'Hola', youFinal: true, fogar: 'Hola' }) }));
   assert.equal(st(), '');
   p.win.TVAgent.render(snap());
   assert.equal(st(), '', 'hablando, nada');
@@ -211,7 +211,7 @@ test('fichas: se crean una vez por tool.id y solo cambia su estado (giro → che
   const A = p.win.TVAgent;
   const tool = st => ({ id: 'c1', kind: 'web', title: 'Abrir en la tele', detail: 'cocina.example', status: st });
   const icons = { web: [['circle', { cx: 12, cy: 12, r: 9 }], ['path', { d: 'M3 12h18' }], ['script', { src: 'x' }], ['path', { onload: 'x', d: 'M1 1' }]] };
-  A.render(snap({ state: 'think', icons, turns: [{ ...snap().turns[0], jota: '', tools: [tool('run')] }] }));
+  A.render(snap({ state: 'think', icons, turns: [{ ...snap().turns[0], fogar: '', tools: [tool('run')] }] }));
   const card = () => p.host().shadowRoot.all().find(n => n.className === 'tc');
   const c = card();
   assert.ok(c.all().some(n => n.className === 'spin'));
@@ -227,20 +227,20 @@ test('fichas: se crean una vez por tool.id y solo cambia su estado (giro → che
 test('fallo: role=alert con el título y la pista; la respuesta final va al role=log una sola vez', () => {
   const p = loadPage();
   const A = p.win.TVAgent;
-  const t = { ...snap().turns[0], jota: 'No he podido.', hint: 'Di «otra vez» para reintentar.', tools: [{ id: 'h', kind: 'home', title: 'Luces del salón', detail: '', status: 'fail' }] };
+  const t = { ...snap().turns[0], fogar: 'No he podido.', hint: 'Di «otra vez» para reintentar.', tools: [{ id: 'h', kind: 'home', title: 'Luces del salón', detail: '', status: 'fail' }] };
   A.render(snap({ state: 'error', live: false, turns: [t] }));
   A.render(snap({ state: 'error', live: false, turns: [t] }));
   const all = p.host().shadowRoot.all();
   const alert = all.find(n => n.getAttribute('role') === 'alert');
   assert.match(alert.textContent, /Luces del salón.*otra vez/);
   const log = all.find(n => n.getAttribute('role') === 'log');
-  assert.deepEqual(log.childNodes.map(n => n.textContent), ['Tú: ¿Qué tiempo hace mañana?', 'Jota: No he podido.']);
+  assert.deepEqual(log.childNodes.map(n => n.textContent), ['Tú: ¿Qué tiempo hace mañana?', 'Fogar: No he podido.']);
 });
 
 test('dos turnos como mucho; el que sale se quita y el actual no se mueve', () => {
   const p = loadPage();
   const A = p.win.TVAgent;
-  const t = (id, jota) => ({ id, you: 'hola', youFinal: true, jota, tools: [], error: false, hint: '' });
+  const t = (id, fogar) => ({ id, you: 'hola', youFinal: true, fogar, tools: [], error: false, hint: '' });
   A.render(snap({ turns: [t(1, 'uno. ')] }));
   A.render(snap({ turns: [t(1, 'uno. '), t(2, 'dos. ')] }));
   const log = () => p.host().shadowRoot.all().find(n => n.className.startsWith('log'));
@@ -278,7 +278,7 @@ test('calma: con la capa abierta y quieta el rAF también se para (y una foto nu
 
 // ── Accesibilidad, cierre y fluidez (hallazgos de la revisión)
 const findRole = (p, role) => p.host().shadowRoot.all().find(n => n.getAttribute('role') === role);
-const failTurn = { id: 1, you: 'Enciende la luz', youFinal: true, jota: 'No he podido.', error: false, hint: 'Di «otra vez» para reintentar.',
+const failTurn = { id: 1, you: 'Enciende la luz', youFinal: true, fogar: 'No he podido.', error: false, hint: 'Di «otra vez» para reintentar.',
   tools: [{ id: 'h', kind: 'home', title: 'Luces', detail: '', status: 'fail' }] };
 
 test('al reabrir, el turno anterior no se vuelve a anunciar (ni su fallo por role=alert)', () => {
@@ -287,7 +287,7 @@ test('al reabrir, el turno anterior no se vuelve a anunciar (ni su fallo por rol
   A.render(snap({ state: 'error', live: false, turns: [failTurn] }));
   A.hide(); p.advance(3000);
   assert.equal(p.host(), undefined, 'capa quitada');
-  const t2 = { id: 2, you: 'Pon', youFinal: false, jota: '', tools: [], error: false, hint: '' };
+  const t2 = { id: 2, you: 'Pon', youFinal: false, fogar: '', tools: [], error: false, hint: '' };
   A.render(snap({ state: 'listen', live: true, turns: [failTurn, t2] }));
   assert.equal(findRole(p, 'alert').textContent, '', 'sin el fallo viejo');
   assert.deepEqual(findRole(p, 'log').childNodes.map(n => n.textContent), [], 'el turno anterior ya se anunció');
@@ -298,7 +298,7 @@ test('un turno nuevo en la misma capa limpia el aviso del fallo anterior', () =>
   const A = p.win.TVAgent;
   A.render(snap({ state: 'error', live: false, turns: [failTurn] }));
   assert.match(findRole(p, 'alert').textContent, /Luces/);
-  A.render(snap({ state: 'listen', live: true, turns: [failTurn, { id: 2, you: '', youFinal: false, jota: '', tools: [], error: false, hint: '' }] }));
+  A.render(snap({ state: 'listen', live: true, turns: [failTurn, { id: 2, you: '', youFinal: false, fogar: '', tools: [], error: false, hint: '' }] }));
   assert.equal(findRole(p, 'alert').textContent, '');
 });
 
@@ -311,7 +311,7 @@ test('fuera de calma, la capa abierta y quieta también para el rAF; escuchando 
   assert.equal(A._debug().rafRunning, false, 'asentada: sin rAF');
   A.render(snap({ live: false, state: 'done' }));
   assert.equal(A._debug().rafRunning, false, 'la misma foto no lo despierta');
-  A.render(snap({ live: true, state: 'listen', turns: [{ ...snap().turns[0], jota: '', youFinal: false }] }));
+  A.render(snap({ live: true, state: 'listen', turns: [{ ...snap().turns[0], fogar: '', youFinal: false }] }));
   p.advance(6000);
   assert.equal(A._debug().rafRunning, true, 'escuchando: late');
 });
@@ -321,7 +321,7 @@ test('level(): escuchando, tu voz agranda el orbe; hablando o en calma no hace n
   const A = p.win.TVAgent;
   const ring = () => p.host().shadowRoot.all().find(n => n.tagName === 'I');
   const scale = () => Number(/scale\(([\d.]+)\)/.exec(ring().style.transform)[1]);
-  const listen = o => snap({ state: 'listen', turns: [{ ...snap().turns[0], you: '', jota: '', youFinal: false }], ...o });
+  const listen = o => snap({ state: 'listen', turns: [{ ...snap().turns[0], you: '', fogar: '', youFinal: false }], ...o });
   A.render(listen()); p.advance(500);
   const quiet = scale();
   A.level(1); p.advance(16);
@@ -330,7 +330,7 @@ test('level(): escuchando, tu voz agranda el orbe; hablando o en calma no hace n
   assert.ok(scale() < quiet + 0.03, 'sin voz vuelve a latir como antes');
   A.render(snap({ state: 'talk' })); p.advance(500);
   const talk = scale(); A.level(1); p.advance(16);
-  assert.ok(scale() <= talk + 0.001, 'hablando Jota, tu nivel no cuenta');
+  assert.ok(scale() <= talk + 0.001, 'hablando Fogar, tu nivel no cuenta');
   A.render(listen({ calm: true })); p.advance(500);
   A.level(1); p.advance(16);
   assert.equal(scale(), 1, 'en calma, quieto');
@@ -349,13 +349,13 @@ test('hide() a mitad de turno (escuchando o pensando) termina por la vía normal
 test('la respuesta en directo no encoge de letra a media lectura; un turno pasado sí usa la letra menor', () => {
   const p = loadPage();
   const A = p.win.TVAgent;
-  const t = jota => ({ ...snap().turns[0], jota });
+  const t = fogar => ({ ...snap().turns[0], fogar });
   const jEl = () => p.host().shadowRoot.all().filter(n => n.tagName === 'P' && n.className.split(' ').includes('j'));
   A.render(snap({ turns: [t('a '.repeat(55))] }));
   assert.ok(!jEl()[0].className.includes('sm'));
   A.render(snap({ turns: [t('a '.repeat(65))] }));
   assert.ok(!jEl()[0].className.includes('sm'), 'mismo turno en directo: mismo tamaño');
-  A.render(snap({ turns: [t('a '.repeat(65)), { ...snap().turns[0], id: 2, jota: '' }] }));
+  A.render(snap({ turns: [t('a '.repeat(65)), { ...snap().turns[0], id: 2, fogar: '' }] }));
   assert.ok(jEl()[0].className.includes('sm'), 'ya es el anterior: letra menor');
 });
 
@@ -417,7 +417,7 @@ test('nivel C y noche sin backdrop-filter: la regla sale de LOOK.tiers (filter:f
 test("glass:'auto': el nivel medido entra al empezar el turno siguiente, no a media frase", () => {
   const p = loadPage();
   const A = p.win.TVAgent;
-  const listen = id => snap({ glass: 'auto', state: 'listen', turns: [{ ...snap().turns[0], id, jota: '', youFinal: false }] });
+  const listen = id => snap({ glass: 'auto', state: 'listen', turns: [{ ...snap().turns[0], id, fogar: '', youFinal: false }] });
   p.setFrameMs(30); // más de AUTO_TIER.b (24 ms) de media: nivel B
   A.render(listen(1)); p.advance(4000);
   assert.equal(A._debug().tier, 'A', 'medido, pero el turno sigue');
@@ -428,7 +428,7 @@ test("glass:'auto': el nivel medido entra al empezar el turno siguiente, no a me
 test("glass:'auto': una medida a medias no se suma a la conversación siguiente", () => {
   const p = loadPage();
   const A = p.win.TVAgent;
-  const listen = id => snap({ glass: 'auto', state: 'listen', turns: [{ ...snap().turns[0], id, jota: '', youFinal: false }] });
+  const listen = id => snap({ glass: 'auto', state: 'listen', turns: [{ ...snap().turns[0], id, fogar: '', youFinal: false }] });
   p.setFrameMs(40);
   A.render(listen(1)); p.advance(50 * 40); // unos 50 frames lentos y se cierra antes de acabar la medida
   A.hide(); p.advance(3000);
@@ -476,7 +476,7 @@ test('servidor y página comparten los enumerados de la foto (src/tv/agent-contr
 test('una foto real de snapshot() se pinta entera: turnos, fichas de cada tipo e iconos con todas sus primitivas', () => {
   const kinds = Object.keys(KINDS);
   const tools = kinds.map((k, i) => ({ id: 't' + i, kind: k, title: KINDS[k].title, detail: 'x', status: 'ok' }));
-  const t = id => ({ id, you: 'hola', youFinal: true, jota: 'vale. ', tools: id === 2 ? tools : [], error: false, hint: '' });
+  const t = id => ({ id, you: 'hola', youFinal: true, fogar: 'vale. ', tools: id === 2 ? tools : [], error: false, hint: '' });
   const s = view.snapshot({ form: 'panel', ctx: 'web', state: 'done', live: false,
     look: { ctx: 'web', night: false, calm: false, glass: 'B', colors: ['#2f7f8a', 'rgb(201, 138, 92)'] }, turns: [t(1), t(2)] });
   const p = loadPage();
@@ -502,8 +502,8 @@ test("enter:'restore' en un documento nuevo: lo dicho a la vista de golpe, sin e
   const p = loadPage();
   const A = p.win.TVAgent;
   const tools = [{ id: 'n', kind: 'video', title: 'Abrir en la tele', detail: 'Netflix', status: 'ok' }];
-  const prev = { id: 1, you: 'Hola', youFinal: true, jota: 'Hola, Sito.', tools: [], error: false, hint: '' };
-  const cur = { id: 2, you: 'Ponme esta serie', youFinal: true, jota: 'Ahí la tienes en Netflix.', tools, error: false, hint: '' };
+  const prev = { id: 1, you: 'Hola', youFinal: true, fogar: 'Hola, Sito.', tools: [], error: false, hint: '' };
+  const cur = { id: 2, you: 'Ponme esta serie', youFinal: true, fogar: 'Ahí la tienes en Netflix.', tools, error: false, hint: '' };
   A.render(snap({ enter: 'restore', live: false, state: 'done', turns: [prev, cur] }));
   const words = byCls(p, 'wd');
   assert.equal(words.length, 1 + 2 + 3 + 5, 'todas las palabras ya están (sin revelado)');
@@ -546,7 +546,7 @@ test('panel → píldora con la capa abierta: sale el contenido, cambia la forma
   assert.equal(w.dataset.morph, undefined);
   p.advance(320);
   assert.equal(A._debug().morph, '');
-  A.render(snap({ form: 'panel', state: 'listen', turns: [t, { ...snap().turns[0], id: 2, jota: '' }] }));
+  A.render(snap({ form: 'panel', state: 'listen', turns: [t, { ...snap().turns[0], id: 2, fogar: '' }] }));
   assert.deepEqual([A._debug().form, A._debug().morph], ['pill', 'out'], 'de vuelta (ronda 3): también con paso');
   p.advance(260);
   assert.deepEqual([A._debug().form, A._debug().morph], ['panel', 'travel']);
@@ -571,7 +571,7 @@ test('sin documentElement (script de documento nuevo): espera a que exista y pin
   const html = p.doc.documentElement;
   html.remove(); p.doc.documentElement = null; p.doc.body = null;
   assert.equal(A.render(snap({ enter: 'restore' })), true);
-  A.render(snap({ enter: 'restore', turns: [{ ...snap().turns[0], jota: 'Otra cosa. ' }] }));
+  A.render(snap({ enter: 'restore', turns: [{ ...snap().turns[0], fogar: 'Otra cosa. ' }] }));
   assert.equal(p.observers.length, 1, 'un solo observador');
   p.doc.documentElement = html;
   p.observers[0].fire();
@@ -700,7 +700,7 @@ test('el arrastre no molesta a la web: eventos parados en la membrana, mousedown
   assert.equal(A._debug().drag, false, 'cerrándose no empieza otro');
 });
 
-test('pass(): la membrana deja pasar el puntero mientras Jota pulsa por coordenadas (tv_click_at) y luego lo recupera', () => {
+test('pass(): la membrana deja pasar el puntero mientras Fogar pulsa por coordenadas (tv_click_at) y luego lo recupera', () => {
   const { A, w } = dragRig('pill');
   assert.equal(A.pass(true), true);
   assert.ok(w.hasAttribute('data-pass'));
@@ -809,7 +809,7 @@ test("cambio de pestaña (restore + tab) con una capa vieja montada: se retira e
   const A = p.win.TVAgent;
   A.render(snap()); p.advance(400);                       // el panel viejo, con palabras aún por salir
   const old = p.host();
-  const cur = { id: 2, you: 'Pon la serie', youFinal: true, jota: 'Vale, te dejo la serie a medias, vuelvo a lo de antes.', tools: [], error: false, hint: '' };
+  const cur = { id: 2, you: 'Pon la serie', youFinal: true, fogar: 'Vale, te dejo la serie a medias, vuelvo a lo de antes.', tools: [], error: false, hint: '' };
   A.render(snap({ form: 'pill', enter: 'restore', tab: true, live: true, turns: [snap().turns[0], cur] }));
   assert.notEqual(p.host(), old, 'el host viejo se quita');
   assert.ok(!old.isConnected);
@@ -842,7 +842,7 @@ test("cambio de pestaña con `shown`: restaura las palabras que se veían en la 
   const p = loadPage();
   const A = p.win.TVAgent;
   assert.equal(A.revealed(), null, 'sin capa');
-  const cur = { id: 2, you: 'Pon la serie', youFinal: true, jota: 'Vale, te dejo la serie a medias. ', tools: [], error: false, hint: '' };
+  const cur = { id: 2, you: 'Pon la serie', youFinal: true, fogar: 'Vale, te dejo la serie a medias. ', tools: [], error: false, hint: '' };
   A.render(snap({ enter: 'restore', tab: true, live: true, turns: [snap().turns[0], cur], shown: { 2: [3, 2] } }));
   const words = () => byCls(p, 'wd');
   assert.equal(words().length, 4 + 5 + 3 + 2, 'el turno anterior entero; del actual, lo que se veía');
@@ -873,7 +873,7 @@ test('tarjeta de Netflix: lista o «poner» con su ▶; pulsarlo no rehace la ta
   const p = loadPage();
   const A = p.win.TVAgent;
   const play = { key: 'nfx-play-1', kind: 'play', state: 'idle', items: [{ title: 'La serie', sub: 'T1 · E2', left: 'quedan 20 min', frac: 0.3, img: 'http://127.0.0.1:8787/idle/nfx?u=a', still: 'http://127.0.0.1:8787/idle/nfx?u=b' }] };
-  const t1 = { id: 1, you: 'Pon la serie', youFinal: true, jota: 'Vale. ', tools: [], error: false, hint: '', media: play };
+  const t1 = { id: 1, you: 'Pon la serie', youFinal: true, fogar: 'Vale. ', tools: [], error: false, hint: '', media: play };
   A.render(snap({ turns: [t1] }));
   const root = p.host().shadowRoot;
   const find = (n, cls) => { if (n.className && n.className.split(' ').includes(cls)) return n; for (const c of n.childNodes || []) { const r = find(c, cls); if (r) return r; } return null; };
@@ -894,8 +894,8 @@ test('tarjeta de Netflix: lista o «poner» con su ▶; pulsarlo no rehace la ta
 });
 
 // ── Voz sincronizada: la respuesta sale frase a frase con la voz y se ilumina lo ya dicho
-const JOTA = 'Hola, Sito. Hoy hace sol. Mañana llueve.';
-const vturn = jota => ({ id: 1, you: 'Qué tal', youFinal: true, jota, tools: [], error: false, hint: '' });
+const FOGAR = 'Hola, Sito. Hoy hace sol. Mañana llueve.';
+const vturn = fogar => ({ id: 1, you: 'Qué tal', youFinal: true, fogar, tools: [], error: false, hint: '' });
 const jline = p => p.host().shadowRoot.all().find(n => cls(n).includes('j'));
 const jwords = p => jline(p).childNodes.map(n => n.textContent);
 const saidN = p => jline(p).childNodes.filter(n => cls(n).includes('said')).length;
@@ -903,11 +903,11 @@ const saidN = p => jline(p).childNodes.filter(n => cls(n).includes('said')).leng
 test('voz: en espera no se enseña la respuesta; luego la frase en curso entera, lo dicho iluminado y la siguiente al empezarla', () => {
   const p = loadPage();
   const A = p.win.TVAgent;
-  A.render(snap({ turns: [vturn(JOTA)], voice: { anchors: [], rate: 62, head: 0, upto: 0, text: JOTA.length } }));
+  A.render(snap({ turns: [vturn(FOGAR)], voice: { anchors: [], rate: 62, head: 0, upto: 0, text: FOGAR.length } }));
   p.advance(2000);
-  assert.deepEqual(jwords(p), [], 'en espera: sin palabras de Jota (tu frase sí sale)');
+  assert.deepEqual(jwords(p), [], 'en espera: sin palabras de Fogar (tu frase sí sale)');
   assert.equal(byCls(p, 'wd').length, 2);
-  A.render(snap({ turns: [vturn(JOTA)], voice: { anchors: [[0, 0]], rate: 62, head: 0, upto: 10000, text: JOTA.length } }));
+  A.render(snap({ turns: [vturn(FOGAR)], voice: { anchors: [[0, 0]], rate: 62, head: 0, upto: 10000, text: FOGAR.length } }));
   assert.deepEqual(jwords(p), ['Hola,', 'Sito.'], 'la frase que empieza, entera');
   assert.ok(jline(p).hasAttribute('data-voice'));
   assert.equal(saidN(p), 0);
@@ -918,21 +918,21 @@ test('voz: en espera no se enseña la respuesta; luego la frase en curso entera,
   assert.deepEqual(jwords(p), ['Hola,', 'Sito.', 'Hoy', 'hace', 'sol.']);
   assert.equal(saidN(p), 2);
   // la cabeza no pasa de lo recibido, y lo dicho nunca retrocede
-  A.render(snap({ turns: [vturn(JOTA)], voice: { anchors: [[0, 0]], rate: 62, head: 300, upto: 300, text: JOTA.length } }));
+  A.render(snap({ turns: [vturn(FOGAR)], voice: { anchors: [[0, 0]], rate: 62, head: 300, upto: 300, text: FOGAR.length } }));
   p.advance(500);
   assert.equal(saidN(p), 2);
   // acaba la voz: todo a la vista ya (sin revelado) y sin tenue
-  A.render(snap({ live: false, state: 'done', turns: [vturn(JOTA)] }));
-  assert.equal(jwords(p).join(' '), JOTA);
+  A.render(snap({ live: false, state: 'done', turns: [vturn(FOGAR)] }));
+  assert.equal(jwords(p).join(' '), FOGAR);
   assert.ok(!jline(p).hasAttribute('data-voice'));
 });
 
 test('voz: sin arrancar (el TTS no manda audio), al quitarse la respuesta se revela como siempre; tenue solo con voz y sin transición en calma', () => {
   const p = loadPage();
   const A = p.win.TVAgent;
-  A.render(snap({ turns: [vturn(JOTA)], voice: { anchors: [], rate: 62, head: 0, upto: 0, text: JOTA.length } }));
+  A.render(snap({ turns: [vturn(FOGAR)], voice: { anchors: [], rate: 62, head: 0, upto: 0, text: FOGAR.length } }));
   p.advance(1000);
-  A.render(snap({ turns: [vturn(JOTA)] }));
+  A.render(snap({ turns: [vturn(FOGAR)] }));
   assert.deepEqual(jwords(p), [], 'no sale de golpe');
   p.advance(400);
   assert.ok(jwords(p).length > 0 && jwords(p).length < 7, 'palabra a palabra');

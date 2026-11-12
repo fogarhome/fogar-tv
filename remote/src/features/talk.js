@@ -1,16 +1,16 @@
 'use strict';
 // @ts-check
-// Capacidad «talk»: hablar con Jota por el J Gateway. Lo escrito en el mando (orden `ask`) va al Gateway y la respuesta
+// Capacidad «talk»: hablar con Fogar por el Fogar Gateway. Lo escrito en el mando (orden `ask`) va al Gateway y la respuesta
 // vuelve en directo, palabra a palabra, por el mismo WebSocket del mando que preguntó (`{t:'talk', ev}`). Un turno a la vez
 // en toda la pantalla. Admin: instrucciones completas; invitados: instrucciones que les impiden tocar nada personal del
 // dueño (TV_OWNER, si se da). Por voz (`vstart`, audio binario, `vend`) el audio sube en directo al Gateway, la frase
 // reconocida se muestra en el móvil y la tele, y al llegar la final se envía por el mismo camino que `ask`. La capa de la tele (`view`) pinta lo mismo en la pantalla.
 // La respuesta suena en UN solo sitio según `out` del turno: la tele (`speaker`, PCM sin cabecera), el móvil que preguntó (el frame
 // binario entero) o ninguno. Solo suenan los frames del `seq` del turn_start del turno; un `ask` sin `out` (API, MCP) no suena.
-// «Jota habla» desde el primer frame hasta que acaba de sonar (tele: el altavoz vacía tras `end`; móvil: la duración estimada
+// «Fogar habla» desde el primer frame hasta que acaba de sonar (tele: el altavoz vacía tras `end`; móvil: la duración estimada
 // del audio enviado); la tele da el intercambio por terminado (`view.done`) cuando acaban el texto y el audio. `stop` para el
 // turno (cancel al Gateway) y el audio y quita la vista; `hide` solo la quita; `vstart`/`ask` con `interrupt` paran lo que
-// haya y siguen; sin él, un turno en vuelo o Jota hablando es BUSY. Parar o interrumpir: el móvil que preguntó o uno con
+// haya y siguen; sin él, un turno en vuelo o Fogar hablando es BUSY. Parar o interrumpir: el móvil que preguntó o uno con
 // el agente completo. El barge-in del Gateway no se usa: interrumpe este servidor.
 // Las llamadas a herramientas del turno (`tool`) pasan el mismo filtro que los tokens: las de la lista cerrada de
 // agent-ui.js van a la vista como ficha (`tool`/`toolEnd`); de las demás solo se registra el nombre (nunca args ni resultado).
@@ -22,7 +22,7 @@ const { WebSocket } = require('ws');
 const { toolCard, toolName, layoutOf, opensPage } = require('./agent-ui');
 const { createVoiceSync } = require('./voice-sync');
 
-const DOWN = 'Jota no está disponible.';
+const DOWN = 'Fogar no está disponible.';
 const BUSY = 'Sigo con la petición anterior. Espera un momento.';
 const NOT_HEARD = 'No te he entendido. Prueba otra vez.';
 const NOT_HEARD_SILENT = 'No te he oído. Prueba otra vez.';
@@ -68,7 +68,7 @@ function prompts(name, owner = '') {
   };
 }
 
-/** «Jota habla»: lo que suena de una respuesta; `ending` tras speaker.end (tele), `view` la tele espera a esto para done.
+/** «Fogar habla»: lo que suena de una respuesta; `ending` tras speaker.end (tele), `view` la tele espera a esto para done.
  * @typedef {{ out: string, ws: any, samples: number, first: number, last: number, timer: any, ending: boolean, view: boolean }} Play */
 
 /** Voz sincronizada de la respuesta que suena: su reloj, el instante en que suena su ms 0 (`t0`, con los atascos ya
@@ -79,7 +79,7 @@ function prompts(name, owner = '') {
 /** Ficha de herramienta tal como la recibe la vista. @typedef {{ id: string, kind: string, title: string, detail: string }} ToolView */
 
 /** Vista de la tele que no pinta nada (tests y arranques sin ella). */
-const NO_VIEW = { turn() {}, you() {}, jota() {}, done() {}, error() {}, hide() {} };
+const NO_VIEW = { turn() {}, you() {}, fogar() {}, done() {}, error() {}, hide() {} };
 /** Altavoz de la tele que no suena (tests y arranques sin él). Sin onIdle: su `end` cuenta como fin al momento. */
 const NO_SPEAKER = { start() {}, write() {}, end() {}, stop() {} };
 
@@ -87,7 +87,7 @@ const NO_SPEAKER = { start() {}, write() {}, end() {}, stop() {} };
  * @param {{
  *   gw: { ensure: () => Promise<boolean>, send: (t: string) => void, audio: (b: Buffer) => void, end: () => void, cancel?: () => void, on: (fn: (ev: any) => void) => () => void },
  *   cfg: { NAME: string, OWNER?: string }, media: () => number,
- *   view?: { turn: (mode: 'island' | 'panel', o?: { voice: boolean }) => void, you: (t: string, final: boolean) => void, jota: (t: string) => void, done: () => void, error: (t: string) => void,
+ *   view?: { turn: (mode: 'island' | 'panel', o?: { voice: boolean }) => void, you: (t: string, final: boolean) => void, fogar: (t: string) => void, done: () => void, error: (t: string) => void,
  *            hide?: () => void, onHide?: (fn: () => void) => void, tool?: (c: ToolView) => void, toolEnd?: (e: { id: string, ok: boolean }) => void,
  *            userForm?: (form: any) => any, agentLayout?: (layout: string, url: string) => void,
  *            onForm?: (fn: (form: 'pill' | 'panel', canSwitch: boolean) => void) => void,
@@ -114,7 +114,7 @@ module.exports = function createTalk({ gw, cfg, media, view = NO_VIEW, speaker =
    *  audioTailMs sin frames (entonces `speaker.end()`); un turno nuevo o una caída la cortan al momento.
    *  @type {null | { seq: number, out: string, ws: any, timer: any, heard?: boolean }} */
   let tail = null;
-  /** «Jota habla»: desde el primer frame que suena hasta el fin de la reproducción. @type {null | Play} */
+  /** «Fogar habla»: desde el primer frame que suena hasta el fin de la reproducción. @type {null | Play} */
   let play = null;
   /** La voz sincronizada: del turn_start de un turno que suena hasta que acaba (o se corta) su audio. @type {null | Vox} */
   let vox = null;
@@ -145,7 +145,7 @@ module.exports = function createTalk({ gw, cfg, media, view = NO_VIEW, speaker =
   if (typeof view.onForm === 'function') view.onForm((form, canSwitch) => tell(viewWs, { ev: 'form', form, canSwitch }));
   if (idleAware) /** @type {any} */ (speaker).onIdle(() => { if (play && play.out === 'tv' && play.ending) playEnded(); });
 
-  /** Acaba «Jota habla» (por fin de reproducción o porque se corta); si la tele lo esperaba, done. */
+  /** Acaba «Fogar habla» (por fin de reproducción o porque se corta); si la tele lo esperaba, done. */
   function playEnded() {
     const p = play; if (!p) return;
     play = null; clearTimeout(p.timer);
@@ -161,7 +161,7 @@ module.exports = function createTalk({ gw, cfg, media, view = NO_VIEW, speaker =
     p.timer = setTimeout(() => { if (play === p) playEnded(); }, Math.max(0, due(p) + extra - Date.now()));
     if (p.timer.unref) p.timer.unref();
   }
-  /** Un frame que suena (en la tele o en el móvil): el primero del turno abre «Jota habla» y cada uno suma su duración.
+  /** Un frame que suena (en la tele o en el móvil): el primero del turno abre «Fogar habla» y cada uno suma su duración.
    *  @param {{ out?: string, ws: any, heard?: boolean }} src el turno o su cola @param {any} ev */
   function hear(src, ev) {
     if (src.out !== 'tv' && src.out !== 'phone') return;
@@ -223,7 +223,7 @@ module.exports = function createTalk({ gw, cfg, media, view = NO_VIEW, speaker =
     if (x.t0 !== null && changed(x)) emitVoice(x);          // una pausa que esperaba a su puntuación
   }
 
-  /** Corta todo lo que suene: la cola, «Jota habla» y el altavoz. */
+  /** Corta todo lo que suene: la cola, «Fogar habla» y el altavoz. */
   function silence() {
     if (tail) { clearTimeout(tail.timer); tail = null; }
     playEnded();
@@ -303,7 +303,7 @@ module.exports = function createTalk({ gw, cfg, media, view = NO_VIEW, speaker =
     const owner = turn ? turn.ws : /** @type {Play} */ (play).ws;
     return (!!owner && sameDev(owner, ws)) || mode === 'full';   // reconectado, el mismo móvil sigue pudiendo
   }
-  /** Antes de un turno nuevo: con un turno en vuelo o Jota hablando, `interrupt` lo para (si puede); si no, BUSY.
+  /** Antes de un turno nuevo: con un turno en vuelo o Fogar hablando, `interrupt` lo para (si puede); si no, BUSY.
    *  @param {any} ws @param {string} mode @param {any} interrupt @returns {null | { error: string }} */
   function gate(ws, mode, interrupt) {
     if (!turn && !play) return null;
@@ -350,7 +350,7 @@ module.exports = function createTalk({ gw, cfg, media, view = NO_VIEW, speaker =
     const id = String(ev.id || '').slice(0, TOOL_ID_MAX);
     if (!id) return;                                       // sin id no se puede cerrar su ficha
     if (ev.phase === 'start') {
-      const lay = layoutOf(ev.name, ev.args);              // Jota elige el formato de la página que abre
+      const lay = layoutOf(ev.name, ev.args);              // Fogar elige el formato de la página que abre
       if (lay) v('agentLayout', lay.layout, lay.url);
       const card = toolCard(ev.name, ev.args);
       if (!card) { log.info('talk: herramienta sin ficha ' + toolName(ev.name)); return; }
@@ -435,7 +435,7 @@ module.exports = function createTalk({ gw, cfg, media, view = NO_VIEW, speaker =
         turn.reply += ev.text;                             // el token es un trozo: se acumula
         if (turn.reply) confirmTurn(turn);                 // antes que el texto: las fichas van delante de la respuesta
         tell(turn.ws, { ev: 'token', text: turn.reply });
-        v('jota', turn.reply);
+        v('fogar', turn.reply);
         voiceText(turn.reply);
         return;
       case 'tool':
@@ -459,7 +459,7 @@ module.exports = function createTalk({ gw, cfg, media, view = NO_VIEW, speaker =
 
   /**
    * @param {any} text @param {any} ws @param {string} [mode] 'full' | 'guest' @param {string} [who] @param {any} [out] 'tv' | 'phone' | 'none'; sin él (API, MCP) no suena
-   * @param {any} [interrupt] true: para el turno en vuelo o el habla de Jota (si puede) en vez de contestar BUSY
+   * @param {any} [interrupt] true: para el turno en vuelo o el habla de Fogar (si puede) en vez de contestar BUSY
    * @returns {Promise<{ ok: 1, reply: string } | { error: string }>}
    */
   async function ask(text, ws, mode = 'full', who = '', out = 'none', interrupt = false) {
@@ -538,7 +538,7 @@ module.exports = function createTalk({ gw, cfg, media, view = NO_VIEW, speaker =
       return f && f.canSwitch ? [{ t: 'talk', ev: 'form', form: f.form, canSwitch: true }] : [];
     },
     busy: () => !!turn,
-    /** Jota sigue hablando la respuesta (en la tele o en el móvil). */
+    /** Fogar sigue hablando la respuesta (en la tele o en el móvil). */
     speaking: () => !!play,
     /** Audio del mando: solo el del socket que hizo vstart y mientras graba; lo demás se descarta. */
     onBinary(/** @type {Buffer} */ buf, /** @type {any} */ ws) {

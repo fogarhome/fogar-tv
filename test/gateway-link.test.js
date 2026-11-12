@@ -1,5 +1,5 @@
 'use strict';
-// La conexión con el J Gateway (remote/src/gateway/link.js y store.js) con un cliente falso: estados, clave rechazada,
+// La conexión con el Fogar Gateway (remote/src/gateway/link.js y store.js) con un cliente falso: estados, clave rechazada,
 // cambio de clave sin perder a los que escuchan y gateway.json.
 const { test } = require('node:test');
 const assert = require('node:assert/strict');

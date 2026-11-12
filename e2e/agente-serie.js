@@ -3,7 +3,7 @@
 // Gateway y sin red.
 // Uso: cd e2e && node agente-serie.js [carpeta-salida] [--solo contenido,esqueleto,web,layout,arrastre,espera,tira]
 //      [--tam 1280x720,1920x1080] [--videos carpeta]   (npm run agente:serie; CHROME=/ruta para otro navegador).
-// La conversación la mueve esta prueba igual que talk.js (turn/you/tool/toolEnd/jota/done) y las navegaciones las hace
+// La conversación la mueve esta prueba igual que talk.js (turn/you/tool/toolEnd/fogar/done) y las navegaciones las hace
 // Playwright (como tv_open); en cada una se llama a reset() como server.js al cambiar de URL, y el binding del arrastre
 // (Runtime.bindingCalled) va a view.fromPage() como en server.js. La «app de contenido» es CONTENT_HOST, un host de
 // pruebas que Chromium resuelve a 127.0.0.1 (--host-resolver-rules) y que se añade a CONTENT_HOSTS solo aquí. Páginas:
@@ -267,7 +267,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   /** Respuesta por trozos, como llega del Gateway. */
   async function say(view, text, ms = 70) {
     const w = text.split(' ');
-    for (let i = 1; i <= w.length; i++) { view.jota(w.slice(0, i).join(' ') + (i < w.length ? ' ' : '')); await sleep(ms); }
+    for (let i = 1; i <= w.length; i++) { view.fogar(w.slice(0, i).join(' ') + (i < w.length ? ' ' : '')); await sleep(ms); }
   }
   const dbg = p => p.evaluate(() => window.TVAgent ? window.TVAgent._debug() : null);
   const settled = (p, form, timeout = 6000) => p.waitForFunction(f => window.TVAgent && window.TVAgent._debug().form === f && !window.TVAgent._debug().morph,
@@ -352,7 +352,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     await idle(r);
     // turno 1, en el reposo: el panel se abre
     view.turn('panel', { voice: true }); await sleep(600);
-    view.you('Hola', false); await sleep(250); view.you('Hola Jota', true); await sleep(400);
+    view.you('Hola', false); await sleep(250); view.you('Hola Fogar', true); await sleep(400);
     await say(view, 'Hola, Sito. ¿Qué te apetece ver esta noche?'); view.done();
     await sleep(1800);
     // turno 2: «ponme esta serie de Netflix»
@@ -433,7 +433,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     const P = await r.p.evaluate(() => ({ shown: window.__shown, paint: window.__e2e.paint, out: (window.__samples.find(x => x.morph === 'out') || {}).t }));
     notes.push(`${tag}: primera pintada a los ${P.paint.toFixed(0)} ms, contenido a los ${P.shown ? P.shown.toFixed(0) : '?'} ms, el paso empieza a los ${P.out ? P.out.toFixed(0) : '?'} ms (respiro ${MORPH_DELAY_MS} ms)`);
     if (!P.shown || !(P.out - P.shown >= MORPH_DELAY_MS - PAINT_SLACK_MS)) bad.push(`el paso empieza con el esqueleto aún en pantalla (${(P.out - P.shown).toFixed(0)} ms tras el contenido)`);
-    r.view.toolEnd({ id: 'n', ok: true }); r.view.jota('Ahí la tienes.'); r.view.done();
+    r.view.toolEnd({ id: 'n', ok: true }); r.view.fogar('Ahí la tienes.'); r.view.done();
     r.poll.stop(); await r.ctx.close();
     report(tag, r, bad);
   }
@@ -468,7 +468,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     report(tag, r, bad);
   }
 
-  // ───────────────────────────── layout: Jota abre una web normal pidiendo la píldora
+  // ───────────────────────────── layout: Fogar abre una web normal pidiendo la píldora
   if (want('layout')) {
     const sz = SIZES[0], tag = `layout ${sz.n}`;
     const r = await rig(sz);
@@ -541,14 +541,14 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     notes.push(`${tag}: clics en el botón ${clicks[0]}, en el documento ${clicks[1]} (uno fuera de la membrana y uno dentro)`);
     if (clicks[0] !== 1) bad.push('el clic fuera de la membrana no llega a la web');
     if (clicks[1] !== 1) bad.push('el clic en la membrana llega al documento de la web');
-    // tv_click_at de Jota debajo de la membrana: como control.clickAt (la capa deja pasar el puntero mientras pulsa)
+    // tv_click_at de Fogar debajo de la membrana: como control.clickAt (la capa deja pasar el puntero mientras pulsa)
     const AGENT_PASS = on => `window.TVAgent&&window.TVAgent.pass&&window.TVAgent.pass(${on})`;
     await r.s.send('Runtime.evaluate', { expression: AGENT_PASS(true) });
     for (const type of ['mouseMoved', 'mousePressed', 'mouseReleased']) await r.s.send('Input.dispatchMouseEvent', { type, x: g.x, y: g.y, button: 'left', clickCount: 1 });
     await r.s.send('Runtime.evaluate', { expression: AGENT_PASS(false) });
-    if ((await p.evaluate(() => window.__docClicks)) !== 2) bad.push('un clic de Jota (tv_click_at) debajo de la membrana no llega a la web');
+    if ((await p.evaluate(() => window.__docClicks)) !== 2) bad.push('un clic de Fogar (tv_click_at) debajo de la membrana no llega a la web');
     await p.mouse.click(g.x, g.y);
-    if ((await p.evaluate(() => window.__docClicks)) !== 2) bad.push('tras el clic de Jota la membrana no vuelve a recibir el puntero');
+    if ((await p.evaluate(() => window.__docClicks)) !== 2) bad.push('tras el clic de Fogar la membrana no vuelve a recibir el puntero');
     // el arrastre no quita el foco al campo en el que se escribe
     await p.click('#q'); await p.keyboard.type('paella');
     await dragBy(-60 * k, 0);

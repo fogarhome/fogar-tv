@@ -1,5 +1,5 @@
 #!/bin/bash
-# Instalador de jota-screen. Idempotente: se puede ejecutar las veces que haga falta.
+# Instalador de fogar-tv. Idempotente: se puede ejecutar las veces que haga falta.
 # Ver «scripts/install.sh --help».
 set -euo pipefail
 
@@ -7,14 +7,14 @@ usage() {
   cat <<'EOF'
 Uso: scripts/install.sh [--dry-run] [--system] [--help]
 
-Instala jota-screen para el usuario actual, desde la carpeta donde esté clonado el repo:
+Instala fogar-tv para el usuario actual, desde la carpeta donde esté clonado el repo:
   1. comprueba las dependencias (no instala paquetes: dice cómo hacerlo en Debian/Ubuntu);
-  2. crea ~/.config/jota-screen/screen.env desde config/screen.env.example si no existe (nunca la pisa);
+  2. crea ~/.config/fogar-tv/screen.env desde config/screen.env.example si no existe (nunca la pisa);
   3. instala las dependencias del servidor (npm ci --omit=dev en remote/) si han cambiado;
-  4. genera las unidades de usuario en ~/.config/systemd/user (jota-screen, jota-screen-mdns,
-     jota-screen-spotify), detiene y deshabilita las antiguas (tv-remote, tv-mdns, spotifyd),
+  4. genera las unidades de usuario en ~/.config/systemd/user (fogar-tv, fogar-tv-mdns,
+     fogar-tv-spotify), detiene y deshabilita las antiguas (tv-remote, tv-mdns, spotifyd),
      y habilita y arranca las nuevas; activa «linger» para que arranquen sin iniciar sesión;
-  5. genera la unidad de sistema del kiosco (jota-screen-kiosk.service) y enseña los comandos sudo
+  5. genera la unidad de sistema del kiosco (fogar-tv-kiosk.service) y enseña los comandos sudo
      para instalarla (o la instala con --system);
   6. si hay nginx, genera el proxy de http://<TV_MDNS_NAME> y enseña cómo instalarlo.
 
@@ -23,7 +23,7 @@ Opciones:
   --system    instala también la unidad del kiosco (necesita sudo sin contraseña; si no, enseña los comandos)
   -h, --help  esta ayuda
 
-Variables: TV_CONFIG (ruta de la config; por defecto ~/.config/jota-screen/screen.env).
+Variables: TV_CONFIG (ruta de la config; por defecto ~/.config/fogar-tv/screen.env).
 Después: scripts/doctor.sh comprueba que todo funciona.
 EOF
 }
@@ -41,13 +41,13 @@ done
 
 # shellcheck source=scripts/lib.sh
 . "$(dirname "$(readlink -f "$0")")/lib.sh"
-APP=$JSC_APP_DIR
-CFG=$(jsc_config_path)
+APP=$FOGAR_TV_APP_DIR
+CFG=$(fogar_tv_config_path)
 CFG_DIR=$(dirname "$CFG")
 GEN_DIR=$CFG_DIR/generated
 UNIT_DIR=${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user
-JSC_USER=$(id -un)
-export JSC_USER
+FOGAR_TV_USER=$(id -un)
+export FOGAR_TV_USER
 
 step() { printf '\n== %s\n' "$*"; }
 ok() { printf '  ✓ %s\n' "$*"; }
@@ -81,7 +81,7 @@ put_file() {
 }
 
 [ $DRY = 1 ] && echo "MODO SIMULADO (--dry-run): no se cambia nada."
-echo "jota-screen en $APP para el usuario $JSC_USER"
+echo "fogar-tv en $APP para el usuario $FOGAR_TV_USER"
 
 # ─────────────────────────────────────────────── configuración
 step "Configuración"
@@ -93,7 +93,7 @@ else
   run install -m 600 "$APP/config/screen.env.example" "$CFG"
   [ $DRY = 1 ] || ok "creada $CFG desde config/screen.env.example (edítala si hace falta)"
 fi
-jsc_load_config
+fogar_tv_load_config
 info "nombre «${TV_NAME}», puerto $TV_PORT, estado en $TV_STATE_DIR"
 
 # ─────────────────────────────────────────────── dependencias
@@ -114,16 +114,16 @@ need() { # need <nivel: req|rec|opt> <descripción> <paquetes apt> <comprobació
   return 0
 }
 has() { command -v "$1"; }
-JSC_NODE=$(jsc_find_node || true)
-export JSC_NODE
-node_ok() { [ -n "$JSC_NODE" ] && [ "$(jsc_node_major "$JSC_NODE")" -ge 22 ]; }
-if node_ok; then ok "node $("$JSC_NODE" --version) ($JSC_NODE)"; else
-  bad "falta node ≥ 22${JSC_NODE:+ (hay $("$JSC_NODE" --version 2>/dev/null) en $JSC_NODE)}"
+FOGAR_TV_NODE=$(fogar_tv_find_node || true)
+export FOGAR_TV_NODE
+node_ok() { [ -n "$FOGAR_TV_NODE" ] && [ "$(fogar_tv_node_major "$FOGAR_TV_NODE")" -ge 22 ]; }
+if node_ok; then ok "node $("$FOGAR_TV_NODE" --version) ($FOGAR_TV_NODE)"; else
+  bad "falta node ≥ 22${FOGAR_TV_NODE:+ (hay $("$FOGAR_TV_NODE" --version 2>/dev/null) en $FOGAR_TV_NODE)}"
   missing=$((missing + 1))
   hint+=("Node 22 o posterior: https://github.com/nodesource/distributions (paquete nodejs, trae npm) o https://nodejs.org")
 fi
 need req "npm" "" has npm
-if CHROME=$(jsc_find_chrome); then ok "navegador $CHROME"; else
+if CHROME=$(fogar_tv_find_chrome); then ok "navegador $CHROME"; else
   bad "falta Chrome o Chromium${TV_CHROME:+ (TV_CHROME=$TV_CHROME no existe)}"
   missing=$((missing + 1))
   hint+=("Google Chrome (recomendado: trae Widevine para Netflix y similares): https://www.google.com/chrome/ — o «sudo apt install chromium»")
@@ -155,7 +155,7 @@ fi
 step "Carpeta de estado"
 if [ -d "$TV_STATE_DIR" ]; then
   ok "$TV_STATE_DIR"
-  [ "$(jsc_mode "$TV_STATE_DIR")" = 700 ] || run chmod 700 "$TV_STATE_DIR"
+  [ "$(fogar_tv_mode "$TV_STATE_DIR")" = 700 ] || run chmod 700 "$TV_STATE_DIR"
 else
   run mkdir -p "$TV_STATE_DIR"
   run chmod 700 "$TV_STATE_DIR"
@@ -165,8 +165,8 @@ fi
 # ─────────────────────────────────────────────── npm
 step "Dependencias del servidor (remote/)"
 NPM_CHANGED=0
-lock_sum=$(jsc_sha256 "$APP/remote/package-lock.json")
-stamp=$APP/remote/node_modules/.jota-screen-install
+lock_sum=$(fogar_tv_sha256 "$APP/remote/package-lock.json")
+stamp=$APP/remote/node_modules/.fogar-tv-install
 if [ -f "$stamp" ] && [ "$(cat "$stamp")" = "$lock_sum omit=dev" ]; then
   ok "al día (package-lock.json sin cambios)"
 else
@@ -185,8 +185,8 @@ fi
 step "Unidades de usuario ($UNIT_DIR)"
 # unidades que han cambiado, separadas por espacios (sin arrays asociativos: bash 3.2 no los tiene)
 CHANGED=" "
-for u in jota-screen jota-screen-mdns jota-screen-spotify; do
-  if jsc_render "$APP/systemd/user/$u.service" | put_file "$UNIT_DIR/$u.service" 644; then
+for u in fogar-tv fogar-tv-mdns fogar-tv-spotify; do
+  if fogar_tv_render "$APP/systemd/user/$u.service" | put_file "$UNIT_DIR/$u.service" 644; then
     CHANGED+="$u "
     [ $DRY = 1 ] || ok "$u.service escrita"
   else
@@ -194,21 +194,21 @@ for u in jota-screen jota-screen-mdns jota-screen-spotify; do
   fi
 done
 if [ -n "$SPOTIFYD" ] && [ ! -f "$HOME/.config/spotifyd/spotifyd.conf" ]; then
-  if jsc_render "$APP/systemd/spotifyd.conf.example" | put_file "$CFG_DIR/spotifyd.conf" 600; then
+  if fogar_tv_render "$APP/systemd/spotifyd.conf.example" | put_file "$CFG_DIR/spotifyd.conf" 600; then
     [ $DRY = 1 ] || ok "creada $CFG_DIR/spotifyd.conf"
-    CHANGED+="jota-screen-spotify "
+    CHANGED+="fogar-tv-spotify "
   fi
 fi
 
 # qué se habilita
-WANT=(jota-screen)
+WANT=(fogar-tv)
 if [ -n "$TV_MDNS_NAME" ]; then
-  if command -v avahi-publish >/dev/null 2>&1; then WANT+=(jota-screen-mdns)
-  else warn "TV_MDNS_NAME=$TV_MDNS_NAME pero no está avahi-publish: no habilito jota-screen-mdns"; fi
+  if command -v avahi-publish >/dev/null 2>&1; then WANT+=(fogar-tv-mdns)
+  else warn "TV_MDNS_NAME=$TV_MDNS_NAME pero no está avahi-publish: no habilito fogar-tv-mdns"; fi
 else
   info "TV_MDNS_NAME vacío: sin alias mDNS"
 fi
-[ -n "$SPOTIFYD" ] && WANT+=(jota-screen-spotify)
+[ -n "$SPOTIFYD" ] && WANT+=(fogar-tv-spotify)
 
 # ─────────────────────────────────────────────── servicios
 step "Servicios de usuario"
@@ -223,13 +223,13 @@ else
   old_unit() { [ -f "$UNIT_DIR/$1.service" ] || systemctl --user cat "$1.service" >/dev/null 2>&1; }
   # antiguas: se paran justo antes de arrancar las nuevas (el puerto es el mismo)
   for u in "${WANT[@]}"; do
-    case $u in jota-screen) old=tv-remote ;; jota-screen-mdns) old=tv-mdns ;; jota-screen-spotify) old=spotifyd ;; esac
+    case $u in fogar-tv) old=tv-remote ;; fogar-tv-mdns) old=tv-mdns ;; fogar-tv-spotify) old=spotifyd ;; esac
     if old_unit "$old"; then
       run systemctl --user disable --now "$old.service" || true
       warn "unidad antigua $old.service detenida y deshabilitada (su fichero queda; bórralo cuando todo vaya bien)"
     fi
     run systemctl --user enable "$u.service"
-    if [[ $CHANGED == *" $u "* ]] || { [ "$u" = jota-screen ] && [ $NPM_CHANGED = 1 ]; } \
+    if [[ $CHANGED == *" $u "* ]] || { [ "$u" = fogar-tv ] && [ $NPM_CHANGED = 1 ]; } \
        || ! systemctl --user is-active --quiet "$u.service"; then
       run systemctl --user restart "$u.service"
       [ $DRY = 1 ] || ok "$u (re)arrancado"
@@ -241,33 +241,33 @@ else
     warn "hay una unidad antigua spotifyd.service y no encuentro spotifyd: pon TV_SPOTIFYD=<ruta> en $CFG y repite"
   fi
   # linger: que los servicios de usuario arranquen con el equipo, sin iniciar sesión
-  if [ "$(loginctl show-user "$JSC_USER" --property=Linger --value 2>/dev/null || true)" = yes ]; then
+  if [ "$(loginctl show-user "$FOGAR_TV_USER" --property=Linger --value 2>/dev/null || true)" = yes ]; then
     ok "linger activo"
   elif [ $DRY = 1 ]; then
-    printf '  [simulado] loginctl enable-linger %s\n' "$JSC_USER"
-  elif loginctl enable-linger "$JSC_USER" 2>/dev/null; then
+    printf '  [simulado] loginctl enable-linger %s\n' "$FOGAR_TV_USER"
+  elif loginctl enable-linger "$FOGAR_TV_USER" 2>/dev/null; then
     ok "linger activado"
   else
-    warn "no he podido activar linger sin permisos; ejecuta: sudo loginctl enable-linger $JSC_USER"
+    warn "no he podido activar linger sin permisos; ejecuta: sudo loginctl enable-linger $FOGAR_TV_USER"
   fi
 fi
 
 # ─────────────────────────────────────────────── kiosco (unidad de sistema)
 step "Kiosco (unidad de sistema)"
-KIOSK_GEN=$GEN_DIR/jota-screen-kiosk.service
-KIOSK_DEST=/etc/systemd/system/jota-screen-kiosk.service
-jsc_render "$APP/systemd/system/jota-screen-kiosk.service" | put_file "$KIOSK_GEN" 644 || true
+KIOSK_GEN=$GEN_DIR/fogar-tv-kiosk.service
+KIOSK_DEST=/etc/systemd/system/fogar-tv-kiosk.service
+fogar_tv_render "$APP/systemd/system/fogar-tv-kiosk.service" | put_file "$KIOSK_GEN" 644 || true
 kiosk_cmds=()
-if [ -f "$KIOSK_DEST" ] && jsc_render "$APP/systemd/system/jota-screen-kiosk.service" | cmp -s - "$KIOSK_DEST"; then
+if [ -f "$KIOSK_DEST" ] && fogar_tv_render "$APP/systemd/system/fogar-tv-kiosk.service" | cmp -s - "$KIOSK_DEST"; then
   ok "$KIOSK_DEST al día"
-  systemctl is-enabled --quiet jota-screen-kiosk.service 2>/dev/null || kiosk_cmds+=("systemctl enable --now jota-screen-kiosk.service")
+  systemctl is-enabled --quiet fogar-tv-kiosk.service 2>/dev/null || kiosk_cmds+=("systemctl enable --now fogar-tv-kiosk.service")
 else
   kiosk_cmds+=("install -m 0644 $(printf %q "$KIOSK_GEN") $KIOSK_DEST" "systemctl daemon-reload")
   if [ -f /etc/systemd/system/tv-kiosk.service ] || systemctl cat tv-kiosk.service >/dev/null 2>&1; then
     kiosk_cmds+=("systemctl disable --now tv-kiosk.service")
   fi
-  if [ -f "$KIOSK_DEST" ]; then kiosk_cmds+=("systemctl enable jota-screen-kiosk.service" "systemctl restart jota-screen-kiosk.service")
-  else kiosk_cmds+=("systemctl enable --now jota-screen-kiosk.service"); fi
+  if [ -f "$KIOSK_DEST" ]; then kiosk_cmds+=("systemctl enable fogar-tv-kiosk.service" "systemctl restart fogar-tv-kiosk.service")
+  else kiosk_cmds+=("systemctl enable --now fogar-tv-kiosk.service"); fi
 fi
 if [ ${#kiosk_cmds[@]} -gt 0 ]; then
   if [ $SYSTEM = 1 ] && [ $DRY = 0 ] && sudo -n true 2>/dev/null; then
@@ -288,14 +288,14 @@ NGINX=$(command -v nginx || { [ -x /usr/sbin/nginx ] && echo /usr/sbin/nginx; } 
 if [ -n "$NGINX" ] && [ -n "$TV_MDNS_NAME" ]; then
   step "nginx (http://$TV_MDNS_NAME sin puerto)"
   NG_GEN=$GEN_DIR/nginx-mando.conf
-  NG_DEST=/etc/nginx/sites-available/jota-screen-mando.conf
-  jsc_render "$APP/remote/nginx-mando.conf" | put_file "$NG_GEN" 644 || true
+  NG_DEST=/etc/nginx/sites-available/fogar-tv-mando.conf
+  fogar_tv_render "$APP/remote/nginx-mando.conf" | put_file "$NG_GEN" 644 || true
   if [ -f "$NG_DEST" ] && cmp -s "$NG_GEN" "$NG_DEST" 2>/dev/null; then
     ok "$NG_DEST al día"
   else
     info "Proxy generado en $NG_GEN. Para instalarlo (si ya tienes otro sitio con server_name $TV_MDNS_NAME, quítalo):"
     printf '    sudo install -m 0644 %q %s\n' "$NG_GEN" "$NG_DEST"
-    printf '    sudo ln -sf %s /etc/nginx/sites-enabled/jota-screen-mando.conf\n' "$NG_DEST"
+    printf '    sudo ln -sf %s /etc/nginx/sites-enabled/fogar-tv-mando.conf\n' "$NG_DEST"
     printf '    sudo nginx -t && sudo systemctl reload nginx\n'
   fi
 fi

@@ -45,7 +45,7 @@ test('con la tele por ADB, el volumen de Spotify es el de la tele y no toca la W
   } finally { await s.stop(); fs.rmSync(bin, { recursive: true, force: true }); }
 });
 
-test('si Spotify no ve el altavoz, el error lo marca y «restart» reinicia jota-screen-spotify', async () => {
+test('si Spotify no ve el altavoz, el error lo marca y «restart» reinicia fogar-tv-spotify', async () => {
   const bin = fs.mkdtempSync(path.join(os.tmpdir(), 'tvc-systemctl-'));
   const calls = path.join(bin, 'calls');
   fs.writeFileSync(path.join(bin, 'systemctl'), `#!/bin/sh\necho "$@" >> ${calls}\n`, { mode: 0o755 });
@@ -56,6 +56,6 @@ test('si Spotify no ve el altavoz, el error lo marca y «restart» reinicia jota
     assert.equal(r.noDevice, true, 'fetch-spy responde sin altavoces');
     assert.equal(fs.existsSync(calls), false, 'nunca se reinicia solo');
     assert.deepEqual(await (await cmd(s, { t: 'spotify', a: 'restart' })).json(), { ok: 1 });
-    assert.equal(fs.readFileSync(calls, 'utf8').trim(), '--user restart jota-screen-spotify');
+    assert.equal(fs.readFileSync(calls, 'utf8').trim(), '--user restart fogar-tv-spotify');
   } finally { await s.stop(); fs.rmSync(bin, { recursive: true, force: true }); }
 });

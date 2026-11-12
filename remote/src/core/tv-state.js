@@ -10,7 +10,7 @@ const hostOf = u => { try { return new URL(u).host; } catch { return ''; } };
 /**
  * @param {{ cdpUp: () => boolean, clients: () => Iterable<any>, ambient?: () => any, gateway?: () => any }} o
  *   ambient: el del reposo (se crea después), o null si la tele no está en reposo
- *   gateway: estado de la conexión con el J Gateway ({status, name}, sin clave ni dirección; se crea después)
+ *   gateway: estado de la conexión con el Fogar Gateway ({status, name}, sin clave ni dirección; se crea después)
  */
 function createTvState({ cdpUp, clients, ambient = () => null, gateway = () => null }) {
   // scroll: {pos, size} de 0 a 1, o null

@@ -1,4 +1,4 @@
-// Voz (v4): mantener el orbe de «Hablar con Jota» para hablar. El micrófono del móvil sube en directo al servidor como
+// Voz (v4): mantener el orbe de «Hablar con Fogar» para hablar. El micrófono del móvil sube en directo al servidor como
 // PCM (Float32 LE, 16 kHz, mono, trozos de 100 ms) por el WebSocket del mando: `vstart`, audio binario y `vend`. La vista
 // del agente enseña la frase mientras se dice (`talk` partial) y la respuesta. La respuesta suena en UN solo sitio: la
 // tele (por defecto), este móvil o ninguno (solo texto). No es un módulo del mando: la hoja `agS` es de agent.js, que
@@ -48,7 +48,7 @@ export function ensureAudioCtx() {
   return ctx;
 }
 const out = () => (OUTS.includes(cfg.voiceOut) ? cfg.voiceOut : 'tv');
-/** Ajuste «Al pulsar el orbe mientras Jota habla»: interrumpir (por defecto) o esperar. */
+/** Ajuste «Al pulsar el orbe mientras Fogar habla»: interrumpir (por defecto) o esperar. */
 export const interruptOn = () => cfg.voiceInterrupt !== false;
 /** El selector «dónde suena la respuesta» (voz y texto escrito). */
 export const outSel = out;
@@ -92,7 +92,7 @@ function go() {
   // el servidor abre el turno al leer vstart, antes que el audio que va detrás por el mismo socket
   rpc({ t: 'vstart', out: out(), interrupt: interruptOn() }).then(r => {
     if (!r || !r.error || r.error === 'sin respuesta' || me !== press) return;
-    if (started) { started = false; held = false; release(); }   // ocupado, sin permiso o Jota caído: no se sigue grabando
+    if (started) { started = false; held = false; release(); }   // ocupado, sin permiso o Fogar caído: no se sigue grabando
     ui.rep(r.error, 'err');                  // (también si ya se soltó: no se queda en «Pensando»)
   });
   for (const p of pending) sendBin(p);
@@ -193,7 +193,7 @@ export const voice = {
     ui = hooks;
     if (!canRecord()) return false;
     const b = $('#agOrb'), o = $('#agOut');
-    b.setAttribute('aria-label', 'Mantén para hablar con Jota; toca para escribir');
+    b.setAttribute('aria-label', 'Mantén para hablar con Fogar; toca para escribir');
     $('#agH').textContent = 'Mantén el orbe para hablar · toca para escribir';
     o.hidden = false; paintOut();
     b.addEventListener('pointerdown', e => { e.preventDefault(); b.setPointerCapture(e.pointerId); start(); });

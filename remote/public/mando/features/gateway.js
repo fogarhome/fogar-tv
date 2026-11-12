@@ -1,6 +1,6 @@
-// Conexión de la tele con Jota (el J Gateway), solo para admin: el aviso de arriba cuando no está conectada (no bloquea, se
-// cierra con ✕ y no vuelve hasta que cambie el estado), la hoja «Conectar con Jota» (buscar → elegir → código o «Hazlo tú»
-// en el mismo equipo → resultado) y la fila de Ajustes › Jota en la tele. El estado llega solo con el de la tele (`gw`);
+// Conexión de la tele con Fogar (el gateway), solo para admin: el aviso de arriba cuando no está conectada (no bloquea, se
+// cierra con ✕ y no vuelve hasta que cambie el estado), la hoja «Conectar con Fogar» (buscar → elegir → código o «Hazlo tú»
+// en el mismo equipo → resultado) y la fila de Ajustes › Fogar en la tele. El estado llega solo con el de la tele (`gw`);
 // la clave nunca llega al mando.
 import { $, el } from '../core/dom.js';
 import { state, on } from '../core/store.js';
@@ -8,7 +8,7 @@ import { rpc } from '../core/api.js';
 import { buzz } from '../ui/haptics.js';
 import { openSheet, closeSheet, isOpen } from '../ui/sheets.js';
 
-const NOTE = { unpaired: 'Jota no está conectado', unreachable: 'Jota no responde', refused: 'El gateway no deja usar el agente de la tele', revoked: 'Hay que volver a emparejar Jota' };
+const NOTE = { unpaired: 'Fogar no está conectado', unreachable: 'Fogar no responde', refused: 'El gateway no deja usar el agente de la tele', revoked: 'Hay que volver a emparejar Fogar' };
 const ST = { checking: 'Comprobando…', unpaired: 'Sin emparejar', ok: 'Conectada', unreachable: 'No responde', refused: 'El gateway no permite su agente', revoked: 'La clave ya no vale' };
 const WHERE = { local: 'este equipo', tailnet: 'tailnet', manual: 'dirección escrita a mano' };
 /** @type {{ status: string, name: string } | null} */ let gw = null;
@@ -31,7 +31,7 @@ function paintRow(i) {
   $('#gwOpen').textContent = i.status === 'ok' ? 'Cambiar' : 'Conectar';
   $('#gwForgetRow').hidden = i.status === 'unpaired';
 }
-/** Ajustes › Jota en la tele: lo comprueba ahora (no se queda con un «no responde» viejo) y pinta la fila (también el equipo). */
+/** Ajustes › Fogar en la tele: lo comprueba ahora (no se queda con un «no responde» viejo) y pinta la fila (también el equipo). */
 export async function gwLoad() { const r = await rpc({ t: 'gateway', op: 'check' }); if (r && !r.error) paintRow(r); }
 
 /** @param {string} s @param {string} [msg] @param {boolean} [err] */
@@ -43,11 +43,11 @@ function pane(s, msg = '', err = false) {
 /** @param {{ host: string, name: string, where: string }} g */
 function choose(g) {
   target = { host: g.host, typed: false };
-  if (g.where === 'local') pane('local', `Jota en ${g.name} (este equipo)`);
-  else pane('code', `Jota en ${g.name}`);
+  if (g.where === 'local') pane('local', `Fogar en ${g.name} (este equipo)`);
+  else pane('code', `Fogar en ${g.name}`);
 }
 async function find() {
-  pane('busy', 'Buscando Jota…');
+  pane('busy', 'Buscando Fogar…');
   const [r, i] = await Promise.all([rpc({ t: 'gateway', op: 'find' }), rpc({ t: 'gateway', op: 'status' })]);
   if (!r || r.error) return pane('list', (r && r.error) || 'No he podido buscar', true);
   const found = /** @type {any[]} */ (r.found);
@@ -56,19 +56,19 @@ async function find() {
   const L = $('#gwL'); L.textContent = '';
   for (const g of found) {
     const b = el('button', 'nv'); b.type = 'button';
-    const t = el('span', 'nvT', `Jota en ${g.name}`); t.append(el('small', '', WHERE[g.where] || g.where));
+    const t = el('span', 'nvT', `Fogar en ${g.name}`); t.append(el('small', '', WHERE[g.where] || g.where));
     b.append(t); b.addEventListener('click', () => { buzz(7); choose(g); });
     L.append(b);
   }
   pane('list', found.length ? 'Elige a cuál conectar la tele' : r.manual
     ? `El gateway de ${(i && i.host) || 'la dirección escrita a mano'} no responde. Escribe otra dirección o vuelve a intentarlo más tarde.`
-    : 'No encuentro Jota en este equipo ni en la tailnet. Escribe su dirección.', found.length === 0 && r.manual);
+    : 'No encuentro Fogar en este equipo ni en la tailnet. Escribe su dirección.', found.length === 0 && r.manual);
 }
 /** @param {any} r @param {string} back el paso al que se vuelve si falla */
 function result(r, back) {
   if (!r || r.error) { buzz(30); return pane(back, (r && r.error) || 'No he podido emparejar', true); }
   buzz(12); paintRow(r);
-  pane('done', r.status === 'ok' ? `Conectada a Jota en ${r.name}` : `Emparejada, pero ${(ST[r.status] || '').toLowerCase()}`, r.status !== 'ok');
+  pane('done', r.status === 'ok' ? `Conectada a Fogar en ${r.name}` : `Emparejada, pero ${(ST[r.status] || '').toLowerCase()}`, r.status !== 'ok');
 }
 async function pairCode() {
   const code = /** @type {HTMLInputElement} */ ($('#gwCode')).value.replace(/\D/g, '');
@@ -100,10 +100,10 @@ export const gateway = {
       const r = await rpc({ t: 'gateway', op: 'forget' }); if (r && !r.error) paintRow(r);
     });
     const host = /** @type {HTMLInputElement} */ ($('#gwHost'));
-    const useHost = () => { const h = host.value.trim(); if (!h) return; buzz(7); target = { host: h, typed: true }; pane('code', `Jota en ${h}`); };
+    const useHost = () => { const h = host.value.trim(); if (!h) return; buzz(7); target = { host: h, typed: true }; pane('code', `Fogar en ${h}`); };
     $('#gwHostGo').addEventListener('click', useHost);
     host.addEventListener('keydown', e => { if (e.key === 'Enter') useHost(); });
-    $('#gwLocal').addEventListener('click', async () => { buzz(7); pane('busy', 'Sacando el código con jota-gw…'); result(await rpc({ t: 'gateway', op: 'local' }), 'local'); });
+    $('#gwLocal').addEventListener('click', async () => { buzz(7); pane('busy', 'Sacando el código con fogar-gw…'); result(await rpc({ t: 'gateway', op: 'local' }), 'local'); });
     $('#gwByCode').addEventListener('click', () => { buzz(7); pane('code', 'En este equipo'); });
     const code = /** @type {HTMLInputElement} */ ($('#gwCode'));
     code.addEventListener('input', () => { code.value = code.value.replace(/\D/g, '').slice(0, 6); if (code.value.length === 6) pairCode(); });

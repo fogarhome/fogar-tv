@@ -1,5 +1,5 @@
 'use strict';
-// Encontrar el J Gateway y emparejarse (remote/src/gateway/discover.js y pair.js) y las órdenes del mando
+// Encontrar el Fogar Gateway y emparejarse (remote/src/gateway/discover.js y pair.js) y las órdenes del mando
 // (remote/src/features/gateway.js), contra un gateway falso por HTTP.
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
@@ -17,14 +17,14 @@ const { createGatewayStore } = R('gateway/store');
 const nolog = { info() {}, warn() {} };
 
 /** Gateway falso: well-known y POST /pair con el código 123456. */
-async function fakeGw({ service = 'jota-gateway', code = '123456', status } = {}) {
+async function fakeGw({ service = 'fogar-gateway', code = '123456', status } = {}) {
   const got = [];
   const srv = http.createServer((req, res) => {
     let body = '';
     req.on('data', d => { body += d; });
     req.on('end', () => {
       const send = (s, j) => { res.writeHead(s, { 'content-type': 'application/json' }); res.end(JSON.stringify(j)); };
-      if (req.method === 'GET' && req.url === '/.well-known/jota-gateway') return send(200, { service, version: '1.29.0', name: 'green-house', pairing: true });
+      if (req.method === 'GET' && req.url === '/.well-known/fogar-gateway') return send(200, { service, version: '1.29.0', name: 'green-house', pairing: true });
       if (req.method === 'POST' && req.url === '/pair') {
         const j = JSON.parse(body); got.push(j);
         if (status) return send(status, {});
@@ -43,12 +43,12 @@ test('endpoints: lo que escribe una persona → http y ws con el puerto 8004 por
   assert.deepEqual(discover.endpoints('green-house'), { http: 'http://green-house:8004', ws: 'ws://green-house:8004/ws/stream', host: 'green-house' });
   assert.equal(discover.endpoints('green-house:9000').ws, 'ws://green-house:9000/ws/stream');
   assert.equal(discover.endpoints('ws://gh:8004/ws/stream').http, 'http://gh:8004');
-  assert.equal(discover.endpoints('https://jota.example').ws, 'wss://jota.example:8004/ws/stream');
+  assert.equal(discover.endpoints('https://fogar.example').ws, 'wss://fogar.example:8004/ws/stream');
   assert.equal(discover.endpoints(''), null);
   assert.equal(discover.endpoints('ftp://x'), null);
 });
 
-test('probe: solo cuenta un Jota de verdad', async () => {
+test('probe: solo cuenta un Fogar de verdad', async () => {
   const ok = await fakeGw(), other = await fakeGw({ service: 'otro' });
   try {
     const g = await discover.probe(ok.host);
@@ -102,13 +102,13 @@ test('redeem: manda tipo screen y lo que sabe reproducir; errores claros y gené
   try { assert.match((await pair.redeem({ http: `http://${busy.host}`, code: '123456', name: 'x' })).error, /espera/); } finally { await busy.stop(); }
 });
 
-test('localCode: `jota-gw --json pair --type screen --name … --no-wait`', async () => {
+test('localCode: `fogar-gw --json pair --type screen --name … --no-wait`', async () => {
   let args = null;
   const exec = (cmd, a, o, cb) => { args = [cmd, ...a]; cb(null, JSON.stringify({ id: 'p1', code: '482913', expires_at: 'x' })); };
   assert.deepEqual(await pair.localCode({ name: 'Salón', agent: 'j-assistant', exec }), { code: '482913' });
-  assert.deepEqual(args, ['jota-gw', '--json', 'pair', '--type', 'screen', '--name', 'Salón', '--agent', 'j-assistant', '--allowed-agent', 'j-assistant', '--no-wait']);
+  assert.deepEqual(args, ['fogar-gw', '--json', 'pair', '--type', 'screen', '--name', 'Salón', '--agent', 'j-assistant', '--allowed-agent', 'j-assistant', '--no-wait']);
   const missing = (c, a, o, cb) => cb(Object.assign(new Error('x'), { code: 'ENOENT' }), '');
-  assert.deepEqual(await pair.localCode({ name: 'x', agent: 'a', exec: missing }), { error: 'jota-gw no está instalado en este equipo' });
+  assert.deepEqual(await pair.localCode({ name: 'x', agent: 'a', exec: missing }), { error: 'fogar-gw no está instalado en este equipo' });
   const junk = (c, a, o, cb) => cb(null, 'no json');
   assert.ok('error' in await pair.localCode({ name: 'x', agent: 'a', exec: junk }));
 });
@@ -121,7 +121,7 @@ function mkLink() {
   return { store, made, link: createGatewayLink({ store, agent: 'a', log: nolog, makeClient }) };
 }
 
-test('orden pair: comprueba que es un Jota, canjea, guarda y conecta; la clave no vuelve al mando', async () => {
+test('orden pair: comprueba que es un Fogar, canjea, guarda y conecta; la clave no vuelve al mando', async () => {
   const g = await fakeGw();
   const { store, made, link } = mkLink();
   const f = createGatewayFeature({ link, name: 'Salón', agent: 'j-assistant', log: nolog });
@@ -136,12 +136,12 @@ test('orden pair: comprueba que es un Jota, canjea, guarda y conecta; la clave n
     assert.deepEqual(store.load(), { url: `ws://${g.host}/ws/stream`, key: 'clave-secreta', name: 'green-house', manual: false });
     assert.equal(made.at(-1).o.key, 'clave-secreta');
     assert.equal((await run({ op: 'pair', host: g.host, code: '123456', typed: true })).manual, true, 'escrita a mano: manual');
-    assert.match((await run({ op: 'pair', host: '127.0.0.1:1', code: '123456' })).error, /No encuentro Jota/);
+    assert.match((await run({ op: 'pair', host: '127.0.0.1:1', code: '123456' })).error, /No encuentro Fogar/);
     assert.deepEqual(await run({ op: 'forget' }), { status: 'unpaired', name: '', host: '127.0.0.1', manual: true });
   } finally { await g.stop(); }
 });
 
-test('orden local: sin gateway en este equipo no ejecuta jota-gw', async () => {
+test('orden local: sin gateway en este equipo no ejecuta fogar-gw', async () => {
   const { link } = mkLink();
   let ran = false;
   const f = createGatewayFeature({ link, name: 'Salón', agent: 'j-assistant', log: nolog,
@@ -150,7 +150,7 @@ test('orden local: sin gateway en este equipo no ejecuta jota-gw', async () => {
   assert.equal(ran, false);
 });
 
-test('orden local: saca el código con jota-gw y lo canjea por la misma ruta', async () => {
+test('orden local: saca el código con fogar-gw y lo canjea por la misma ruta', async () => {
   const g = await fakeGw();
   const { store, link } = mkLink();
   const f = createGatewayFeature({ link, name: 'Salón', agent: 'j-assistant', log: nolog,

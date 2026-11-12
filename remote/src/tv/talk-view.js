@@ -1,6 +1,6 @@
 'use strict';
 // @ts-check
-// Capa de la conversación en la tele: lo que dices y lo que contesta Jota, en directo, encima de cualquier página.
+// Capa de la conversación en la tele: lo que dices y lo que contesta Fogar, en directo, encima de cualquier página.
 // Dos formatos, fijados al empezar el turno: `island` (hay vídeo: arriba en el centro, solo la frase y la respuesta) y
 // `panel` (columna a la derecha). La página recibe public/tv-agent.js («paneles vivos») una sola vez: la primera llamada
 // lleva la fuente (con los tokens delante, src/tv/tokens.js) y las siguientes solo `TVAgent.render(…)`.
@@ -13,10 +13,10 @@
 // turnos (también en la píldora, que solo enseña el último), las fichas de herramientas y sus iconos.
 // Se cierra `CLOSE_BASE_MS + CLOSE_PER_CHAR_MS × letras de la respuesta` tras el fin.
 // Formato (ronda 3): lo decide agent-form.js (`decideForm`) con la página de context(): override del usuario, lo que pidió
-// Jota (`agentLayout`), app de contenido o escenario → píldora, vídeo grande en marcha → píldora, y si no, panel. Se fija
+// Fogar (`agentLayout`), app de contenido o escenario → píldora, vídeo grande en marcha → píldora, y si no, panel. Se fija
 // al empezar el turno y se vuelve a mirar cuando una página nueva ya está PINTADA (tras navegar), cuando cambia la
 // reproducción (`playback`, de page-poll) y cuando el usuario arrastra (`userForm`, orden talkform o binding de la página).
-// Lo automático es de un solo sentido (panel → píldora, tras `MORPH_DELAY_MS`); a panel solo vuelve el usuario o Jota.
+// Lo automático es de un solo sentido (panel → píldora, tras `MORPH_DELAY_MS`); a panel solo vuelve el usuario o Fogar.
 // El tinte (`ctx`) sigue a la página en cada foto. Un turno con una ficha que abre algo (`opens`, de agent-ui.js) no se
 // cierra mientras la página nueva no enseñe su contenido (y transformada, si toca): espera como mucho `AWAIT_PAGE_MS`.
 // Navegar mata la capa (documento nuevo): mientras se ve, la fuente y la última foto van también como script de documento
@@ -35,14 +35,14 @@ const { CTXS, GLASS, COLOR_RE, FORM_BINDING, HOST_ID } = require('./agent-contra
 const { CONTENT_HOSTS, AGENT_LAYOUT_TTL_MS, FORCED_SOURCES, cleanForm, contentKey, decideForm } = require('./agent-form');
 
 // la isla de actividades (arriba en el centro) se aparta solo bajo la píldora, que va en su sitio; con el panel (a la
-// derecha) sigue a la vista, centrada a su izquierda: un temporizador que acaba no se queda escondido mientras habla Jota
+// derecha) sigue a la vista, centrada a su izquierda: un temporizador que acaba no se queda escondido mientras habla Fogar
 // (y lo deja apuntado en la página: la isla que se inyecte después lo lee al nacer)
 const dimOn = (/** @type {string} */ form) => { const a = form === 'pill' ? '0,false' : '1,true'; return `window.__tvIslandDim=[${a}];window.TVIsland&&window.TVIsland.dim(${a})`; };
 // la isla de actividades vuelve a 1 aunque hide falle
 const HIDE = 'try{window.TVAgent&&window.TVAgent.hide()}finally{window.__tvIslandDim=null;window.TVIsland&&window.TVIsland.dim(1)}';
 /** Quita en seco (sin fundido) la capa de la pestaña que se deja: ya no se ve y, al volver, se restaura de cero. */
 const LEAVE_HIDE = 'try{window.TVAgent&&window.TVAgent.hide(true)}finally{window.__tvIslandDim=null;window.TVIsland&&window.TVIsland.dim(1)}';
-/** Palabras que enseña ya cada turno en la pestaña que se deja ({ id: [tú, Jota] }), o null. */
+/** Palabras que enseña ya cada turno en la pestaña que se deja ({ id: [tú, Fogar] }), o null. */
 const REVEALED = '(()=>{try{return window.TVAgent&&typeof window.TVAgent.revealed==="function"?window.TVAgent.revealed():null}catch(e){return null}})()';
 const FROM_WAIT_MS = 100;                    // lo que se espera esa respuesta antes de pintar sin ella
 
@@ -132,7 +132,7 @@ const RESTORE_GLOBAL = '__tvAgentRestore';   // global de la página con la últ
 
 /** @typedef {'listen' | 'think' | 'talk' | 'error' | 'done'} State */
 /** @typedef {{ id: string, kind: string, title: string, detail: string, status: 'run' | 'ok' | 'fail' }} Tool */
-/** @typedef {{ id: number, you: string, youFinal: boolean, jota: string, tools: Tool[], error: boolean, hint: string, media?: Media | null }} Turn */
+/** @typedef {{ id: number, you: string, youFinal: boolean, fogar: string, tools: Tool[], error: boolean, hint: string, media?: Media | null }} Turn */
 /**
  * Tarjeta de contenido del turno (la pone el servidor, no el Gateway): Netflix o YouTube (`brand`). `list`: lo que se está viendo;
  * `play`: el título que se va a poner, con su ▶ (`state`: 'idle' → 'press' al pulsarlo). Imágenes por URL absoluta.
@@ -148,7 +148,7 @@ const RESTORE_GLOBAL = '__tvAgentRestore';   // global de la página con la últ
 /**
  * Foto que recibe `TVAgent.render`. `enter`: 'open' normal; 'restore' en un documento nuevo (tras navegar)
  * o en otra pestaña. `tab` (solo la primera foto tras un cambio de pestaña, con 'restore'): lo que haya pintado en esa
- * pestaña es de antes y se retira en seco. `shown` (con `tab`): palabras de tú y de Jota que ya se veían de cada turno.
+ * pestaña es de antes y se retira en seco. `shown` (con `tab`): palabras de tú y de Fogar que ya se veían de cada turno.
  * `voice` (solo con voz, del turno actual): ver Voice.
  * @typedef {{ form: 'pill' | 'panel', ctx: string, state: State, live: boolean, night: boolean, calm: boolean, glass: string,
  *   colors: [string, string] | null, turns: Turn[], icons: Record<string, any>, enter: 'open' | 'restore', tab?: true,
@@ -219,7 +219,7 @@ function within(p, ms) {
 }
 
 /** @param {number} id @returns {Turn} */
-const newTurn = id => ({ id, you: '', youFinal: false, jota: '', tools: [], error: false, hint: '' }); // media: solo si la hay
+const newTurn = id => ({ id, you: '', youFinal: false, fogar: '', tools: [], error: false, hint: '' }); // media: solo si la hay
 
 const MEDIA_MAX = 4;
 const BRANDS = ['netflix', 'youtube'];   // de quién es la tarjeta (la capa pone su nombre)
@@ -240,7 +240,7 @@ function cleanMedia(m) {
   return { key: str(m.key, 80) || m.kind, kind: m.kind, state: m.state === 'press' ? 'press' : 'idle', brand: BRANDS.includes(m.brand) ? m.brand : 'netflix', items };
 }
 /** Un turno que algo dijo o hizo (uno cancelado sin nada no se guarda). @param {Turn} t */
-const said = t => !!(t.you || t.jota || t.tools.length || t.media);
+const said = t => !!(t.you || t.fogar || t.tools.length || t.media);
 /** El turno salió mal: error en la respuesta o un fallo de herramienta sin despejar (la pista lo marca). @param {Turn} t */
 const failed = t => t.error || !!t.hint;
 /** Las fichas que siguen girando al cerrar o archivar el turno pasan a SETTLED_STATUS (no cuentan como fallo). @param {Turn} t */
@@ -311,7 +311,7 @@ function createTalkView({ cdp, pub, batchMs = 100, log = () => {}, context, onAs
   let openMark = -1;     // `paints` cuando empezó la última de ellas (si sigue igual al acabar, la página no ha llegado)
   let navOpened = false; // el servidor navegó durante el turno (control.nav): cuenta como una ficha que abre, también sin
                          // eventos de herramienta del Gateway (tool_calls_enabled apagado)
-  // formato pedido por el usuario (arrastre) para un contenido, y por Jota para la página que abre (`reached`: ya se llegó)
+  // formato pedido por el usuario (arrastre) para un contenido, y por Fogar para la página que abre (`reached`: ya se llegó)
   /** @type {{ form: 'pill' | 'panel', key: string } | null} */ let override = null;
   /** @type {{ form: 'pill' | 'panel', key: string, at: number, reached: boolean } | null} */ let pick = null;
   let bindingAt = -Infinity;
@@ -482,8 +482,8 @@ function createTalkView({ cdp, pub, batchMs = 100, log = () => {}, context, onAs
     awaiting = opened && (paints === openMark || navSeq !== paintedSeq || !!morphT);
     hideT = setTimeout(hide, awaiting ? Math.max(awaitMs, closeMs()) : mode === 'island' && morphed ? pillDwell() : closeMs());
   }
-  const closeMs = () => CLOSE_BASE_MS + CLOSE_PER_CHAR_MS * cur.jota.length;
-  const pillDwell = () => pillBaseMs + PILL_DWELL_PER_CHAR_MS * cur.jota.length;
+  const closeMs = () => CLOSE_BASE_MS + CLOSE_PER_CHAR_MS * cur.fogar.length;
+  const pillDwell = () => pillBaseMs + PILL_DWELL_PER_CHAR_MS * cur.fogar.length;
   /** Acaba la espera a la página: lo que quede del cierre normal (contado desde el fin), y al menos AFTER_PAINT_MIN_MS. */
   function settleWait() {
     awaiting = false;
@@ -507,11 +507,11 @@ function createTalkView({ cdp, pub, batchMs = 100, log = () => {}, context, onAs
   /** Avisa del formato (talk.js se lo dice al móvil). @param {boolean} canSwitch */
   function emitForm(canSwitch) { try { formFn(formNow(), canSwitch); } catch (e) { log('conversación: ' + e.message); } }
 
-  /** Clave del contenido de la página actual (alcance del override y de lo que pidió Jota). @param {Look} l */
+  /** Clave del contenido de la página actual (alcance del override y de lo que pidió Fogar). @param {Look} l */
   const keyOf = l => (l.page ? contentKey({ ...l.page, hosts: contentHosts }) : '');
   /**
-   * Formato que toca ahora (agent-form.js) con el override y lo de Jota que valgan para esta página. Olvida el override de
-   * otro contenido y lo de Jota en cuanto se sale del sitio que abrió (o si no se llega a él en AGENT_LAYOUT_TTL_MS).
+   * Formato que toca ahora (agent-form.js) con el override y lo de Fogar que valgan para esta página. Olvida el override de
+   * otro contenido y lo de Fogar en cuanto se sale del sitio que abrió (o si no se llega a él en AGENT_LAYOUT_TTL_MS).
    * @param {Look} l
    */
   function decide(l) {
@@ -551,7 +551,7 @@ function createTalkView({ cdp, pub, batchMs = 100, log = () => {}, context, onAs
     if (awaiting && pageIn()) settleWait();
   }
   /** Cambia al formato que toque (si aún toca). Con el turno ya acabado: píldora automática → PILL_DWELL; si lo pidió
-   *  el usuario o Jota, el cierre normal desde ahora. */
+   *  el usuario o Fogar, el cierre normal desde ahora. */
   function reform() {
     const m = wanted();
     if (!m) { if (awaiting) settleWait(); return; }
@@ -568,7 +568,7 @@ function createTalkView({ cdp, pub, batchMs = 100, log = () => {}, context, onAs
   function recover() {
     if (!RECOVER_ON_OK || cur.error || !cur.hint) return;
     cur.hint = '';
-    state = cur.jota ? 'talk' : 'think';
+    state = cur.fogar ? 'talk' : 'think';
   }
 
   /**
@@ -615,10 +615,10 @@ function createTalkView({ cdp, pub, batchMs = 100, log = () => {}, context, onAs
       schedule();
     },
     /** @param {string} text respuesta acumulada */
-    jota(text) {
+    fogar(text) {
       if (!open) begin(mode);
-      cur.jota = String(text || '');
-      if (cur.jota && (state === 'listen' || state === 'think')) state = 'talk';   // el primer token
+      cur.fogar = String(text || '');
+      if (cur.fogar && (state === 'listen' || state === 'think')) state = 'talk';   // el primer token
       schedule();
     },
     /** Voz sincronizada de la respuesta del turno actual (talk.js), o null: sin voz, o se acabó o se cortó (todo a la
@@ -672,7 +672,7 @@ function createTalkView({ cdp, pub, batchMs = 100, log = () => {}, context, onAs
     },
     done() { end(); },
     /** @param {string} text va en el hueco de la respuesta (sin turn() abierto, en un intercambio nuevo con el último formato) */
-    error(text) { if (!open) begin(mode); cur.jota = String(text || ''); cur.error = true; end(); },
+    error(text) { if (!open) begin(mode); cur.fogar = String(text || ''); cur.error = true; end(); },
     /** Quita la capa ya (Parar, Quitar de la tele): sin esperar al cierre. */
     hide() { clearTimeout(hideT); live = false; muted = true; settleTools(cur); hide(); },
     /** Empezó (true) o acabó (false) una reproducción de verdad (page-poll; context().playback ya lo dice). Con la capa
@@ -695,7 +695,7 @@ function createTalkView({ cdp, pub, batchMs = 100, log = () => {}, context, onAs
     /** El servidor va a navegar (control.nav): con un turno en curso, el cierre esperará a que la página nueva esté pintada. */
     navigating() { if (open) { navOpened = true; openMark = paints; } },
     /**
-     * Jota pide un formato para la página que abre (tv_open / tv_open_app con `layout`): vale en cuanto se llega a esa
+     * Fogar pide un formato para la página que abre (tv_open / tv_open_app con `layout`): vale en cuanto se llega a esa
      * página y mientras se siga en ese sitio. Si ya se está en él, se aplica tras el respiro.
      * @param {any} layout 'pill' | 'panel' @param {string} url la que se abre (ya normalizada)
      */
@@ -734,7 +734,7 @@ function createTalkView({ cdp, pub, batchMs = 100, log = () => {}, context, onAs
      */
     reset(o = {}) {
       injected = false; retried = false;
-      decide(look());                                 // el override y lo de Jota se olvidan al salir de su contenido
+      decide(look());                                 // el override y lo de Fogar se olvidan al salir de su contenido
       if (shown && !muted) {
         restoreNext = true; navSeq++;
         rearm();

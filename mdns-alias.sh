@@ -6,7 +6,7 @@ set -u
 APP_DIR=$(cd "$(dirname "$(readlink -f "$0")")" && pwd)
 # shellcheck source=scripts/lib.sh
 . "$APP_DIR/scripts/lib.sh"
-jsc_load_config
+fogar_tv_load_config
 
 NAME=${1:-$TV_MDNS_NAME}
 if [ -z "$NAME" ]; then
@@ -17,7 +17,7 @@ if ! command -v avahi-publish >/dev/null 2>&1; then
   echo "no está avahi-publish (paquete avahi-utils): no publico $NAME" >&2
   exit 0
 fi
-IFACE=${TV_NET_IFACE:-$(jsc_detect_iface)}
+IFACE=${TV_NET_IFACE:-$(fogar_tv_detect_iface)}
 if [ -z "$IFACE" ]; then
   echo "no hay ruta por defecto todavía (ni TV_NET_IFACE): reintento luego" >&2
   exit 1

@@ -104,7 +104,7 @@ const BUILDERS = {
     return { kind: 'volume', title: 'Volumen', detail };
   },
   tv_power: a => ({ kind: 'screen', title: a.state === 'off' ? 'Apagar la tele' : 'Encender la tele', detail: '' }),
-  tv_source: a => ({ kind: 'screen', title: 'Cambiar de entrada', detail: a.source === 'tv' ? 'Tele' : 'J-Screen' }),
+  tv_source: a => ({ kind: 'screen', title: 'Cambiar de entrada', detail: a.source === 'tv' ? 'Tele' : 'Fogar TV' }),
   tv_media: a => {
     if (a.action !== 'seek') return { kind: 'video', title: 'Vídeo', detail: 'Pausa o sigue' };
     const s = Math.round(Number(a.seconds ?? 10)) || 0;
@@ -155,12 +155,12 @@ function cardOf(n, a) {
   return isHomeWrite(base) ? { kind: 'home', title: 'Casa', detail: homeDetail(a) } : null;
 }
 
-// adónde lleva tv_open_app (para el `layout` que pide Jota: basta con el sitio, la búsqueda de dentro no cuenta)
+// adónde lleva tv_open_app (para el `layout` que pide Fogar: basta con el sitio, la búsqueda de dentro no cuenta)
 const APP_URLS = Object.freeze({ youtube: 'https://www.youtube.com/', netflix: 'https://www.netflix.com/', spotify: 'https://open.spotify.com/' });
 const URL_MAX = 2000;
 
 /**
- * Formato que pide Jota en los argumentos de tv_open / tv_open_app (`layout: 'pill' | 'panel'`) y la página a la que
+ * Formato que pide Fogar en los argumentos de tv_open / tv_open_app (`layout: 'pill' | 'panel'`) y la página a la que
  * va, o null. Lo que no sea exactamente eso no cuenta (talk-view.js lo vuelve a sanear).
  * @param {any} name @param {any} args @returns {{ layout: string, url: string } | null}
  */

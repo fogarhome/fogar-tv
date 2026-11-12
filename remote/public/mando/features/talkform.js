@@ -1,4 +1,4 @@
-// Formato de la conversación en la tele (panel a la derecha o píldora arriba), desde la hoja de Jota. Mientras la tele
+// Formato de la conversación en la tele (panel a la derecha o píldora arriba), desde la hoja de Fogar. Mientras la tele
 // enseña la conversación y el servidor deja cambiarla (`talk` {ev:'form', form, canSwitch}), la tarjeta de la
 // conversación (#agCard: la frase y la respuesta) se desliza en horizontal: hacia la derecha, panel (a ese lado vive en
 // la tele); hacia la izquierda, píldora. Sigue al dedo, se resiste en el sentido que no cambia nada y al soltar vuelve a

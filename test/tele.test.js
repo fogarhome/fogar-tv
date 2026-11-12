@@ -1,5 +1,5 @@
 'use strict';
-// Capacidad «tele» con una tele falsa: sondeo, órdenes power/src/tvkey, siempre a J-Screen al encender y ensureJ.
+// Capacidad «tele» con una tele falsa: sondeo, órdenes power/src/tvkey, siempre a Fogar TV al encender y ensureJ.
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -54,7 +54,7 @@ test('power off: pausa, apaga, lee el estado y difunde', async t => {
   assert.ok(seen.bc > 0);
 });
 
-test('sondeo off, on, on (tv), on (tv): a J-Screen una sola vez', async t => {
+test('sondeo off, on, on (tv), on (tv): a Fogar TV una sola vez', async t => {
   const { tv, tele, step } = setup(t);
   tv.st = { ...tv.st, power: 'off', src: null };
   tele.start(); await flush();
@@ -63,7 +63,7 @@ test('sondeo off, on, on (tv), on (tv): a J-Screen una sola vez', async t => {
   assert.equal(tv.calls.filter(c => c === 'toJ').length, 1);
 });
 
-test('sondeo off, null, on (reposo profundo): a J-Screen una vez', async t => {
+test('sondeo off, null, on (reposo profundo): a Fogar TV una vez', async t => {
   const { tv, tele, step } = setup(t);
   tv.st = { ...tv.st, power: 'off', src: null };
   tele.start(); await flush();
@@ -162,7 +162,7 @@ test('tele caída: estado desconocido y la orden da error', async t => {
   assert.deepEqual(state.tv, { power: null, src: null });
 });
 
-test('ensureJ enciende y espera a J-Screen; el sondeo no repite el salto', async t => {
+test('ensureJ enciende y espera a Fogar TV; el sondeo no repite el salto', async t => {
   const { tv, tele, step } = setup(t);
   tv.st = { ...tv.st, power: 'off', src: null };
   tele.start(); await flush();
@@ -172,7 +172,7 @@ test('ensureJ enciende y espera a J-Screen; el sondeo no repite el salto', async
   tv.st = { ...tv.st, src: 'j' }; await step(500);
   assert.equal(await p, true);
   await step(15000);
-  assert.equal(tv.calls.filter(c => c === 'toJ').length, 0, 'power(true) ya fue a J-Screen');
+  assert.equal(tv.calls.filter(c => c === 'toJ').length, 0, 'power(true) ya fue a Fogar TV');
 });
 
 test('ensureJ que no llega en 6 s da false y la orden envuelta se hace igual', async t => {
@@ -185,7 +185,7 @@ test('ensureJ que no llega en 6 s da false y la orden envuelta se hace igual', a
   for (let i = 0; i < 13; i++) await step(500);
   assert.deepEqual(await p, { ok: 1 });
   assert.equal(ran, 1);
-  assert.ok(seen.logs.includes('tele: no llegó a J-Screen a tiempo'));
+  assert.ok(seen.logs.includes('tele: no llegó a Fogar TV a tiempo'));
 });
 
 test('withScreen: nav con la tele en Tele pasa por ensureJ; vol y lo que no está en la lista, no', async t => {
@@ -259,7 +259,7 @@ test('un apagado propio que falla no se traga un apagado de fuera más tarde', a
   assert.deepEqual(tv.calls, ['pause', 'power:false', 'pause']);
 });
 
-test('encendido propio que sale en el lanzador: una vez a J-Screen', async t => {
+test('encendido propio que sale en el lanzador: una vez a Fogar TV', async t => {
   const { tv, tele, step, cmd } = setup(t);
   tv.st = { ...tv.st, power: 'off', src: null };
   tele.start(); await flush();
@@ -337,7 +337,7 @@ test('servidor sin TV_ADB: tv es null', async () => {
   try { assert.equal((await (await s.api('/api/state')).json()).tv, null); } finally { await s.stop(); }
 });
 
-test('channel con la tele apagada: enciende directa en la TDT, marca y no salta a J-Screen', async t => {
+test('channel con la tele apagada: enciende directa en la TDT, marca y no salta a Fogar TV', async t => {
   const { tv, tele, step, cmd } = setup(t);
   tv.st = { ...tv.st, power: 'off', src: null };
   tele.start(); await flush();
@@ -350,7 +350,7 @@ test('channel con la tele apagada: enciende directa en la TDT, marca y no salta 
   assert.deepEqual(tv.calls.filter(c => c !== 'pause'), ['power:true:tdt', 'digits:3'], 'sin toJ: el encendido era nuestro');
 });
 
-test('channel desde J-Screen: pausa, abre la TDT, espera y marca el número entero', async t => {
+test('channel desde Fogar TV: pausa, abre la TDT, espera y marca el número entero', async t => {
   const { tv, tele, step, cmd } = setup(t);
   tele.start(); await flush();
   const r = cmd('channel', { n: 24 });

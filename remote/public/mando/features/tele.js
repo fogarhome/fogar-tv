@@ -1,5 +1,5 @@
-// Modos del mando según la tele (state.tv; solo con TV_ADB): J-Screen (el mando de siempre), Tele (el trackpad es la
-// cruceta del Google TV) y Apagada (queda el botón de encender). Pinta la fila «J-Screen | Tele» y ⏻, manda power, src
+// Modos del mando según la tele (state.tv; solo con TV_ADB): Fogar TV (el mando de siempre), Tele (el trackpad es la
+// cruceta del Google TV) y Apagada (queda el botón de encender). Pinta la fila «Fogar TV | Tele» y ⏻, manda power, src
 // y tvkey, y avisa con la píldora de lo que cambia sin una orden de este mando. Clases en <html>: tele, tv, off, waking y tvq
 // (la tele no responde). Lo leen controls (botones a tvkey) y trackpad (gesto a la cruceta) con inTv() y padGesture().
 import { $ } from '../core/dom.js';
@@ -32,15 +32,15 @@ let last = null;           // último state.tv
 let expect = null;         // orden propia en curso ({ power } o { src }): hasta ver la tele así (o 4 s tras la respuesta), el estado no la deshace
 let quietUntil = 0;        // tras una orden propia, lo que cambie no se avisa (la tele tarda en asentarse)
 let known = null;          // último encendido conocido (sin null: una tele dormida a fondo no responde)
-let bootUntil = 0;         // recién encendida: el servidor la lleva a J-Screen (como mucho 6 s); el lanzador no cuenta
+let bootUntil = 0;         // recién encendida: el servidor la lleva a Fogar TV (como mucho 6 s); el lanzador no cuenta
 let swapT = 0, homeT = 0, offT = 0, wakeT = 0;
 let padLabel = '';
-let home = false;          // el reposo está delante (state.amb): en J-Screen el trackpad es la cruceta del inicio (foco, A2)
+let home = false;          // el reposo está delante (state.amb): en Fogar TV el trackpad es la cruceta del inicio (foco, A2)
 const CROSS_LABEL = 'Cruceta: desliza hacia un lado o toca una flecha para moverte, toca en el centro para elegir';
 
 /** ¿El mando está en modo Tele? (los botones y el trackpad van a la tele) */
 export const inTv = () => mode === 'tv';
-/** ¿El trackpad es la cruceta del inicio? (reposo delante y mando en J-Screen; el gesto mueve el foco de la tele) */
+/** ¿El trackpad es la cruceta del inicio? (reposo delante y mando en Fogar TV; el gesto mueve el foco de la tele) */
 export const inHome = () => mode === 'j' && home;
 const padAria = () => $('#pad').setAttribute('aria-label', mode === 'tv' || home ? CROSS_LABEL : padLabel);
 
@@ -66,7 +66,7 @@ export function padGesture(dx, dy, x, y) {
 const modeOf = t => (t.power === 'off' ? 'off' : t.src === 'tv' && Date.now() > bootUntil ? 'tv' : 'j');
 const matches = t => (expect.power ? t.power === expect.power && (expect.power === 'off' || t.src === 'j') : t.power === 'on' && t.src === expect.src);
 
-/* el resaltado de la píldora J-Screen | Tele se desliza al botón elegido (con la fila oculta no hay medidas) */
+/* el resaltado de la píldora Fogar TV | Tele se desliza al botón elegido (con la fila oculta no hay medidas) */
 function ind() {
   const b = /** @type {HTMLElement} */ ($('#srcSeg [aria-checked=true]')), i = $('#srcInd');
   if (!b || !b.offsetWidth) return;
@@ -123,7 +123,7 @@ function paint(s) {
   let note = '';
   if (prev && prev.power === 'on' && Date.now() > quietUntil) {
     if (t.power === 'off') note = 'Han apagado la tele';
-    else if (prev.src && t.src && prev.src !== t.src) note = t.src === 'tv' ? 'La tele se ha ido a Google TV' : 'La tele ha vuelto a J-Screen';
+    else if (prev.src && t.src && prev.src !== t.src) note = t.src === 'tv' ? 'La tele se ha ido a Google TV' : 'La tele ha vuelto a Fogar TV';
   }
   if (note) pill(note);
   const v = modeOf(t);

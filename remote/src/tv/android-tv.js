@@ -10,7 +10,7 @@ const STATUS_CMD = "dumpsys power | grep -m1 mWakefulness=; dumpsys activity act
 
 /**
  * @param {string} out salida de STATUS_CMD
- * @param {string} input inputId de TV Input Framework donde está J-Screen (HDMI)
+ * @param {string} input inputId de TV Input Framework donde está Fogar TV (HDMI)
  * @returns {{ power: 'on'|'off'|null, src: 'j'|'tv'|null, vol: number|null, muted: boolean }}
  */
 function parseStatus(out, input) {

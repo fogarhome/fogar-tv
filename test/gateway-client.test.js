@@ -1,5 +1,5 @@
 'use strict';
-// Cliente del J Gateway (remote/src/gateway/client.js) contra un Gateway falso: handshake, ready, audio en cola,
+// Cliente del Fogar Gateway (remote/src/gateway/client.js) contra un Gateway falso: handshake, ready, audio en cola,
 // traducción de mensajes, cierre inesperado y órdenes de salida.
 const { test } = require('node:test');
 const assert = require('node:assert/strict');

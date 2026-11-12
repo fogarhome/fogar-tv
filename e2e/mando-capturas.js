@@ -82,8 +82,8 @@ if (a[0] === 'set-mute') s.m = !s.m;
 if (a[0] === 'set-volume') { const m = /^(\\d+)%([+-])$/.exec(a[2]); s.v = m ? s.v + (m[2] === '+' ? 1 : -1) * m[1] / 100 : +a[2]; s.v = Math.round(Math.min(1, Math.max(0, s.v)) * 100) / 100; }
 fs.writeFileSync(f, JSON.stringify(s));
 `, { mode: 0o755 });
-  // jota-gw falso para «Hazlo tú»: `--json pair … --no-wait` da el código bueno del gateway falso
-  fs.writeFileSync(path.join(dir, 'jota-gw'), `#!${process.execPath}
+  // fogar-gw falso para «Hazlo tú»: `--json pair … --no-wait` da el código bueno del gateway falso
+  fs.writeFileSync(path.join(dir, 'fogar-gw'), `#!${process.execPath}
 const a = process.argv.slice(2);
 if (a[0] === '--json' && a[1] === 'pair' && a.includes('--no-wait')) console.log(JSON.stringify({ id: 'p1', code: '123456', expires_at: '2030-01-15T10:10:00Z' }));
 else process.exit(2);
@@ -288,14 +288,14 @@ async function adminScenes(theme, admin) {
   });
   await run('hoja-direccion', async p => { await tap(p, 'Abrir una dirección'); await p.keyboard.type('elpais.com'); await shot(p, T('hoja-direccion')); });
   await run('hoja-agente', async p => {
-    await tap(p, 'Hablar con Jota'); await shot(p, T('hoja-agente'));
+    await tap(p, 'Hablar con Fogar'); await shot(p, T('hoja-agente'));
     await inject(p, { t: 'talk', ev: 'done', reply: 'Hecho: he puesto «Lo-fi para estudiar» en YouTube a pantalla completa.' });
     await shot(p, T('hoja-agente-respuesta'));                            // con «Quitar de la tele» (suena en la tele: hasta hidden)
     await tap(p, 'Quitar de la tele');
   });
-  // Jota escribe la respuesta: «Parar» a la vista; al pulsarlo, el turno se para y queda «Parado.»
+  // Fogar escribe la respuesta: «Parar» a la vista; al pulsarlo, el turno se para y queda «Parado.»
   await run('hoja-agente-parar', async p => {
-    await tap(p, 'Hablar con Jota');
+    await tap(p, 'Hablar con Fogar');
     await inject(p, { t: 'talk', ev: 'final', text: 'pon algo de jazz' });
     await inject(p, { t: 'talk', ev: 'token', text: 'Voy a buscar algo de jazz tranquilo' });
     await shot(p, T('hoja-agente-parar'));
@@ -304,9 +304,9 @@ async function adminScenes(theme, admin) {
   // voz: mantener el orbe con el micrófono falso. vstart se contesta aquí (sin Gateway el servidor diría «no disponible»);
   // la parcial y la final las manda el servidor, inyectadas. Un toque corto no manda nada y abre el teclado.
   await run('hoja-agente-voz', async p => {
-    await tap(p, 'Hablar con Jota');
+    await tap(p, 'Hablar con Fogar');
     await p.evaluate(() => { window.__wsFake['vstart:'] = { ok: 1 }; window.__wsFake['vend:'] = { ok: 1 }; });
-    const orb = await p.getByRole('button', { name: 'Mantén para hablar con Jota; toca para escribir', exact: true }).boundingBox();
+    const orb = await p.getByRole('button', { name: 'Mantén para hablar con Fogar; toca para escribir', exact: true }).boundingBox();
     const [x, y] = [orb.x + orb.width / 2, orb.y + orb.height / 2];
     await p.mouse.move(x, y); await p.mouse.down(); await p.waitForTimeout(100); await p.mouse.up(); await p.waitForTimeout(500);
     await takeLog(p, T('hoja-agente-voz: toque corto'));
@@ -332,7 +332,7 @@ async function adminScenes(theme, admin) {
     await tap(p, 'Ajustes', 1000); await shot(p, T('ajustes'));
     await goSet(p, 'movil'); await shot(p, T('ajustes-movil')); await backSet(p);
     await goSet(p, 'reposo'); await shot(p, T('ajustes-reposo')); await backSet(p);
-    await goSet(p, 'jota'); await shot(p, T('ajustes-jota')); await backSet(p);
+    await goSet(p, 'fogar'); await shot(p, T('ajustes-fogar')); await backSet(p);
     await goSet(p, 'personas', 900); await shot(p, T('ajustes-acceso')); await backSet(p);
     await goSet(p, 'permisos'); await shot(p, T('ajustes-permisos'));
   });
@@ -421,7 +421,7 @@ async function walk(admin) {
     await tap(p, 'Siguiente', 400); await tap(p, 'Aleatorio', 400); await tap(p, 'Recientes', 900);
     await shade(p);
     await takeLog(p, 'recorrido: spotify');
-    await tap(p, 'Hablar con Jota'); await p.keyboard.type('pon música tranquila'); await p.keyboard.press('Enter'); await p.waitForTimeout(600);
+    await tap(p, 'Hablar con Fogar'); await p.keyboard.type('pon música tranquila'); await p.keyboard.press('Enter'); await p.waitForTimeout(600);
     await shade(p);
     await takeLog(p, 'recorrido: agente');
     await tap(p, 'Ajustes', 1000);
@@ -526,10 +526,10 @@ async function extraScenes(admin) {
       codes.push(await p.locator('#alBox b').textContent());
     }
   });
-  // conexión con Jota: olvidar el gateway → aviso arriba → «Conectar» → lo encuentra en este equipo → código a mano (mal y
-  // bien); otra vez olvidar → «Hazlo tú» (jota-gw falso); y una dirección escrita a mano que no responde
+  // conexión con Fogar: olvidar el gateway → aviso arriba → «Conectar» → lo encuentra en este equipo → código a mano (mal y
+  // bien); otra vez olvidar → «Hazlo tú» (fogar-gw falso); y una dirección escrita a mano que no responde
   const forget = async p => {
-    await tap(p, 'Ajustes', 1000); await goSet(p, 'jota', 900);
+    await tap(p, 'Ajustes', 1000); await goSet(p, 'fogar', 900);
     await tap(p, 'Olvidar', 300); await tap(p, '¿Seguro?', 800);
     await p.locator('#gwSt').filter({ hasText: 'Sin emparejar' }).waitFor();
     await p.keyboard.press('Escape'); await p.waitForTimeout(400);
@@ -537,7 +537,7 @@ async function extraScenes(admin) {
   };
   await run('extra-gateway', async p => {
     await tap(p, 'Ajustes', 1000);
-    await goSet(p, 'jota', 900);
+    await goSet(p, 'fogar', 900);
     await p.locator('#gwSt').filter({ hasText: 'Conectada a green-house' }).waitFor();
     await shot(p, 'extra-gateway-ajustes');
     await p.keyboard.press('Escape'); await p.waitForTimeout(400);
@@ -552,16 +552,16 @@ async function extraScenes(admin) {
     await p.locator('#gwM.err').waitFor();
     await shot(p, 'extra-gateway-mal');
     await p.getByLabel('Código de 6 cifras', { exact: true }).fill('123456');
-    await p.getByText('Conectada a Jota en green-house').waitFor();
+    await p.getByText('Conectada a Fogar en green-house').waitFor();
     await shot(p, 'extra-gateway-hecho');
     if (gwf.pairs.at(-1).client_type !== 'screen') throw new Error('el emparejamiento no manda client_type screen');
     await tap(p, 'Listo', 500);
     if (await p.locator('#gwN').isVisible()) throw new Error('el aviso sigue tras emparejar');
-    // «Hazlo tú»: el código lo saca el jota-gw falso
+    // «Hazlo tú»: el código lo saca el fogar-gw falso
     await forget(p);
     await p.locator('#gwNGo').tap();
     await tap(p, 'Hazlo tú', 300);
-    await p.getByText('Conectada a Jota en green-house').waitFor();
+    await p.getByText('Conectada a Fogar en green-house').waitFor();
     await shot(p, 'extra-gateway-hazlo');
     await tap(p, 'Listo', 500);
     // ✕: el aviso se cierra y no vuelve mientras el estado no cambie
@@ -613,7 +613,7 @@ async function extraScenes(admin) {
     evaluate: expr => (expr.includes('scrollingElement') ? [1, 900, 4000, 1000]   // sondeo: vídeo reproduciendo y scroll a un tercio
       : expr.includes('"boot":"') ? { ok: 1 } : undefined),                        // escribir en el campo: aplicado
   });
-  // gateway falso con la tele ya emparejada: el aviso de «Jota no está conectado» solo sale en su escena
+  // gateway falso con la tele ya emparejada: el aviso de «Fogar no está conectado» solo sale en su escena
   gwf = await startFakeGateway();
   // TV_NAME=Salón: el nombre de la pantalla con el que se hicieron las capturas de referencia
   // TV_GATEWAY_PORT: el gateway falso es «el de este equipo» (la búsqueda no mira el 8004 ni la tailnet del Mac)

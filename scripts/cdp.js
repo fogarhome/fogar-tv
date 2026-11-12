@@ -20,12 +20,12 @@ Opciones:
   --tab N    índice de la pestaña (por defecto la primera de tipo «page»; ver «tabs»)
   -h, --help esta ayuda
 
-La config se lee de TV_CONFIG o ~/.config/jota-screen/screen.env.`;
+La config se lee de TV_CONFIG o ~/.config/fogar-tv/screen.env.`;
 
 /** TV_CDP_PORT del entorno; si no, del fichero de config (KEY=valor); si no, 9222. */
 function cdpPort(env = process.env) {
   if (env.TV_CDP_PORT) return Number(env.TV_CDP_PORT);
-  const file = env.TV_CONFIG || path.join(os.homedir(), '.config', 'jota-screen', 'screen.env');
+  const file = env.TV_CONFIG || path.join(os.homedir(), '.config', 'fogar-tv', 'screen.env');
   try {
     for (const line of fs.readFileSync(file, 'utf8').split('\n')) {
       const m = /^\s*TV_CDP_PORT\s*=\s*["']?(\d+)["']?\s*$/.exec(line);

@@ -1,6 +1,6 @@
 'use strict';
 // @ts-check
-// La conexión guardada con el J Gateway (gateway.json en TV_STATE_DIR, 0600): a qué gateway y con qué clave.
+// La conexión guardada con el Fogar Gateway (gateway.json en TV_STATE_DIR, 0600): a qué gateway y con qué clave.
 // `manual`: la dirección la escribió alguien; entonces es la única que se usa (no se busca otra).
 const { createJsonStore } = require('../core/json-store');
 

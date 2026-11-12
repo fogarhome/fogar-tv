@@ -1,22 +1,22 @@
 #!/bin/bash
-# Funciones comunes de los scripts de jota-screen (kiosco, alias mDNS, instalador, doctor, actualizar).
-# Se carga con «. scripts/lib.sh»; no ejecuta nada al cargarse salvo fijar JSC_APP_DIR.
+# Funciones comunes de los scripts de fogar-tv (kiosco, alias mDNS, instalador, doctor, actualizar).
+# Se carga con «. scripts/lib.sh»; no ejecuta nada al cargarse salvo fijar FOGAR_TV_APP_DIR.
 # Las funciones de detección leen la salida de la orden por la entrada estándar para poder probarlas
 # con textos de ejemplo (test/unit/scripts.test.js).
 
 # Carpeta del repo (la que contiene scripts/).
-JSC_APP_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+FOGAR_TV_APP_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 
-# Ruta del fichero de configuración (contrato: TV_CONFIG o ~/.config/jota-screen/screen.env).
-jsc_config_path() {
-  printf '%s\n' "${TV_CONFIG:-$HOME/.config/jota-screen/screen.env}"
+# Ruta del fichero de configuración (contrato: TV_CONFIG o ~/.config/fogar-tv/screen.env).
+fogar_tv_config_path() {
+  printf '%s\n' "${TV_CONFIG:-$HOME/.config/fogar-tv/screen.env}"
 }
 
 # Carga la configuración (si existe) y rellena los valores por defecto del contrato.
 # Lo que ya venga en el entorno y no esté en el fichero se respeta.
-jsc_load_config() {
+fogar_tv_load_config() {
   local cfg
-  cfg=$(jsc_config_path)
+  cfg=$(fogar_tv_config_path)
   if [ -r "$cfg" ]; then
     set -a
     # shellcheck disable=SC1090
@@ -26,7 +26,7 @@ jsc_load_config() {
   : "${TV_NAME:=Pantalla}"
   : "${TV_PORT:=8787}"
   : "${TV_CDP_PORT:=9222}"
-  : "${TV_STATE_DIR:=$HOME/.local/state/jota-screen}"
+  : "${TV_STATE_DIR:=$HOME/.local/state/fogar-tv}"
   : "${TV_SCALE:=1.5}"
   : "${TV_SPOTIFY_DEVICE:=$TV_NAME}"
   : "${DISPLAY:=:0}"
@@ -36,7 +36,7 @@ jsc_load_config() {
 }
 
 # Navegador del kiosco: TV_CHROME o el primero que exista.
-jsc_find_chrome() {
+fogar_tv_find_chrome() {
   local c
   if [ -n "${TV_CHROME:-}" ]; then
     command -v "$TV_CHROME" 2>/dev/null || return 1
@@ -49,14 +49,14 @@ jsc_find_chrome() {
 }
 
 # Salida conectada a partir de «xrandr --query» (stdin): la primaria si está conectada; si no, la primera.
-jsc_parse_xrandr_output() {
+fogar_tv_parse_xrandr_output() {
   awk '$2 == "connected" { if ($3 == "primary") { print $1; found = 1; exit } if (!first) first = $1 }
        END { if (!found && first) print first }'
 }
 
 # Modo preferido y su frecuencia («1920x1080 60.00») de la salida $1, a partir de «xrandr --query» (stdin).
 # Preferido = el que lleva «+»; si ninguno lo lleva, el actual («*»); si tampoco, el primero.
-jsc_parse_xrandr_mode() {
+fogar_tv_parse_xrandr_mode() {
   awk -v out="$1" '
     /^[^ \t]/ { inside = ($1 == out); next }
     inside && $1 ~ /^[0-9]+x[0-9]+/ {
@@ -76,7 +76,7 @@ jsc_parse_xrandr_mode() {
 }
 
 # Interfaz de la ruta por defecto a partir de «ip route show default» (stdin); la de menor métrica.
-jsc_parse_default_iface() {
+fogar_tv_parse_default_iface() {
   awk '$1 == "default" {
          dev = ""; metric = 0
          for (i = 2; i < NF; i++) { if ($i == "dev") dev = $(i + 1); if ($i == "metric") metric = $(i + 1) + 0 }
@@ -86,12 +86,12 @@ jsc_parse_default_iface() {
 }
 
 # Lo mismo con las órdenes reales.
-jsc_detect_output() { xrandr --query 2>/dev/null | jsc_parse_xrandr_output; }
-jsc_detect_mode() { xrandr --query 2>/dev/null | jsc_parse_xrandr_mode "$1"; }
-jsc_detect_iface() { ip route show default 2>/dev/null | jsc_parse_default_iface; }
+fogar_tv_detect_output() { xrandr --query 2>/dev/null | fogar_tv_parse_xrandr_output; }
+fogar_tv_detect_mode() { xrandr --query 2>/dev/null | fogar_tv_parse_xrandr_mode "$1"; }
+fogar_tv_detect_iface() { ip route show default 2>/dev/null | fogar_tv_parse_default_iface; }
 
 # Node: la ruta absoluta del que haya en el PATH (o en los sitios habituales).
-jsc_find_node() {
+fogar_tv_find_node() {
   local n
   for n in "$(command -v node 2>/dev/null)" /usr/local/bin/node /usr/bin/node; do
     if [ -n "$n" ] && [ -x "$n" ]; then printf '%s\n' "$n"; return 0; fi
@@ -100,13 +100,13 @@ jsc_find_node() {
 }
 
 # Versión principal de node ($1 = ruta). «22» para v22.x.
-jsc_node_major() {
+fogar_tv_node_major() {
   "$1" -p 'process.versions.node.split(".")[0]' 2>/dev/null
 }
 
 # Codifica $1 para usarlo en una URL (componente de query o fragmento), byte a byte (UTF-8 → %XX).
 # Con od y no con ${s:i:1}: bash 3.2 (macOS) no cambia de locale con un «local LC_ALL» y partía por caracteres.
-jsc_urlencode() {
+fogar_tv_urlencode() {
   local b out=''
   for b in $(printf '%s' "$1" | LC_ALL=C od -An -v -tx1 | LC_ALL=C tr abcdef ABCDEF); do
     case $b in
@@ -118,12 +118,12 @@ jsc_urlencode() {
 }
 
 # Permisos en octal («700») de $1, con stat de GNU o de BSD.
-jsc_mode() {
+fogar_tv_mode() {
   stat -c %a -- "$1" 2>/dev/null || stat -f %Lp -- "$1"
 }
 
 # SHA-256 en hexadecimal del fichero $1 (sha256sum o, si no está, shasum).
-jsc_sha256() {
+fogar_tv_sha256() {
   local out
   if command -v sha256sum >/dev/null 2>&1; then out=$(sha256sum -- "$1") || return 1
   else out=$(shasum -a 256 -- "$1") || return 1; fi
@@ -131,7 +131,7 @@ jsc_sha256() {
 }
 
 # Crea la carpeta de estado con 0700 si no existe (y la deja en 0700 si ya existe).
-jsc_ensure_state_dir() {
+fogar_tv_ensure_state_dir() {
   mkdir -p "$TV_STATE_DIR"
   chmod 700 "$TV_STATE_DIR"
 }
@@ -139,10 +139,10 @@ jsc_ensure_state_dir() {
 # Mueve el perfil de Chrome antiguo a $TV_STATE_DIR/chrome-profile. Nunca sobrescribe: si el nuevo ya
 # existe, no toca nada (y avisa de los antiguos que queden). Candidatos: los argumentos o, por defecto,
 # ~/tv/chrome-profile y <repo>/chrome-profile.
-jsc_migrate_chrome_profile() {
+fogar_tv_migrate_chrome_profile() {
   local dest="$TV_STATE_DIR/chrome-profile" src
   local -a cands=("$@")
-  [ ${#cands[@]} -gt 0 ] || cands=("$HOME/tv/chrome-profile" "$JSC_APP_DIR/chrome-profile")
+  [ ${#cands[@]} -gt 0 ] || cands=("$HOME/tv/chrome-profile" "$FOGAR_TV_APP_DIR/chrome-profile")
   for src in "${cands[@]}"; do
     [ -d "$src" ] && [ ! -L "$src" ] || continue
     if [ -e "$dest" ] || [ -L "$dest" ]; then
@@ -150,7 +150,7 @@ jsc_migrate_chrome_profile() {
       echo "aviso: queda un perfil de Chrome antiguo en $src (no lo muevo: ya existe $dest)" >&2
       continue
     fi
-    jsc_ensure_state_dir
+    fogar_tv_ensure_state_dir
     if mv -- "$src" "$dest"; then
       echo "perfil de Chrome movido: $src -> $dest"
     else
@@ -163,16 +163,16 @@ jsc_migrate_chrome_profile() {
 # Sustituye los marcadores de las plantillas en el fichero $1 y escribe el resultado en stdout:
 # los del contrato (@USER@, @HOME@, @APP_DIR@, @CONFIG@, @NODE@), @NODE_DIR@ (carpeta de node, para el PATH
 # del servicio: OpenClaw usa «#!/usr/bin/env node») y los de nginx (@MDNS_NAME@, @PORT@).
-# Variables: JSC_USER (por defecto, el usuario actual) y JSC_NODE (ruta de node).
-jsc_render() {
+# Variables: FOGAR_TV_USER (por defecto, el usuario actual) y FOGAR_TV_NODE (ruta de node).
+fogar_tv_render() {
   local t
   t=$(<"$1")
-  t=${t//@USER@/"${JSC_USER:-$(id -un)}"}
+  t=${t//@USER@/"${FOGAR_TV_USER:-$(id -un)}"}
   t=${t//@HOME@/"$HOME"}
-  t=${t//@APP_DIR@/"$JSC_APP_DIR"}
-  t=${t//@CONFIG@/"$(jsc_config_path)"}
-  t=${t//@NODE@/"${JSC_NODE:-/usr/bin/node}"}
-  t=${t//@NODE_DIR@/"$(dirname "${JSC_NODE:-/usr/bin/node}")"}
+  t=${t//@APP_DIR@/"$FOGAR_TV_APP_DIR"}
+  t=${t//@CONFIG@/"$(fogar_tv_config_path)"}
+  t=${t//@NODE@/"${FOGAR_TV_NODE:-/usr/bin/node}"}
+  t=${t//@NODE_DIR@/"$(dirname "${FOGAR_TV_NODE:-/usr/bin/node}")"}
   t=${t//@MDNS_NAME@/"${TV_MDNS_NAME:-mando.local}"}
   t=${t//@PORT@/"${TV_PORT:-8787}"}
   printf '%s\n' "$t"

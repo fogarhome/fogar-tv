@@ -298,7 +298,7 @@ const r0 = n => Math.round(n);
   }
   async function say(view, text, ms = 70) {
     const w = text.split(' ');
-    for (let i = 1; i <= w.length; i++) { view.jota(w.slice(0, i).join(' ') + (i < w.length ? ' ' : '')); await sleep(ms); }
+    for (let i = 1; i <= w.length; i++) { view.fogar(w.slice(0, i).join(' ') + (i < w.length ? ' ' : '')); await sleep(ms); }
   }
   const dbg = p => p.evaluate(() => window.TVAgent ? window.TVAgent._debug() : null);
   const settled = (p, form, timeout = 6000) => p.waitForFunction(f => window.TVAgent && window.TVAgent._debug().form === f && !window.TVAgent._debug().morph,
@@ -364,7 +364,7 @@ const r0 = n => Math.round(n);
       await idle(A);
       // turno 1, en el reposo: el panel se abre
       view.turn('panel', { voice: true }); await sleep(600);
-      view.you('Hola', false); await sleep(250); view.you('Hola Jota', true); await sleep(400);
+      view.you('Hola', false); await sleep(250); view.you('Hola Fogar', true); await sleep(400);
       await say(view, 'Hola, Sito. ¿Qué te apetece ver esta noche?'); view.done();
       await sleep(1800);
       // turno 2: «abre Netflix» (con su ficha, y navigating() como la orden netflix)

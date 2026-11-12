@@ -43,7 +43,7 @@ const DEFAULTS = {
     on: false,
     sources: [{ id: 'netflix', on: true }, { id: 'spotify', on: true }, { id: 'youtube', on: false }],
   },
-  fresh: true,                  // al apagar la tele, J-Screen vuelve al reposo (empieza de cero; no se olvida nada)
+  fresh: true,                  // al apagar la tele, Fogar TV vuelve al reposo (empieza de cero; no se olvida nada)
   usage: true,                  // registro local de lo que estuvo en pantalla (Recientes y sugerencias por hábito)
   privacy: { on: false, until: /** @type {number | null} */ (null), show: /** @type {string[]} */ ([]) }, // visitas: until = cuándo se quita sola
   glass: 'auto',                // auto | A | B | C: nivel del cristal del agente (src/tv/talk-view.js)

@@ -43,7 +43,7 @@ initSession();                                          // token de ?t= o guarda
 register([controls, tele, trackpad, keyboard, go, recents, agent, spotify, pair, admin, settings, idle, gateway]);
 handle('me', applyMe);
 // orden del script único: ambiente (v3), accesos, conexión (eco cada 2 s y visibilitychange), cabecera, trackpad, gestos,
-// botones, hojas, teclado, dirección, agente, Spotify, emparejar, administración, ajustes, reposo y conexión con Jota
+// botones, hojas, teclado, dirección, agente, Spotify, emparejar, administración, ajustes, reposo y conexión con Fogar
 ambient.init();
 controls.init();
 tele.init();

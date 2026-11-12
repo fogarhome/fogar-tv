@@ -3,7 +3,7 @@
 // MCP "tv-canvas": controla el navegador de la pantalla (Chrome en modo kiosco) a través de la API del mando.
 //   TV_URL        base de la API (por defecto http://127.0.0.1:8787; desde otra máquina, la URL pública del mando)
 //   TV_TOKEN      token del mando (si no se indica, se lee de TV_TOKEN_FILE o TV_STATE_DIR/token)
-//   TV_STATE_DIR  carpeta de estado del servidor (por defecto ~/.local/state/jota-screen), como en el servidor
+//   TV_STATE_DIR  carpeta de estado del servidor (por defecto ~/.local/state/fogar-tv), como en el servidor
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
@@ -14,7 +14,7 @@ const { z } = require('zod');
 const BASE = (process.env.TV_URL || 'http://127.0.0.1:8787').replace(/\/+$/, '');
 function token() {
   if (process.env.TV_TOKEN) return process.env.TV_TOKEN.trim();
-  const dir = process.env.TV_STATE_DIR || path.join(os.homedir(), '.local', 'state', 'jota-screen');
+  const dir = process.env.TV_STATE_DIR || path.join(os.homedir(), '.local', 'state', 'fogar-tv');
   const f = process.env.TV_TOKEN_FILE || path.join(dir, 'token');
   try { return fs.readFileSync(f, 'utf8').trim(); } catch { return ''; }
 }
@@ -45,7 +45,7 @@ const out = (j, ok) => ({
 const server = new McpServer({ name: 'tv-canvas', version: '0.1.0' });
 const tool = (name, description, shape, fn) => server.registerTool(name, { description, inputSchema: shape }, fn);
 
-tool('tv_state', 'Current state of the TV browser: page title, URL, volume, tv: { power, src } (the TV itself over ADB: power on/off, src j = J-Screen / tv = Google TV; null when TV control is not set up), whether a video is playing (media: 1 playing, 0 paused, -1 no video) and what is on the stage.', {},
+tool('tv_state', 'Current state of the TV browser: page title, URL, volume, tv: { power, src } (the TV itself over ADB: power on/off, src j = Fogar TV / tv = Google TV; null when TV control is not set up), whether a video is playing (media: 1 playing, 0 paused, -1 no video) and what is on the stage.', {},
   async () => out(await api('GET', '/api/state')));
 
 // formato de la conversación en la tele para la página que se abre (lo mismo que FORMS de remote/src/tv/agent-contract.js;
@@ -112,15 +112,15 @@ tool('tv_volume', "TV volume: up/down (1 point per step on the TV's own 0-100 sc
     return out(r);
   });
 
-tool('tv_power', 'Turn the TV on or off. Turning it on always lands on J-Screen (HDMI). Works for guests.',
+tool('tv_power', 'Turn the TV on or off. Turning it on always lands on Fogar TV (HDMI). Works for guests.',
   { state: z.enum(['on', 'off']) },
   async ({ state }) => out(await cmd({ t: 'power', on: state === 'on' })));
 
-tool('tv_source', "Switch what the TV shows: jscreen (this canvas, HDMI) or tv (the TV's own Google TV home, for live TV). Anything opened on the canvas switches back to jscreen by itself.",
-  { source: z.enum(['jscreen', 'tv']) },
+tool('tv_source', "Switch what the TV shows: fogar-tv (this canvas, HDMI) or tv (the TV's own Google TV home, for live TV). Anything opened on the canvas switches back to fogar-tv by itself.",
+  { source: z.enum(['fogar-tv', 'tv']) },
   async ({ source }) => out(await cmd({ t: 'src', s: source === 'tv' ? 'tv' : 'j' })));
 
-tool('tv_channel', "Put a live TV (antenna/TDT) channel by its number on the TV's own channel list, e.g. 3 for «la 3». Turns the TV on if needed and leaves J-Screen for the TV tuner. Only numbers: a channel name works only if you know its number on this TV.",
+tool('tv_channel', "Put a live TV (antenna/TDT) channel by its number on the TV's own channel list, e.g. 3 for «la 3». Turns the TV on if needed and leaves Fogar TV for the TV tuner. Only numbers: a channel name works only if you know its number on this TV.",
   { number: z.number().int().min(1).max(9999) },
   async ({ number }) => out(await cmd({ t: 'channel', n: number })));
 
@@ -222,9 +222,9 @@ tool('tv_idle',
   'e.g. "Netflix · Estabas viendo · hace 40 min"; nothing at night or in cinema mode; the spotify entry follows music), netflix (on|off: legacy shortcut for suggest on + netflix on), ' +
   'privacy (guests mode: {on, show [netflix|spotify], until?}: hides personal things from the TV (the suggestion card and now playing) except the ids in show; ' +
   'turning it on lasts until 06:00 TV time next morning unless a future until (epoch ms) is given; use it for "hoy vienen invitados"), ' +
-  'fresh (true|false: when the TV is switched off, J-Screen goes back to the idle screen so it starts fresh; nothing is forgotten), ' +
+  'fresh (true|false: when the TV is switched off, Fogar TV goes back to the idle screen so it starts fresh; nothing is forgotten), ' +
   'usage (true|false: keep a local log of what was on screen, for Recents and future habit suggestions), ' +
-  'glass (auto|A|B|C: glass level of the live panels where the conversation with Jota is drawn on the TV; auto picks it by how smooth the TV runs, A full, B light, C opaque).',
+  'glass (auto|A|B|C: glass level of the live panels where the conversation with Fogar is drawn on the TV; auto picks it by how smooth the TV runs, A full, B light, C opaque).',
   { op: z.enum(['show', 'get', 'set']), cfg: z.record(z.any()).optional() },
   async ({ op, cfg }) => out(await cmd({ t: 'idle', op, cfg })));
 

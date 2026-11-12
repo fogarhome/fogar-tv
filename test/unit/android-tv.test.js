@@ -22,7 +22,7 @@ const OUT = `  mWakefulness=Awake
    streamVolume:22
 `;
 
-test('leer la tele: encendida con J-Screen en la entrada', () => {
+test('leer la tele: encendida con Fogar TV en la entrada', () => {
   assert.deepEqual(parseStatus(OUT, TV_INPUT), { power: 'on', src: 'j', vol: 22, muted: false });
 });
 
@@ -52,7 +52,7 @@ const TAIL = `- STREAM_MUSIC:
    Muted: false
    streamVolume:22
 `;
-// (a) captura real, despierta, J-Screen en HDMI1 (2026-10-22)
+// (a) captura real, despierta, Fogar TV en HDMI1 (2026-10-22)
 const REAL_AWAKE = `  sessionStateMap: ITvInputSession -> SessionState
     android.os.Binder@1483134: com.android.server.tv.TvInputManagerService$SessionState@3e14e47
       inputId: com.mediatek.tvinput/.hdmi.HDMIInputService/HW4

@@ -89,10 +89,10 @@ const base = () => `http://127.0.0.1:${srv.address().port}`;
 
 // ── fotos de ejemplo (la forma la decide el contexto, como el servidor: vídeo → píldora)
 const YOU = 'Pon algo tranquilo de jazz en el salón.';
-const JOTA = 'Ahí va. Jazz tranquilo en el salón, empezando por Miles Davis.';
+const FOGAR = 'Ahí va. Jazz tranquilo en el salón, empezando por Miles Davis.';
 const LONG = 'Mañana, sol y veinticuatro grados en Elche. Por la tarde se levanta algo de viento de levante y por la noche refresca bastante, así que mejor llevar una chaqueta si sales a cenar.';
 const tool = (id, kind, title, detail, status) => ({ id, kind, title, detail, status });
-const turn = (id, o) => ({ id, you: YOU, youFinal: true, jota: '', tools: [], error: false, hint: '', ...o });
+const turn = (id, o) => ({ id, you: YOU, youFinal: true, fogar: '', tools: [], error: false, hint: '', ...o });
 // tarjetas de Netflix (las imágenes, del servidor de aquí: la dirección entera, como las manda el de verdad)
 const nimg = n => `${base()}/idle/nfx?u=${n}`;
 const NFX_LIST = () => ({ key: 'nfx-list', kind: 'list', state: 'idle', items: [
@@ -106,26 +106,26 @@ const SCENES = [
   { n: 'escucha', state: 'listen', live: true, turns: [turn(1, { you: 'Pon algo tranquilo de', youFinal: false })] },
   { n: 'pensando', state: 'think', live: true, turns: [turn(1)] },
   { n: 'herramienta', state: 'think', live: true, turns: [turn(1, { tools: [tool('a', 'music', 'Reproducir en el Salón', 'Spotify · jazz tranquilo', 'run')] })] },
-  { n: 'check', state: 'talk', live: false, turns: [turn(1, { jota: JOTA, tools: [tool('a', 'music', 'Reproducir en el Salón', 'Spotify · jazz tranquilo', 'ok')] })] },
-  { n: 'fallo', state: 'error', live: false, turns: [turn(1, { you: 'Enciende las luces del salón.', jota: 'No he podido conectar con la casa.', hint: 'Di «otra vez» para reintentar.',
+  { n: 'check', state: 'talk', live: false, turns: [turn(1, { fogar: FOGAR, tools: [tool('a', 'music', 'Reproducir en el Salón', 'Spotify · jazz tranquilo', 'ok')] })] },
+  { n: 'fallo', state: 'error', live: false, turns: [turn(1, { you: 'Enciende las luces del salón.', fogar: 'No he podido conectar con la casa.', hint: 'Di «otra vez» para reintentar.',
     tools: [tool('h', 'home', 'Encender luces del salón', 'Casa · Salón', 'fail')] })] },
-  { n: 'hablando', state: 'talk', live: true, turns: [turn(1, { you: '¿Qué tiempo hace mañana?', jota: LONG })] },
+  { n: 'hablando', state: 'talk', live: true, turns: [turn(1, { you: '¿Qué tiempo hace mañana?', fogar: LONG })] },
   { n: 'dos-turnos', state: 'talk', live: false, turns: [
-    turn(1, { jota: JOTA, tools: [tool('a', 'music', 'Reproducir en el Salón', 'Spotify · jazz tranquilo', 'ok')] }),
-    turn(2, { you: 'Y ponme un temporizador de diez minutos para la pasta.', jota: 'Hecho, diez minutos. Te aviso cuando termine.',
+    turn(1, { fogar: FOGAR, tools: [tool('a', 'music', 'Reproducir en el Salón', 'Spotify · jazz tranquilo', 'ok')] }),
+    turn(2, { you: 'Y ponme un temporizador de diez minutos para la pasta.', fogar: 'Hecho, diez minutos. Te aviso cuando termine.',
       tools: [tool('b', 'timer', 'Temporizador', '10 min · Pasta', 'ok'), tool('c', 'volume', 'Volumen', 'Volumen 30 %', 'ok')] })] },
-  { n: 'noche', state: 'talk', live: false, night: true, turns: [turn(1, { jota: JOTA })] },
+  { n: 'noche', state: 'talk', live: false, night: true, turns: [turn(1, { fogar: FOGAR })] },
   { n: 'calm', state: 'think', live: true, calm: true, turns: [turn(1, { tools: [tool('a', 'music', 'Reproducir en el Salón', 'Spotify · jazz tranquilo', 'run')] })] },
-  { n: 'nivel-c', state: 'talk', live: false, glass: 'C', turns: [turn(1, { jota: JOTA })] },
+  { n: 'nivel-c', state: 'talk', live: false, glass: 'C', turns: [turn(1, { fogar: FOGAR })] },
   { n: 'desborda', state: 'talk', live: false, overflows: true, turns: [
-    turn(1, { you: '¿Qué tiempo hace mañana?', jota: LONG, tools: [tool('w', 'web', 'Consultar el tiempo', 'Elche · mañana', 'ok')] }),
-    turn(2, { you: '¿Y el fin de semana? ¿Lloverá en la sierra?', jota: LONG + ' ' + LONG,
+    turn(1, { you: '¿Qué tiempo hace mañana?', fogar: LONG, tools: [tool('w', 'web', 'Consultar el tiempo', 'Elche · mañana', 'ok')] }),
+    turn(2, { you: '¿Y el fin de semana? ¿Lloverá en la sierra?', fogar: LONG + ' ' + LONG,
       tools: [tool('x', 'web', 'Consultar el tiempo', 'Elche · sábado y domingo', 'ok'), tool('y', 'web', 'Consultar el tiempo', 'Sierra de Aitana', 'ok')] })] },
   // Netflix: «¿qué series estoy viendo?» y «pon Aquí no hay quien viva por donde iba» (la tarjeta y, al pulsar, su ▶)
-  { n: 'netflix-lista', state: 'talk', live: false, turns: [turn(1, { you: '¿Qué series estoy viendo?', jota: 'Tienes tres a medias. La que más, Aquí no hay quien viva.', media: NFX_LIST })] },
-  { n: 'netflix-poner', state: 'think', live: true, turns: [turn(1, { you: 'Pon Aquí no hay quien viva por donde iba.', jota: '',
+  { n: 'netflix-lista', state: 'talk', live: false, turns: [turn(1, { you: '¿Qué series estoy viendo?', fogar: 'Tienes tres a medias. La que más, Aquí no hay quien viva.', media: NFX_LIST })] },
+  { n: 'netflix-poner', state: 'think', live: true, turns: [turn(1, { you: 'Pon Aquí no hay quien viva por donde iba.', fogar: '',
     tools: [tool('n', 'video', 'Poner en Netflix', 'Aquí no hay quien viva', 'run')], media: NFX_PLAY('idle') })] },
-  { n: 'netflix-pulsa', state: 'think', live: true, turns: [turn(1, { you: 'Pon Aquí no hay quien viva por donde iba.', jota: '',
+  { n: 'netflix-pulsa', state: 'think', live: true, turns: [turn(1, { you: 'Pon Aquí no hay quien viva por donde iba.', fogar: '',
     tools: [tool('n', 'video', 'Poner en Netflix', 'Aquí no hay quien viva', 'run')], media: NFX_PLAY('press') })] },
 ];
 const CONTEXTS = [
@@ -311,7 +311,7 @@ const LOOK = (() => {
   {
     const { ctx, p } = await open(SIZES[0], { url: '/blanco.html' });
     const snap = { form: 'panel', ctx: 'idle', state: 'done', live: false, night: false, calm: true, glass: 'A', colors: null, icons: {},
-      turns: [{ id: 1, you: '', youFinal: true, jota: '', tools: [], error: false, hint: '' }] };
+      turns: [{ id: 1, you: '', youFinal: true, fogar: '', tools: [], error: false, hint: '' }] };
     await feed(p, snap, 300);
     await p.waitForTimeout(SETTLE_MS);
     const g = await p.evaluate(() => { const r = document.getElementById('__tvagent').shadowRoot.querySelector('.body').getBoundingClientRect(); return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) }; });

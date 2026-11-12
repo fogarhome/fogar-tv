@@ -1,8 +1,8 @@
-# jota-screen
+# fogar-tv
 
-La pantalla del ecosistema Jota: convierte cualquier pantalla conectada a un equipo Linux (la tele del salón, un
+La pantalla del ecosistema Fogar: convierte cualquier pantalla conectada a un equipo Linux (la tele del salón, un
 monitor, un kiosco) en un lienzo que se maneja desde el móvil y desde los agentes. Chrome a pantalla completa,
-controlado por un mando web (PWA), por el agente Jota (J Gateway) y por Claude (MCP, skill y plugin `tv-canvas`).
+controlado por un mando web (PWA), por el agente Fogar (Fogar Gateway) y por Claude (MCP, skill y plugin `tv-canvas`).
 
 - **Mando** en el móvil: touchpad, teclado, atajos, música, ajustes. Roles admin, miembro e invitado; se empareja con un
   código que sale en la pantalla.
@@ -19,7 +19,7 @@ Antes se llamaba `tv-canvas`; el MCP, la skill y el plugin conservan ese nombre 
 - Google Chrome (recomendado: trae Widevine para Netflix y similares) o Chromium.
 - `xrandr`/`xset` (x11-xserver-utils), `python3` con libX11 y libXtst (puntero del mando), `openbox` (recomendado).
 - Opcional: `avahi-utils` (alias `mando.local`), PipeWire con `wpctl` (volumen), `adb` (apagar/encender la tele y su volumen real, ver [cómo se hace](docs/como-se-hace.md#control-nativo-de-la-tele-por-adb)), spotifyd, nginx (mando sin puerto),
-  el J Gateway local (el agente que contesta desde el mando, por texto y voz).
+  el Fogar Gateway local (el agente que contesta desde el mando, por texto y voz).
 
 El instalador comprueba todo esto y dice qué paquetes faltan; no instala paquetes del sistema.
 
@@ -28,7 +28,7 @@ El instalador comprueba todo esto y dice qué paquetes faltan; no instala paquet
 Con el usuario que va a ser dueño de la pantalla (no root), en cualquier carpeta:
 
 ```sh
-git clone https://github.com/Jota-project/jota-screen.git && cd jota-screen
+git clone https://github.com/fogarhome/fogar-tv.git && cd fogar-tv
 scripts/install.sh --dry-run     # enseña lo que haría, sin cambiar nada
 scripts/install.sh               # config, npm ci en remote/, servicios de usuario y unidad del kiosco
 ```
@@ -36,12 +36,12 @@ scripts/install.sh               # config, npm ci en remote/, servicios de usuar
 `scripts/install.sh` (idempotente, se puede repetir):
 
 1. comprueba las dependencias;
-2. crea `~/.config/jota-screen/screen.env` desde `config/screen.env.example` si no existe (nunca la pisa);
-3. crea la carpeta de estado (`~/.local/state/jota-screen`, 0700) e instala las dependencias del servidor
+2. crea `~/.config/fogar-tv/screen.env` desde `config/screen.env.example` si no existe (nunca la pisa);
+3. crea la carpeta de estado (`~/.local/state/fogar-tv`, 0700) e instala las dependencias del servidor
    (`npm ci --omit=dev` en `remote/`) si han cambiado;
-4. genera, habilita y arranca los servicios de usuario `jota-screen` (servidor), `jota-screen-mdns` (alias mDNS, si hay
-   avahi y `TV_MDNS_NAME`) y `jota-screen-spotify` (si hay spotifyd), y activa *linger* para que arranquen con el equipo;
-5. genera la unidad de sistema del kiosco en `~/.config/jota-screen/generated/jota-screen-kiosk.service` y enseña los
+4. genera, habilita y arranca los servicios de usuario `fogar-tv` (servidor), `fogar-tv-mdns` (alias mDNS, si hay
+   avahi y `TV_MDNS_NAME`) y `fogar-tv-spotify` (si hay spotifyd), y activa *linger* para que arranquen con el equipo;
+5. genera la unidad de sistema del kiosco en `~/.config/fogar-tv/generated/fogar-tv-kiosk.service` y enseña los
    comandos `sudo` para instalarla y arrancarla (con `--system` lo hace él si hay sudo sin contraseña);
 6. si hay nginx, genera el proxy de `http://<TV_MDNS_NAME>` y enseña cómo instalarlo.
 
@@ -52,11 +52,11 @@ scripts/doctor.sh                # servicios, CDP, /api/state con y sin token, p
 node remote/admin-link.js        # enlace de admin de un solo uso para el primer móvil
 ```
 
-Para que Claude o Jota manejen la pantalla: `(cd mcp && npm ci)` y el plugin de [plugin/tv-canvas](plugin/tv-canvas/README.md).
+Para que Claude o Fogar manejen la pantalla: `(cd mcp && npm ci)` y el plugin de [plugin/tv-canvas](plugin/tv-canvas/README.md).
 
 ## Configuración
 
-Todo es opcional y vive en `~/.config/jota-screen/screen.env` (o la ruta de `TV_CONFIG`), formato `KEY=valor`. La
+Todo es opcional y vive en `~/.config/fogar-tv/screen.env` (o la ruta de `TV_CONFIG`), formato `KEY=valor`. La
 plantilla con todas las variables y su valor por defecto es [config/screen.env.example](config/screen.env.example).
 Las principales:
 
@@ -69,14 +69,14 @@ Las principales:
 | `TV_MDNS_NAME`, `TV_NET_IFACE` | `mando.local`, interfaz de la ruta por defecto | Alias mDNS del mando (vacío = sin alias) |
 | `TV_PUBLIC_URL`, `TV_ADMIN_URL` | `http://127.0.0.1:8787`, `http://mando.local` | URL pública (vuelta de Spotify) y de los enlaces de admin |
 | `TV_CHROME`, `TV_HOME_URL` | primer Chrome/Chromium, el reposo | Navegador y página de inicio del kiosco |
-| `TV_GATEWAY_URL`, `TV_GATEWAY_KEY`, `TV_AGENT`, `TV_OWNER` | vacía (sin agente), vacía, `j-assistant`, vacío | J Gateway y agente que contesta desde el mando (texto y voz) |
+| `TV_GATEWAY_URL`, `TV_GATEWAY_KEY`, `TV_AGENT`, `TV_OWNER` | vacía (sin agente), vacía, `j-assistant`, vacío | Fogar Gateway y agente que contesta desde el mando (texto y voz) |
 | `TV_SPEAKER_CMD` | `pw-cat` | Orden que reproduce el PCM de la respuesta en la tele |
 | `TV_SPOTIFY_DEVICE`, `TV_SPOTIFYD` | `TV_NAME`, `spotifyd` del PATH | Altavoz Spotify Connect |
 | `TV_CITY`, `TV_LAT`, `TV_LON`, `TV_TZ` | vacío, zona del sistema | Tiempo en el reposo: sin latitud y longitud no se pide |
-| `TV_STATE_DIR` | `~/.local/state/jota-screen` | Estado: token, dispositivos, ajustes, escenario, perfil de Chrome |
+| `TV_STATE_DIR` | `~/.local/state/fogar-tv` | Estado: token, dispositivos, ajustes, escenario, perfil de Chrome |
 
-Tras cambiarla: `systemctl --user restart jota-screen` (y `jota-screen-mdns` / `jota-screen-spotify` si toca); lo
-de la pantalla (salida, escala, Chrome) con `sudo systemctl restart jota-screen-kiosk`.
+Tras cambiarla: `systemctl --user restart fogar-tv` (y `fogar-tv-mdns` / `fogar-tv-spotify` si toca); lo
+de la pantalla (salida, escala, Chrome) con `sudo systemctl restart fogar-tv-kiosk`.
 
 ## Actualizar
 
@@ -106,7 +106,7 @@ xdg-open "http://127.0.0.1:8787/?t=$(cat "$TV_STATE_DIR/token")"   # el mando ca
 
 Para tener «tele», un Chrome aparte con CDP:
 `google-chrome --remote-debugging-port=9222 --user-data-dir="$(mktemp -d)" http://127.0.0.1:8787/idle.html`.
-Sin `wpctl` (ni `adb`) no hay volumen y sin `TV_GATEWAY_URL` Jota no está disponible; el resto funciona. Con `TV_LAT`/`TV_LON` el reposo pide
+Sin `wpctl` (ni `adb`) no hay volumen y sin `TV_GATEWAY_URL` Fogar no está disponible; el resto funciona. Con `TV_LAT`/`TV_LON` el reposo pide
 el tiempo a Open-Meteo.
 
 ## Herramientas
@@ -129,10 +129,10 @@ el tiempo a Open-Meteo.
 | `remote/` | Servidor (Node): `server.js` compone las piezas de `src/` (core, auth, tv, features, transport) |
 | `remote/public/` | Lo que se sirve: el mando (`index.html` + módulos ES en `mando/`), el reposo (`idle.*`), la isla de Live Activities (`tv-island.js`), los tokens de la tele (`shared/tokens-tv.css`) y el escenario (`tv-stage.js`, `tpl-*.html`) |
 | `config/` | `screen.env.example`, la plantilla de configuración |
-| `systemd/` | Plantillas de las unidades (`jota-screen*`) que rellena el instalador |
+| `systemd/` | Plantillas de las unidades (`fogar-tv*`) que rellena el instalador |
 | `scripts/` | `install.sh`, `update.sh`, `doctor.sh`, `cdp.js`, `lib.sh` (funciones comunes), `spotifyd-run.sh`, `sync-plugin.sh` |
 | `kiosk-session.sh`, `home.html` | Sesión X del kiosco (salida, Chrome con CDP) y su portada, que salta al reposo cuando el servidor responde |
-| `mdns-alias.sh` | Alias mDNS del mando (lo lanza `jota-screen-mdns`) |
+| `mdns-alias.sh` | Alias mDNS del mando (lo lanza `fogar-tv-mdns`) |
 | `mcp/`, `plugin/tv-canvas/` | MCP `tv-canvas` (stdio) sobre la API y el plugin de Claude Code que lo empaqueta |
 | `e2e/` | Capturas del reposo y del mando con datos de ejemplo, y su comparador |
 | `test/` | Pruebas de contrato (servidor real aislado, Chrome falso) y unitarias |

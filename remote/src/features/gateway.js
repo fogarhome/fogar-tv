@@ -1,10 +1,10 @@
 'use strict';
 // @ts-check
-// Conectar la tele con el J Gateway desde el mando (solo admin): {t:'gateway', op}
+// Conectar la tele con el Fogar Gateway desde el mando (solo admin): {t:'gateway', op}
 //   status  estado de la conexión (sin clave)          check   lo comprueba ahora
 //   find    busca gateways (a mano → este equipo → tailnet)
-//   pair    {host, code, typed}: empareja con el código que enseña `jota-gw pair` en el gateway
-//   local   empareja con el gateway de este equipo sacando el código con `jota-gw` (el mando avisa antes)
+//   pair    {host, code, typed}: empareja con el código que enseña `fogar-gw pair` en el gateway
+//   local   empareja con el gateway de este equipo sacando el código con `fogar-gw` (el mando avisa antes)
 //   forget  olvida la clave
 // Nada de esto pasa solo: lo pide un admin desde el mando. La clave no sale nunca hacia el mando.
 const discoverDefault = require('../gateway/discover');
@@ -39,7 +39,7 @@ function createGatewayFeature({ link, name, agent, port = discoverDefault.PORT, 
         if (!host) return { error: 'Falta la dirección del gateway' };
         if (!pair.cleanCode(m.code)) return { error: 'El código son 6 cifras' };
         const g = await discover.probe(host, { port });
-        if (!g) return { error: `No encuentro Jota en ${discover.endpoints(host, port)?.host || host}` };
+        if (!g) return { error: `No encuentro Fogar en ${discover.endpoints(host, port)?.host || host}` };
         return connect(g, m.code, typed || !!link.manual());
       }
       case 'local': {

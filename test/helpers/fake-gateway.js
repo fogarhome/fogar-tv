@@ -1,5 +1,5 @@
 'use strict';
-// J Gateway falso para pruebas y capturas: GET /.well-known/jota-gateway, POST /pair (código `code`, devuelve una clave
+// Fogar Gateway falso para pruebas y capturas: GET /.well-known/fogar-gateway, POST /pair (código `code`, devuelve una clave
 // que empieza por `keyPrefix`) y el WebSocket /ws/stream (ready si la clave empieza por `keyPrefix`; si no, 1008 como el
 // de verdad). Lo que llega a /pair queda en `pairs`.
 const http = require('node:http');
@@ -15,7 +15,7 @@ async function startFakeGateway({ name = 'green-house', code = '123456', keyPref
     req.on('data', d => { body += d; });
     req.on('end', () => {
       const send = (s, j) => { res.writeHead(s, { 'content-type': 'application/json' }); res.end(JSON.stringify(j)); };
-      if (req.method === 'GET' && req.url === '/.well-known/jota-gateway') return send(200, { service: 'jota-gateway', version: '1.29.0', name, pairing: true });
+      if (req.method === 'GET' && req.url === '/.well-known/fogar-gateway') return send(200, { service: 'fogar-gateway', version: '1.29.0', name, pairing: true });
       if (req.method === 'POST' && req.url === '/pair') {
         let j = {}; try { j = JSON.parse(body); } catch {}
         pairs.push(j);

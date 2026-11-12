@@ -16,13 +16,13 @@ const SCRIPTS = ['scripts/lib.sh', 'scripts/install.sh', 'scripts/doctor.sh', 's
 
 const TMPS = [];
 // Ruta real: en macOS /tmp y /var/folders son enlaces (a /private/…) y los scripts resuelven la suya (readlink -f).
-const tmp = () => { const d = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'jsc-'))); TMPS.push(d); return d; };
+const tmp = () => { const d = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'fogar-tv-'))); TMPS.push(d); return d; };
 after(() => { for (const d of TMPS) fs.rmSync(d, { recursive: true, force: true }); });
 
-/** Entorno limpio: HOME temporal y sin variables de jota-screen heredadas. */
+/** Entorno limpio: HOME temporal y sin variables de fogar-tv heredadas. */
 function cleanEnv(home, extra = {}) {
   const env = {};
-  for (const [k, v] of Object.entries(process.env)) if (!/^(TV_|XDG_|JSC_|DISPLAY$)/.test(k)) env[k] = v;
+  for (const [k, v] of Object.entries(process.env)) if (!/^(TV_|XDG_|FOGAR_TV_|DISPLAY$)/.test(k)) env[k] = v;
   return { ...env, HOME: home, XDG_CONFIG_HOME: path.join(home, '.config'), TMPDIR: home, LC_ALL: 'C.UTF-8', ...extra };
 }
 
@@ -78,44 +78,44 @@ DP-3 connected primary 2560x1440+1920+0 (normal left inverted right x axis y axi
 `;
 
 test('xrandr: salida conectada (la primaria si la hay) y su modo preferido', () => {
-  assert.equal(lib('jsc_parse_xrandr_output', { input: XRANDR }).trim(), 'DP-3');
+  assert.equal(lib('fogar_tv_parse_xrandr_output', { input: XRANDR }).trim(), 'DP-3');
   const noPrimary = XRANDR.replace(' primary', '');
-  assert.equal(lib('jsc_parse_xrandr_output', { input: noPrimary }).trim(), 'HDMI-A-1', 'sin primaria: la primera conectada');
-  assert.equal(lib('jsc_parse_xrandr_mode HDMI-A-1', { input: XRANDR }).trim(), '3840x2160 30.00', 'el modo con «+»');
-  assert.equal(lib('jsc_parse_xrandr_mode DP-3', { input: XRANDR }).trim(), '2560x1440 59.95');
+  assert.equal(lib('fogar_tv_parse_xrandr_output', { input: noPrimary }).trim(), 'HDMI-A-1', 'sin primaria: la primera conectada');
+  assert.equal(lib('fogar_tv_parse_xrandr_mode HDMI-A-1', { input: XRANDR }).trim(), '3840x2160 30.00', 'el modo con «+»');
+  assert.equal(lib('fogar_tv_parse_xrandr_mode DP-3', { input: XRANDR }).trim(), '2560x1440 59.95');
   const noPlus = XRANDR.replace('30.00 +', '30.00  ');
-  assert.equal(lib('jsc_parse_xrandr_mode HDMI-A-1', { input: noPlus }).trim(), '1920x1080 60.00', 'sin «+»: el actual');
-  assert.equal(lib('jsc_parse_xrandr_mode NADA', { input: XRANDR }).trim(), '');
-  assert.equal(lib('jsc_parse_xrandr_output', { input: 'Screen 0: …\nHDMI-1 disconnected (normal)\n' }).trim(), '', 'nada conectado');
-  assert.equal(lib('jsc_parse_xrandr_output', { input: '' }).trim(), '');
+  assert.equal(lib('fogar_tv_parse_xrandr_mode HDMI-A-1', { input: noPlus }).trim(), '1920x1080 60.00', 'sin «+»: el actual');
+  assert.equal(lib('fogar_tv_parse_xrandr_mode NADA', { input: XRANDR }).trim(), '');
+  assert.equal(lib('fogar_tv_parse_xrandr_output', { input: 'Screen 0: …\nHDMI-1 disconnected (normal)\n' }).trim(), '', 'nada conectado');
+  assert.equal(lib('fogar_tv_parse_xrandr_output', { input: '' }).trim(), '');
 });
 
 test('ip route: interfaz de la ruta por defecto (la de menor métrica)', () => {
   const routes = `default via 192.168.1.1 dev wlp2s0 proto dhcp src 192.168.1.50 metric 600
 default via 192.168.1.1 dev enp3s0 proto dhcp src 192.168.1.51 metric 100
 `;
-  assert.equal(lib('jsc_parse_default_iface', { input: routes }).trim(), 'enp3s0');
-  assert.equal(lib('jsc_parse_default_iface', { input: 'default via 10.0.0.1 dev eth0\n' }).trim(), 'eth0');
-  assert.equal(lib('jsc_parse_default_iface', { input: '10.0.0.0/24 dev eth0 proto kernel scope link\n' }).trim(), '');
+  assert.equal(lib('fogar_tv_parse_default_iface', { input: routes }).trim(), 'enp3s0');
+  assert.equal(lib('fogar_tv_parse_default_iface', { input: 'default via 10.0.0.1 dev eth0\n' }).trim(), 'eth0');
+  assert.equal(lib('fogar_tv_parse_default_iface', { input: '10.0.0.0/24 dev eth0 proto kernel scope link\n' }).trim(), '');
 });
 
 test('config: valores por defecto, fichero y alias vacío', () => {
   const home = tmp();
-  const out = lib('jsc_load_config; echo "$TV_NAME|$TV_PORT|$TV_CDP_PORT|$TV_STATE_DIR|$TV_SCALE|$TV_SPOTIFY_DEVICE|$TV_MDNS_NAME|$DISPLAY"', { home });
-  assert.equal(out.trim(), `Pantalla|8787|9222|${home}/.local/state/jota-screen|1.5|Pantalla|mando.local|:0`);
-  const cfg = path.join(home, '.config', 'jota-screen');
+  const out = lib('fogar_tv_load_config; echo "$TV_NAME|$TV_PORT|$TV_CDP_PORT|$TV_STATE_DIR|$TV_SCALE|$TV_SPOTIFY_DEVICE|$TV_MDNS_NAME|$DISPLAY"', { home });
+  assert.equal(out.trim(), `Pantalla|8787|9222|${home}/.local/state/fogar-tv|1.5|Pantalla|mando.local|:0`);
+  const cfg = path.join(home, '.config', 'fogar-tv');
   fs.mkdirSync(cfg, { recursive: true });
   fs.writeFileSync(path.join(cfg, 'screen.env'), 'TV_NAME="Tele del salón"\nTV_PORT=9000\nTV_MDNS_NAME=\n');
-  const out2 = lib('jsc_load_config; echo "$TV_NAME|$TV_PORT|$TV_SPOTIFY_DEVICE|[$TV_MDNS_NAME]"', { home });
+  const out2 = lib('fogar_tv_load_config; echo "$TV_NAME|$TV_PORT|$TV_SPOTIFY_DEVICE|[$TV_MDNS_NAME]"', { home });
   assert.equal(out2.trim(), 'Tele del salón|9000|Tele del salón|[]');
   const other = path.join(home, 'otra.env');
   fs.writeFileSync(other, 'TV_CDP_PORT=9333\n');
-  assert.equal(lib('jsc_load_config; echo $TV_CDP_PORT', { home, env: { TV_CONFIG: other } }).trim(), '9333');
+  assert.equal(lib('fogar_tv_load_config; echo $TV_CDP_PORT', { home, env: { TV_CONFIG: other } }).trim(), '9333');
 });
 
 test('urlencode', () => {
-  assert.equal(lib('jsc_urlencode "Tele del salón & más"').trim(), 'Tele%20del%20sal%C3%B3n%20%26%20m%C3%A1s');
-  assert.equal(lib('jsc_urlencode "http://127.0.0.1:8787/idle.html"').trim(), 'http%3A%2F%2F127.0.0.1%3A8787%2Fidle.html');
+  assert.equal(lib('fogar_tv_urlencode "Tele del salón & más"').trim(), 'Tele%20del%20sal%C3%B3n%20%26%20m%C3%A1s');
+  assert.equal(lib('fogar_tv_urlencode "http://127.0.0.1:8787/idle.html"').trim(), 'http%3A%2F%2F127.0.0.1%3A8787%2Fidle.html');
 });
 
 test('permisos y sha256 con stat y sha256sum de GNU o de BSD', () => {
@@ -123,8 +123,8 @@ test('permisos y sha256 con stat y sha256sum de GNU o de BSD', () => {
   const f = path.join(home, 'f');
   fs.writeFileSync(f, 'hola\n');
   fs.chmodSync(f, 0o640);
-  assert.equal(lib(`jsc_mode "${f}"`, { home }).trim(), '640');
-  assert.equal(lib(`jsc_sha256 "${f}"`, { home }).trim(), require('node:crypto').createHash('sha256').update('hola\n').digest('hex'));
+  assert.equal(lib(`fogar_tv_mode "${f}"`, { home }).trim(), '640');
+  assert.equal(lib(`fogar_tv_sha256 "${f}"`, { home }).trim(), require('node:crypto').createHash('sha256').update('hola\n').digest('hex'));
 });
 
 test('perfil de Chrome: se mueve a la carpeta de estado y nunca se sobrescribe', () => {
@@ -132,8 +132,8 @@ test('perfil de Chrome: se mueve a la carpeta de estado y nunca se sobrescribe',
   const old = path.join(home, 'tv', 'chrome-profile');
   fs.mkdirSync(path.join(old, 'Default'), { recursive: true });
   fs.writeFileSync(path.join(old, 'Default', 'Cookies'), 'viejo');
-  const out = lib('jsc_load_config; jsc_migrate_chrome_profile 2>&1', { home });
-  const dest = path.join(home, '.local', 'state', 'jota-screen', 'chrome-profile');
+  const out = lib('fogar_tv_load_config; fogar_tv_migrate_chrome_profile 2>&1', { home });
+  const dest = path.join(home, '.local', 'state', 'fogar-tv', 'chrome-profile');
   assert.match(out, /perfil de Chrome movido/);
   assert.equal(fs.readFileSync(path.join(dest, 'Default', 'Cookies'), 'utf8'), 'viejo');
   assert.ok(!fs.existsSync(old));
@@ -141,18 +141,18 @@ test('perfil de Chrome: se mueve a la carpeta de estado y nunca se sobrescribe',
   // otro perfil antiguo: no pisa el nuevo
   fs.mkdirSync(old, { recursive: true });
   fs.writeFileSync(path.join(old, 'otro'), 'x');
-  const out2 = lib('jsc_load_config; jsc_migrate_chrome_profile 2>&1', { home });
+  const out2 = lib('fogar_tv_load_config; fogar_tv_migrate_chrome_profile 2>&1', { home });
   assert.match(out2, /no lo muevo/);
   assert.ok(fs.existsSync(path.join(old, 'otro')));
   assert.equal(fs.readFileSync(path.join(dest, 'Default', 'Cookies'), 'utf8'), 'viejo');
   // segunda pasada sin antiguos: nada que decir
   fs.rmSync(old, { recursive: true });
-  assert.equal(lib('jsc_load_config; jsc_migrate_chrome_profile 2>&1', { home }).trim(), '');
+  assert.equal(lib('fogar_tv_load_config; fogar_tv_migrate_chrome_profile 2>&1', { home }).trim(), '');
 });
 
 // ───────────────────────────────────────────────────────────────── plantillas
-const TEMPLATES = ['systemd/user/jota-screen.service', 'systemd/user/jota-screen-mdns.service', 'systemd/user/jota-screen-spotify.service',
-  'systemd/system/jota-screen-kiosk.service', 'systemd/spotifyd.conf.example', 'remote/nginx-mando.conf'];
+const TEMPLATES = ['systemd/user/fogar-tv.service', 'systemd/user/fogar-tv-mdns.service', 'systemd/user/fogar-tv-spotify.service',
+  'systemd/system/fogar-tv-kiosk.service', 'systemd/spotifyd.conf.example', 'remote/nginx-mando.conf'];
 const PERSONAL = /sito|green-house|tailf2c275|HDMI-0|eno2|192\.168\.|Elche|Salón/;
 
 test('plantillas: sin nada personal y con todos los marcadores rellenos', () => {
@@ -162,18 +162,18 @@ test('plantillas: sin nada personal y con todos los marcadores rellenos', () => 
   }
   const home = tmp();
   for (const t of TEMPLATES) {
-    const out = lib(`jsc_render "${path.join(REPO, t)}"`, { home, env: { JSC_USER: 'ana', JSC_NODE: '/opt/node/bin/node' } });
+    const out = lib(`fogar_tv_render "${path.join(REPO, t)}"`, { home, env: { FOGAR_TV_USER: 'ana', FOGAR_TV_NODE: '/opt/node/bin/node' } });
     assert.doesNotMatch(out, /@[A-Z_]+@/, t);
   }
-  const unit = lib(`jsc_render "${path.join(REPO, 'systemd/user/jota-screen.service')}"`, { home, env: { JSC_NODE: '/opt/node/bin/node' } });
-  assert.match(unit, new RegExp(`EnvironmentFile=-${home}/.config/jota-screen/screen.env`));
+  const unit = lib(`fogar_tv_render "${path.join(REPO, 'systemd/user/fogar-tv.service')}"`, { home, env: { FOGAR_TV_NODE: '/opt/node/bin/node' } });
+  assert.match(unit, new RegExp(`EnvironmentFile=-${home}/.config/fogar-tv/screen.env`));
   assert.match(unit, new RegExp(`WorkingDirectory=${REPO}/remote`));
   assert.match(unit, /ExecStart=\/opt\/node\/bin\/node server\.js/);
-  const kiosk = lib(`jsc_render "${path.join(REPO, 'systemd/system/jota-screen-kiosk.service')}"`, { home, env: { JSC_USER: 'ana' } });
+  const kiosk = lib(`fogar_tv_render "${path.join(REPO, 'systemd/system/fogar-tv-kiosk.service')}"`, { home, env: { FOGAR_TV_USER: 'ana' } });
   assert.match(kiosk, /^User=ana$/m);
   assert.match(kiosk, new RegExp(`xinit ${REPO}/kiosk-session.sh`));
   // los «&» de una ruta no se interpretan (bash 5.2: patsub_replacement)
-  const odd = lib(`jsc_render "${path.join(REPO, 'systemd/user/jota-screen.service')}"`, { home, env: { JSC_NODE: '/a&b/node' } });
+  const odd = lib(`fogar_tv_render "${path.join(REPO, 'systemd/user/fogar-tv.service')}"`, { home, env: { FOGAR_TV_NODE: '/a&b/node' } });
   assert.match(odd, /ExecStart=\/a&b\/node server\.js/);
 });
 
@@ -189,8 +189,8 @@ test('install.sh --help y --dry-run: no cambia nada', () => {
     { env: cleanEnv(home, { PATH: `${st.dir}:${process.env.PATH}` }), encoding: 'utf8' });
   assert.equal(r.status, 0, r.stdout + r.stderr);
   assert.match(r.stdout, /MODO SIMULADO/);
-  assert.match(r.stdout, /\[simulado\] crearía .*jota-screen\.service/);
-  assert.match(r.stdout, /sudo install -m 0644 .*jota-screen-kiosk\.service \/etc\/systemd\/system\/jota-screen-kiosk\.service/);
+  assert.match(r.stdout, /\[simulado\] crearía .*fogar-tv\.service/);
+  assert.match(r.stdout, /sudo install -m 0644 .*fogar-tv-kiosk\.service \/etc\/systemd\/system\/fogar-tv-kiosk\.service/);
   assert.deepEqual(listAll(home), [], 'el HOME sigue vacío');
   assert.deepEqual(listAll(app), before, 'la copia del repo no cambia');
   assert.doesNotMatch(st.calls(), /^npm /m, 'no ejecuta npm');
@@ -205,16 +205,16 @@ test('install.sh de verdad sin systemd de usuario: genera, avisa y es idempotent
   const r = run();
   assert.equal(r.status, 0, r.stdout + r.stderr);
   assert.match(r.stdout, /no hay systemd de usuario/);
-  const cfg = path.join(home, '.config', 'jota-screen', 'screen.env');
+  const cfg = path.join(home, '.config', 'fogar-tv', 'screen.env');
   assert.equal(fs.statSync(cfg).mode & 0o777, 0o600);
-  assert.equal(fs.statSync(path.join(home, '.local', 'state', 'jota-screen')).mode & 0o777, 0o700);
+  assert.equal(fs.statSync(path.join(home, '.local', 'state', 'fogar-tv')).mode & 0o777, 0o700);
   const units = path.join(home, '.config', 'systemd', 'user');
-  for (const u of ['jota-screen', 'jota-screen-mdns', 'jota-screen-spotify']) {
+  for (const u of ['fogar-tv', 'fogar-tv-mdns', 'fogar-tv-spotify']) {
     const txt = fs.readFileSync(path.join(units, u + '.service'), 'utf8');
     assert.doesNotMatch(txt, /@[A-Z_]+@/, u);
     assert.match(txt, new RegExp(app.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   }
-  const kiosk = fs.readFileSync(path.join(home, '.config', 'jota-screen', 'generated', 'jota-screen-kiosk.service'), 'utf8');
+  const kiosk = fs.readFileSync(path.join(home, '.config', 'fogar-tv', 'generated', 'fogar-tv-kiosk.service'), 'utf8');
   assert.match(kiosk, new RegExp(`^User=${os.userInfo().username}$`, 'm'));
   assert.match(st.calls(), /^npm ci --omit=dev/m);
 
@@ -226,7 +226,7 @@ test('install.sh de verdad sin systemd de usuario: genera, avisa y es idempotent
   assert.equal(r2.status, 0, r2.stdout + r2.stderr);
   assert.equal(fs.readFileSync(cfg, 'utf8'), before);
   assert.match(r2.stdout, /ya existe .*screen\.env/);
-  assert.match(r2.stdout, /jota-screen\.service al día/);
+  assert.match(r2.stdout, /fogar-tv\.service al día/);
   assert.match(r2.stdout, /nombre «Mía»/);
   assert.doesNotMatch(st.calls(), /^npm /m);
   // nada fuera del HOME y de la copia
@@ -269,7 +269,7 @@ test('kiosk-session.sh: detecta salida y modo, perfil en el estado y CDP solo en
   assert.ok(chrome, calls);
   assert.match(chrome, /--remote-debugging-port=9333 /);
   assert.match(chrome, /--remote-debugging-address=127\.0\.0\.1 /);
-  assert.match(chrome, new RegExp(`--user-data-dir=${home}/.local/state/jota-screen/chrome-profile `));
+  assert.match(chrome, new RegExp(`--user-data-dir=${home}/.local/state/fogar-tv/chrome-profile `));
   assert.match(chrome, new RegExp(`file://${app}/home\\.html#port=8787&name=Tele$`));
   assert.match(r.stdout, /perfil de Chrome movido/);
   assert.ok(!fs.existsSync(path.join(home, 'tv', 'chrome-profile')));

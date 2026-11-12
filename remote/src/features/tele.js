@@ -2,12 +2,12 @@
 // @ts-check
 // Capacidad «tele»: la tele Google TV por ADB. Sondea encendido, entrada y volumen (cada 3 s con mandos, 15 s sin ellos),
 // da las órdenes power, src, channel y tvkey (sin permiso: también invitados) y aplica las reglas del diseño:
-//   - al encenderse la tele (off → on, también con el mando original) va a J-Screen una sola vez; si la encendimos
-//     nosotros y aun así sale otra cosa (el lanzador llega después del am start), se vuelve a J-Screen una vez;
-//   - al apagar o pasar a Tele (por orden nuestra o con el mando original) se pausa lo que suena en J-Screen, una vez;
-//   - src con la tele apagada la enciende antes (j: el encendido ya va a J-Screen; tv: encender y luego Tele);
-//   - channel abre la TDT (encendiendo si hace falta, sin saltar a J-Screen) y marca el número;
-//   - las órdenes que necesitan la pantalla esperan antes a ver J-Screen delante (ensureJ, como mucho 6 s).
+//   - al encenderse la tele (off → on, también con el mando original) va a Fogar TV una sola vez; si la encendimos
+//     nosotros y aun así sale otra cosa (el lanzador llega después del am start), se vuelve a Fogar TV una vez;
+//   - al apagar o pasar a Tele (por orden nuestra o con el mando original) se pausa lo que suena en Fogar TV, una vez;
+//   - src con la tele apagada la enciende antes (j: el encendido ya va a Fogar TV; tv: encender y luego Tele);
+//   - channel abre la TDT (encendiendo si hace falta, sin saltar a Fogar TV) y marca el número;
+//   - las órdenes que necesitan la pantalla esperan antes a ver Fogar TV delante (ensureJ, como mucho 6 s).
 const { TV_KEYS } = require('../tv/android-tv');
 
 const WATCHED_MS = 3000, IDLE_MS = 15000;
@@ -18,7 +18,7 @@ const TDT_MS = 2000;
 const OWN_PAUSE_MS = 30000; // la pausa de una orden propia vale para su apagado o paso a Tele si el sondeo lo ve en este tiempo
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-// órdenes que ponen algo en pantalla: antes, J-Screen delante (`t`, o `t:op` si solo cuenta esa op; buscar no enciende)
+// órdenes que ponen algo en pantalla: antes, Fogar TV delante (`t`, o `t:op` si solo cuenta esa op; buscar no enciende)
 const SCREEN = new Set(['nav', 'home', 'youtube:play', 'present', 'show', 'netflix:open', 'netflix:play', 'idle:show']);
 
 /**
@@ -28,7 +28,7 @@ const SCREEN = new Set(['nav', 'home', 'youtube:play', 'present', 'show', 'netfl
  */
 function createTele({ tv, state, broadcast, watched, pause, onOff, log }) {
   state.tv = { power: null, src: null };
-  let lastPower = null; // último encendido conocido (sin null): de él sale el salto a J-Screen
+  let lastPower = null; // último encendido conocido (sin null): de él sale el salto a Fogar TV
   let lastSrc = null;   // entrada en la última lectura encendida (null tras verla apagada): de ella sale el j → tv
   /** @type {false|'j'|'tv'} el encendido lo pedimos nosotros, con la entrada a la que va */
   let own = false;
@@ -46,11 +46,11 @@ function createTele({ tv, state, broadcast, watched, pause, onOff, log }) {
     const p = state.tv.power, src = state.tv.src;
     if (p !== null) {
       if (lastPower === 'off' && p === 'on' && !own) {
-        log.info('tele: encendida, a J-Screen');
+        log.info('tele: encendida, a Fogar TV');
         tv.toJ().catch(() => {});
       }
       if (p === 'on' && own) {
-        if (own === 'j' && src !== 'j') { log.info('tele: encendida pero no en J-Screen, a J-Screen'); tv.toJ().catch(() => {}); }
+        if (own === 'j' && src !== 'j') { log.info('tele: encendida pero no en Fogar TV, a Fogar TV'); tv.toJ().catch(() => {}); }
         own = false;
       }
       const change = lastPower === 'on' && p === 'off' ? 'off' : p === 'on' && lastSrc === 'j' && src === 'tv' ? 'tv' : null;
@@ -110,7 +110,7 @@ function createTele({ tv, state, broadcast, watched, pause, onOff, log }) {
     });
   }
 
-  /** Pone un canal de la TDT: enciende o deja J-Screen si hace falta, abre la TDT y marca el número. @param {number} n */
+  /** Pone un canal de la TDT: enciende o deja Fogar TV si hace falta, abre la TDT y marca el número. @param {number} n */
   function channel(n) {
     return act(async () => {
       if (asleep()) {
@@ -125,7 +125,7 @@ function createTele({ tv, state, broadcast, watched, pause, onOff, log }) {
     });
   }
 
-  /** Enciende o vuelve a J-Screen si hace falta y espera a verlo (como mucho 6 s). */
+  /** Enciende o vuelve a Fogar TV si hace falta y espera a verlo (como mucho 6 s). */
   async function ensureJ() {
     const ok = () => state.tv.power === 'on' && state.tv.src === 'j';
     if (ok()) return true;
@@ -141,7 +141,7 @@ function createTele({ tv, state, broadcast, watched, pause, onOff, log }) {
   }
 
   /**
-   * Envuelve las órdenes que necesitan la pantalla: antes de su run, J-Screen delante. La orden se hace igual si no llega.
+   * Envuelve las órdenes que necesitan la pantalla: antes de su run, Fogar TV delante. La orden se hace igual si no llega.
    * @param {import('../transport/commands').Command[]} cmds
    * @param {Set<string>} types  `t` de la orden, o `t:op` si solo cuenta con esa op (p. ej. 'netflix:open')
    * @returns {import('../transport/commands').Command[]}
@@ -151,7 +151,7 @@ function createTele({ tv, state, broadcast, watched, pause, onOff, log }) {
       if (types.has(m.t) || types.has(m.t + ':' + m.op)) {
         await readNow();   // el estado guardado puede tener 15 s: la tele pudo apagarse con el mando original
         // sin responder y sin haberla visto apagada no se espera: la orden va directa
-        if ((asleep() || state.tv.src === 'tv') && !(await ensureJ())) log.info('tele: no llegó a J-Screen a tiempo');
+        if ((asleep() || state.tv.src === 'tv') && !(await ensureJ())) log.info('tele: no llegó a Fogar TV a tiempo');
       }
       return c.run(m, ctx);
     } } : c));

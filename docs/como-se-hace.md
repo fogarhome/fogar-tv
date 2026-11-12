@@ -134,7 +134,7 @@ Tamaños de la tele (se leen a 3 m): todo en `--u` (1 px de la tele de 1920×108
 (24u solo en mayúsculas con `letter-spacing` de .14em o más), barras de progreso de 8u y, si un texto puede no caber,
 `line-clamp` a 2 o 3 líneas antes que «…» a media palabra. Nada fuera del área segura (5 % del ancho, 6 % del alto) y
 sin `:hover` ni textos de teclado («Esc para…»): la tele no tiene ratón ni teclado. Como los
-estáticos se cargan al arrancar, en la tele el reposo cambia tras reiniciar `jota-screen`. Comprobar con las capturas
+estáticos se cargan al arrancar, en la tele el reposo cambia tras reiniciar `fogar-tv`. Comprobar con las capturas
 del reposo.
 
 ## Textos con el nombre de la pantalla
@@ -148,14 +148,14 @@ dueño, solo para las instrucciones del agente, como `cfg.OWNER` (`TV_OWNER`).
 ## Una variable de configuración nueva
 
 1. Leerla solo en `remote/src/core/config.js` (con su valor por defecto) y pasarla a quien la use por sus dependencias.
-   Si la usan los scripts de bash, su valor por defecto también en `jsc_load_config` (`scripts/lib.sh`).
+   Si la usan los scripts de bash, su valor por defecto también en `fogar_tv_load_config` (`scripts/lib.sh`).
 2. Documentarla, comentada y con su valor por defecto, en `config/screen.env.example` y en
    [arquitectura.md](arquitectura.md#configuración).
 3. Prueba en `test/unit/config.test.js` (y en `test/runtime.test.js` si cambia lo que se ve desde fuera).
 
 ## Control nativo de la tele por ADB
 
-Opcional: apagar y encender la tele, cambiar entre J-Screen y la tele, la cruceta y el volumen real (el de la barra de la tele).
+Opcional: apagar y encender la tele, cambiar entre Fogar TV y la tele, la cruceta y el volumen real (el de la barra de la tele).
 Sin `TV_ADB` todo sigue como antes (volumen de PipeWire).
 
 1. En la tele (Google TV): Ajustes → Sistema → Acerca de → pulsar «Compilación del SO de Android TV» 7 veces; después, en
@@ -163,14 +163,14 @@ Sin `TV_ADB` todo sigue como antes (volumen de PipeWire).
 2. En el equipo de la pantalla: `sudo apt install adb`.
 3. Con el usuario de la pantalla: `adb connect <ip-de-la-tele>:5555` y, en la tele, «¿Permitir depuración?» →
    «Permitir siempre». `adb devices` debe enseñar la tele como `device`.
-4. La entrada de J-Screen: `adb -s <ip-de-la-tele>:5555 shell dumpsys tv_input` y buscar el HDMI al que está conectado el
+4. La entrada de Fogar TV: `adb -s <ip-de-la-tele>:5555 shell dumpsys tv_input` y buscar el HDMI al que está conectado el
    equipo (`state: 0`, el `inputId` de la sesión principal), p. ej. `com.mediatek.tvinput/.hdmi.HDMIInputService/HW4`.
 5. En `screen.env`: `TV_ADB=<ip-de-la-tele>:5555` y `TV_INPUT=<inputId>`; para poner canales por número, también
    `TV_TDT=<inputId de la antena>` (el `TunerInputService`, p. ej. `com.mediatek.tvinput/.tuner.TunerInputService/HW0`).
-   `systemctl --user restart jota-screen`.
+   `systemctl --user restart fogar-tv`.
    Con la IP fija en el router (la conexión ADB va por IP). En `spotifyd.conf`, `initial_volume = 100`: el volumen de Spotify
    es el de la tele. `scripts/doctor.sh` comprueba que `adb -s $TV_ADB get-state` diga `device`.
-6. Si ha cambiado `mcp/` (herramientas nuevas para Jota): reiniciar el cliente del MCP a mano
+6. Si ha cambiado `mcp/` (herramientas nuevas para Fogar): reiniciar el cliente del MCP a mano
    (`systemctl --user restart openclaw-gateway`; deja vivos los procesos del MCP viejo) y añadir las herramientas a su skill.
 
 ## Pruebas
@@ -209,32 +209,32 @@ Si un fichero nuevo hace lo mismo, añadirlo a esa lista (corta a propósito).
 - **En la pantalla** (por ssh, con el usuario de la pantalla, en la carpeta del clon):
 
   ```
-  scripts/update.sh                 # fetch + merge --ff-only, npm ci si cambió el lock, reinicia jota-screen y doctor.sh
+  scripts/update.sh                 # fetch + merge --ff-only, npm ci si cambió el lock, reinicia fogar-tv y doctor.sh
   ```
 
   Si avisa de que cambiaron las plantillas (`systemd/`, `config/`, nginx), `scripts/install.sh`; si cambió el kiosco,
-  `sudo systemctl restart jota-screen-kiosk`. Si cambió el MCP, `(cd mcp && npm ci)`. Una variable nueva en
+  `sudo systemctl restart fogar-tv-kiosk`. Si cambió el MCP, `(cd mcp && npm ci)`. Una variable nueva en
   `config/screen.env.example` no se copia sola a `screen.env`: añadirla a mano si se quiere otro valor.
 - **Salud** tras reiniciar: `scripts/doctor.sh` (no cambia nada; sale con 1 si algo falla). Comprueba los servicios
-  (`jota-screen`, `jota-screen-mdns`, `jota-screen-spotify` si está habilitado, `jota-screen-kiosk`), «CDP conectado»
+  (`fogar-tv`, `fogar-tv-mdns`, `fogar-tv-spotify` si está habilitado, `fogar-tv-kiosk`), «CDP conectado»
   en el registro, `/api/state` con el token de `TV_STATE_DIR` (200 y `cdp:true`) y sin él (401), que el token no salga
   en el registro reciente (`--since MINUTOS`, 15 por defecto), los permisos del estado, que CDP solo escuche en
-  127.0.0.1, el alias mDNS y, con `TV_ADB`, que la tele responda por ADB. Registro: `journalctl --user -u jota-screen -f` y `journalctl -u jota-screen-kiosk -f`.
+  127.0.0.1, el alias mDNS y, con `TV_ADB`, que la tele responda por ADB. Registro: `journalctl --user -u fogar-tv -f` y `journalctl -u fogar-tv-kiosk -f`.
 - **Depurar la pantalla** a mano: `node scripts/cdp.js tabs`, `nav <url>`, `eval <js>`, `click <texto>`.
 
 ## Instalar en otra pantalla
 
 1. En el equipo nuevo (Linux con systemd y X), con el usuario que será dueño de la pantalla, clonar en cualquier carpeta:
-   `git clone https://github.com/Jota-project/jota-screen.git && cd jota-screen`.
+   `git clone https://github.com/fogarhome/fogar-tv.git && cd fogar-tv`.
 2. `scripts/install.sh --dry-run`: dice qué falta (con la línea de `sudo apt install …`) y qué haría. Instalar lo que
    falte (Node 22+, Chrome o Chromium, xinit/Xorg, x11-xserver-utils, python3; y lo opcional: avahi, PipeWire,
    spotifyd, nginx).
-3. `scripts/install.sh`: crea `~/.config/jota-screen/screen.env` desde la plantilla, la carpeta de estado, las
+3. `scripts/install.sh`: crea `~/.config/fogar-tv/screen.env` desde la plantilla, la carpeta de estado, las
    dependencias del servidor y los servicios de usuario.
-4. Editar `~/.config/jota-screen/screen.env` si hace falta (`TV_NAME`, salida de vídeo con
+4. Editar `~/.config/fogar-tv/screen.env` si hace falta (`TV_NAME`, salida de vídeo con
    `DISPLAY=:0 xrandr --query`, `TV_MDNS_NAME` distinto si ya hay otra pantalla con `mando.local` en la red, ubicación
-   del tiempo…) y `systemctl --user restart jota-screen`.
-5. Ejecutar los comandos `sudo` que enseña el instalador para el kiosco (instalar `jota-screen-kiosk.service` en
+   del tiempo…) y `systemctl --user restart fogar-tv`.
+5. Ejecutar los comandos `sudo` que enseña el instalador para el kiosco (instalar `fogar-tv-kiosk.service` en
    `/etc/systemd/system/`, `daemon-reload`, `enable --now`), o `scripts/install.sh --system` si hay sudo sin contraseña.
    Si hay nginx, también los del proxy.
 6. `scripts/doctor.sh` hasta que todo salga con ✓, y `node remote/admin-link.js` para el primer móvil admin.
@@ -254,12 +254,12 @@ En los ejemplos, el clon está en `~/tv`.
 
    ```
    cd ~/tv
-   mkdir -p ~/jota-screen-backup && chmod 700 ~/jota-screen-backup
-   tar czf ~/jota-screen-backup/estado.tgz -C ~/tv remote/token remote/devices.json remote/access.json \
-       remote/spotify.json remote/idle.json stage chrome-profile 2>/dev/null; chmod 600 ~/jota-screen-backup/estado.tgz
-   cp ~/.config/systemd/user/{tv-remote,tv-mdns,spotifyd}.service ~/jota-screen-backup/ 2>/dev/null
-   systemctl cat tv-kiosk > ~/jota-screen-backup/tv-kiosk.service
-   git rev-parse HEAD > ~/jota-screen-backup/commit          # para volver atrás
+   mkdir -p ~/fogar-tv-backup && chmod 700 ~/fogar-tv-backup
+   tar czf ~/fogar-tv-backup/estado.tgz -C ~/tv remote/token remote/devices.json remote/access.json \
+       remote/spotify.json remote/idle.json stage chrome-profile 2>/dev/null; chmod 600 ~/fogar-tv-backup/estado.tgz
+   cp ~/.config/systemd/user/{tv-remote,tv-mdns,spotifyd}.service ~/fogar-tv-backup/ 2>/dev/null
+   systemctl cat tv-kiosk > ~/fogar-tv-backup/tv-kiosk.service
+   git rev-parse HEAD > ~/fogar-tv-backup/commit          # para volver atrás
    ```
 
    (Ajustar la lista a lo que exista: `ls remote ~/tv`.)
@@ -268,31 +268,31 @@ En los ejemplos, el clon está en `~/tv`.
 3. **Crear `screen.env`** con los valores de la instalación antigua, para que todo se vea y se llame igual:
 
    ```
-   mkdir -p ~/.config/jota-screen && chmod 700 ~/.config/jota-screen
-   install -m 600 config/screen.env.example ~/.config/jota-screen/screen.env
+   mkdir -p ~/.config/fogar-tv && chmod 700 ~/.config/fogar-tv
+   install -m 600 config/screen.env.example ~/.config/fogar-tv/screen.env
    ```
 
    y descomentar en él:
    - `TV_NAME`: el nombre que tenía la pantalla (también el del altavoz de Spotify, para no perder el dispositivo en
      la app; o `TV_SPOTIFY_DEVICE` si eran distintos).
    - `TV_DISPLAY_OUTPUT` (y `TV_DISPLAY_MODE` / `TV_DISPLAY_RATE`): la salida, el modo y la frecuencia de la línea
-     `xrandr` del `kiosk-session.sh` antiguo (`git show $(cat ~/jota-screen-backup/commit):kiosk-session.sh`).
+     `xrandr` del `kiosk-session.sh` antiguo (`git show $(cat ~/fogar-tv-backup/commit):kiosk-session.sh`).
    - `TV_NET_IFACE`: la interfaz que usaba `mdns-alias.sh`, si la detección automática no sirve.
-   - `TV_PUBLIC_URL` (y el resto de `Environment=`) si la unidad `tv-remote` lo tenía (`~/jota-screen-backup/tv-remote.service`).
+   - `TV_PUBLIC_URL` (y el resto de `Environment=`) si la unidad `tv-remote` lo tenía (`~/fogar-tv-backup/tv-remote.service`).
    - `TV_SPOTIFYD` con la ruta de spotifyd si la unidad `spotifyd` lo arrancaba desde una ruta fuera del PATH. Si había
      `~/.config/spotifyd/spotifyd.conf`, se sigue usando.
    - Ubicación del tiempo (`TV_CITY`, `TV_LAT`, `TV_LON`): solo si `idle.json` no la tenía; la de `idle.json` manda.
 4. `scripts/install.sh --dry-run` para repasar y después `scripts/install.sh`: detiene y deshabilita `tv-remote`,
-   `tv-mdns` y `spotifyd`, arranca `jota-screen`, `jota-screen-mdns` y `jota-screen-spotify`, y el servidor, al arrancar,
-   **mueve** el estado a `~/.local/state/jota-screen` (o `TV_STATE_DIR`). Comprobarlo:
-   `journalctl --user -u jota-screen -b | grep 'estado:'` (rutas «movido …», nunca el contenido).
+   `tv-mdns` y `spotifyd`, arranca `fogar-tv`, `fogar-tv-mdns` y `fogar-tv-spotify`, y el servidor, al arrancar,
+   **mueve** el estado a `~/.local/state/fogar-tv` (o `TV_STATE_DIR`). Comprobarlo:
+   `journalctl --user -u fogar-tv -b | grep 'estado:'` (rutas «movido …», nunca el contenido).
 5. `scripts/doctor.sh`: el kiosco aún sale con ✗ (sigue `tv-kiosk`).
-6. **Kiosco**: ejecutar los comandos `sudo` que enseñó el instalador (instalan `jota-screen-kiosk.service`, hacen
+6. **Kiosco**: ejecutar los comandos `sudo` que enseñó el instalador (instalan `fogar-tv-kiosk.service`, hacen
    `systemctl disable --now tv-kiosk.service` y arrancan el nuevo). La pantalla se reinicia y `kiosk-session.sh` mueve
    `~/tv/chrome-profile` a `$TV_STATE_DIR/chrome-profile` (las sesiones de Netflix, YouTube… se conservan).
 7. `scripts/doctor.sh` otra vez: todo con ✓. Los móviles emparejados siguen funcionando (mismos `devices.json` y token).
    Si el MCP de OpenClaw o de Claude tenía `TV_TOKEN_FILE=~/tv/remote/token`, quitarlo (por defecto ya lee
-   `~/.local/state/jota-screen/token`) y `(cd mcp && npm ci)`. Si había un sitio de nginx propio para `mando.local`,
+   `~/.local/state/fogar-tv/token`) y `(cd mcp && npm ci)`. Si había un sitio de nginx propio para `mando.local`,
    cambiarlo por el que genera el instalador o dejarlo si apunta al mismo puerto.
 8. **Limpieza**, cuando todo lleve unos días bien: borrar `~/.config/systemd/user/{tv-remote,tv-mdns,spotifyd}.service`
    y `systemctl --user daemon-reload`; `sudo rm /etc/systemd/system/tv-kiosk.service && sudo systemctl daemon-reload`;
@@ -302,14 +302,14 @@ En los ejemplos, el clon está en `~/tv`.
 **Vuelta atrás** (antes de la limpieza):
 
 ```
-sudo systemctl disable --now jota-screen-kiosk
-systemctl --user disable --now jota-screen jota-screen-mdns jota-screen-spotify
-cd ~/tv && git checkout "$(cat ~/jota-screen-backup/commit)"     # el código antiguo (rama separada)
-S=~/.local/state/jota-screen
+sudo systemctl disable --now fogar-tv-kiosk
+systemctl --user disable --now fogar-tv fogar-tv-mdns fogar-tv-spotify
+cd ~/tv && git checkout "$(cat ~/fogar-tv-backup/commit)"     # el código antiguo (rama separada)
+S=~/.local/state/fogar-tv
 mv $S/token $S/devices.json $S/access.json $S/spotify.json $S/idle.json remote/ 2>/dev/null
 mv $S/stage ~/tv/stage; mv $S/chrome-profile ~/tv/chrome-profile
 systemctl --user enable --now tv-remote tv-mdns spotifyd
 sudo systemctl enable --now tv-kiosk
 ```
 
-(o restaurar `~/jota-screen-backup/estado.tgz` con `tar xzf … -C ~/tv` si se prefiere el estado de antes de migrar).
+(o restaurar `~/fogar-tv-backup/estado.tgz` con `tar xzf … -C ~/tv` si se prefiere el estado de antes de migrar).

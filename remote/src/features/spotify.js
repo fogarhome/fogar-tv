@@ -137,7 +137,7 @@ module.exports = function createSpotify({ cdp, cfg, log, clients, idle, tvAudio 
       }
       // spotifyd a veces sigue vivo sin sesión tras un corte de red y Spotify deja de verlo: el mando ofrece reiniciarlo (siempre a mano)
       if (a === 'restart') {
-        await new Promise((res, rej) => execFile('systemctl', ['--user', 'restart', 'jota-screen-spotify'], { timeout: 15000 }, (e, _o, se) => (e ? rej(new Error('no he podido reiniciar el altavoz: ' + String(se || e.message).trim())) : res(null))));
+        await new Promise((res, rej) => execFile('systemctl', ['--user', 'restart', 'fogar-tv-spotify'], { timeout: 15000 }, (e, _o, se) => (e ? rej(new Error('no he podido reiniciar el altavoz: ' + String(se || e.message).trim())) : res(null))));
         log.info('spotify: altavoz reiniciado desde el mando');
         return { ok: 1 };
       }

@@ -2,13 +2,13 @@
 // @ts-check
 // Qué formato lleva la capa del agente: `pill` (arriba, pequeña: lo que se ve manda) o `panel` (columna a
 // la derecha con la conversación). Función pura: talk-view.js la consulta al empezar el turno, al acabar de pintarse una
-// página nueva, cuando cambia la reproducción y cuando el usuario o Jota piden otro formato. Orden:
+// página nueva, cuando cambia la reproducción y cuando el usuario o Fogar piden otro formato. Orden:
 //   1. `override` del usuario (arrastre en la tele o en el mando) para el contenido actual
-//   2. `agentLayout`: Jota lo pidió al abrir esta página (tv_open / tv_open_app con `layout`)
+//   2. `agentLayout`: Fogar lo pidió al abrir esta página (tv_open / tv_open_app con `layout`)
 //   3. destino de contenido (app de vídeo o música, o el escenario propio) → pill, se reproduzca o no
 //   4. `playback`: un vídeo grande que avanza en cualquier web → pill (reserva)
 //   5. reposo y webs normales → panel
-// Lo automático (3, 4) solo lleva de panel a píldora: volver al panel es cosa del usuario o de Jota (o de un turno nuevo).
+// Lo automático (3, 4) solo lleva de panel a píldora: volver al panel es cosa del usuario o de Fogar (o de un turno nuevo).
 const { FORMS } = require('./agent-contract');
 
 // Apps de contenido (lo que abre tv_open_app y las de vídeo y música habituales en España). Se compara por sufijo del
@@ -23,10 +23,10 @@ const CONTENT_HOSTS = Object.freeze([
 // el usuario fuerza un formato mientras siga el mismo contenido (mismo destino, o el mismo escenario); al volver al
 // reposo o abrir otra cosa se olvida
 const OVERRIDE_SCOPE = 'content';
-// Jota pide un formato para la página que abre: vale mientras se esté en ese destino; si en este tiempo no se llega a él
+// Fogar pide un formato para la página que abre: vale mientras se esté en ese destino; si en este tiempo no se llega a él
 // (la navegación falló), se olvida
 const AGENT_LAYOUT_TTL_MS = 20000;
-// de dónde sale el formato (talk-view.js: lo automático no vuelve al panel; usuario y Jota sí)
+// de dónde sale el formato (talk-view.js: lo automático no vuelve al panel; usuario y Fogar sí)
 const FORM_SOURCES = Object.freeze(['user', 'agent', 'content', 'playback', 'default']);
 /** quién puede devolver la píldora al panel */
 const FORCED_SOURCES = Object.freeze(['user', 'agent']);
@@ -58,7 +58,7 @@ function contentEntry(url, hosts = CONTENT_HOSTS) {
 const isContent = (url, hosts) => !!contentEntry(url, hosts);
 
 /**
- * Clave del contenido para el alcance del override y de lo que pidió Jota: el reposo (`idle`), el escenario
+ * Clave del contenido para el alcance del override y de lo que pidió Fogar: el reposo (`idle`), el escenario
  * (`stage:<tipo>`), la app de contenido (su entrada de la lista, así un salto de `netflix.com` a `www.netflix.com` sigue siendo
  * lo mismo) o el host sin `www.`. '' si no hay URL.
  * @param {{ url?: any, stage?: any, idle?: boolean, hosts?: readonly string[] }} o

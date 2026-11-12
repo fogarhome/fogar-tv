@@ -1,6 +1,6 @@
 'use strict';
 // @ts-check
-// Encontrar el J Gateway: solo cuenta quien responde a /.well-known/jota-gateway con service "jota-gateway".
+// Encontrar el Fogar Gateway: solo cuenta quien responde a /.well-known/fogar-gateway con service "fogar-gateway".
 // Orden: la dirección escrita a mano (si la hay, es la única: si no responde, no se busca otra); si no, este equipo
 // (127.0.0.1 y el puerto, sin barrer otros); si no, los equipos en línea de la tailnet, en paralelo y con un plazo corto.
 const { execFile } = require('node:child_process');
@@ -27,17 +27,17 @@ function endpoints(input, port = PORT) {
 }
 
 /**
- * ¿Hay un Jota ahí? @param {string} input @param {{ port?: number, timeoutMs?: number, fetchImpl?: typeof fetch }} [o]
+ * ¿Hay un Fogar ahí? @param {string} input @param {{ port?: number, timeoutMs?: number, fetchImpl?: typeof fetch }} [o]
  * @returns {Promise<{ http: string, ws: string, host: string, name: string, version: string, pairing: boolean } | null>}
  */
 async function probe(input, { port = PORT, timeoutMs = 1500, fetchImpl = fetch } = {}) {
   const e = endpoints(input, port);
   if (!e) return null;
   try {
-    const r = await fetchImpl(`${e.http}/.well-known/jota-gateway`, { signal: AbortSignal.timeout(timeoutMs), redirect: 'error' });
+    const r = await fetchImpl(`${e.http}/.well-known/fogar-gateway`, { signal: AbortSignal.timeout(timeoutMs), redirect: 'error' });
     if (!r.ok) return null;
     const j = /** @type {any} */ (await r.json());
-    if (!j || j.service !== 'jota-gateway') return null;
+    if (!j || j.service !== 'fogar-gateway') return null;
     return { ...e, name: String(j.name || e.host).slice(0, 80), version: String(j.version || '').slice(0, 40), pairing: j.pairing === true };
   } catch { return null; }
 }

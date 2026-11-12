@@ -15,7 +15,7 @@ const AGENT_PASS = on => `window.TVAgent&&window.TVAgent.pass&&window.TVAgent.pa
  *   onLayout?: (url: string, layout: string) => void, onReload?: () => void, onNavigate?: () => void,
  *   netflix?: { isNetflix: (u: string) => boolean, open: (m: { url: string }) => Promise<any>, leave: () => Promise<void> },
  * }} deps   netflix: Netflix va en su propia pestaña (src/features/netflix.js); el resto de webs, en la de siempre
- *   onLayout: Jota pidió un formato para la conversación en la página que abre (`layout` de tv_open / tv_open_app)
+ *   onLayout: Fogar pidió un formato para la conversación en la página que abre (`layout` de tv_open / tv_open_app)
  *   onNavigate: se va a navegar (la conversación de la tele espera a que la página nueva se pinte antes de cerrarse)
  *   onReload: se volvió a cargar la página que ya se veía (abrir la misma URL o «recargar»): documento nuevo sin cambio de
  *   URL, que Chrome no avisa como cambio de página (tv_idle show en el reposo, tv_open_app en la portada de la app…)
@@ -123,7 +123,7 @@ module.exports = function createControl({ cdp, state, broadcast, key, audio, cfg
     x = Number(x); y = Number(y);
     if (!Number.isFinite(x) || !Number.isFinite(y)) return { error: 'coordenadas no válidas' };
     const base = { x, y, button: 'left', clickCount: 1 };
-    // la membrana de la conversación (tv-agent.js) recibe el puntero para arrastrarla: el clic de Jota pasa a través
+    // la membrana de la conversación (tv-agent.js) recibe el puntero para arrastrarla: el clic de Fogar pasa a través
     await cdp.call('Runtime.evaluate', { expression: AGENT_PASS(true) }).catch(() => {});
     try {
       await cdp.call('Input.dispatchMouseEvent', { type: 'mouseMoved', x, y });

@@ -1,6 +1,6 @@
 'use strict';
 // @ts-check
-// La conexión con el J Gateway, en un solo sitio: a qué gateway, con qué clave y si funciona. Para talk.js es lo mismo que
+// La conexión con el Fogar Gateway, en un solo sitio: a qué gateway, con qué clave y si funciona. Para talk.js es lo mismo que
 // el cliente (ensure, send, audio, end, cancel, on, isReady, close); por debajo cambia de cliente al cambiar la clave
 // (use/forget) sin reiniciar el servidor, y los que escuchan siguen enganchados.
 // Estados: checking (aún sin comprobar), unpaired (sin clave), ok, unreachable (no responde; la clave se conserva),

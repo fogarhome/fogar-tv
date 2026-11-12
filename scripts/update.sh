@@ -1,5 +1,5 @@
 #!/bin/bash
-# Actualiza jota-screen desde git (solo avance rápido), instala dependencias si cambian, reinicia y comprueba.
+# Actualiza fogar-tv desde git (solo avance rápido), instala dependencias si cambian, reinicia y comprueba.
 # Ver «scripts/update.sh --help».
 set -euo pipefail
 
@@ -10,7 +10,7 @@ Uso: scripts/update.sh [--from REF] [--no-doctor]
   1. git fetch del remoto y git merge --ff-only de la rama de seguimiento (o de REF, p. ej. origin/main).
      Se para sin tocar nada si hay cambios locales sin guardar o si no es un avance rápido.
   2. npm ci --omit=dev en remote/ si ha cambiado remote/package-lock.json.
-  3. Reinicia jota-screen (y avisa si cambiaron las plantillas: entonces toca scripts/install.sh).
+  3. Reinicia fogar-tv (y avisa si cambiaron las plantillas: entonces toca scripts/install.sh).
   4. Ejecuta scripts/doctor.sh.
 EOF
 }
@@ -29,10 +29,10 @@ main() {
 
   # shellcheck source=scripts/lib.sh
   . "$(dirname "$(readlink -f "$0")")/lib.sh"
-  cd "$JSC_APP_DIR"
+  cd "$FOGAR_TV_APP_DIR"
 
   if ! git diff --quiet || ! git diff --cached --quiet; then
-    echo "✗ hay cambios locales sin guardar en $JSC_APP_DIR; guárdalos o descártalos antes (git status)" >&2
+    echo "✗ hay cambios locales sin guardar en $FOGAR_TV_APP_DIR; guárdalos o descártalos antes (git status)" >&2
     exit 1
   fi
   if [ -z "$FROM" ]; then
@@ -61,18 +61,18 @@ main() {
     if ! git diff --quiet "$old" "$new" -- remote/package-lock.json; then
       echo "· remote/package-lock.json ha cambiado: npm ci --omit=dev"
       (cd remote && npm ci --omit=dev --no-audit --no-fund)
-      lock_sum=$(jsc_sha256 remote/package-lock.json)
-      printf '%s omit=dev\n' "$lock_sum" >remote/node_modules/.jota-screen-install
+      lock_sum=$(fogar_tv_sha256 remote/package-lock.json)
+      printf '%s omit=dev\n' "$lock_sum" >remote/node_modules/.fogar-tv-install
     fi
     if ! git diff --quiet "$old" "$new" -- systemd/ config/ remote/nginx-mando.conf; then
       echo "! han cambiado las plantillas (systemd/, config/ o nginx): ejecuta scripts/install.sh para aplicarlas"
     fi
     if ! git diff --quiet "$old" "$new" -- kiosk-session.sh home.html; then
-      echo "! ha cambiado el kiosco: se aplica al reiniciarlo (sudo systemctl restart jota-screen-kiosk)"
+      echo "! ha cambiado el kiosco: se aplica al reiniciarlo (sudo systemctl restart fogar-tv-kiosk)"
     fi
     if systemctl --user show-environment >/dev/null 2>&1; then
-      echo "· reinicio jota-screen"
-      systemctl --user restart jota-screen.service
+      echo "· reinicio fogar-tv"
+      systemctl --user restart fogar-tv.service
       sleep 4
     else
       echo "! no hay systemctl --user: reinicia el servidor a mano"
@@ -81,7 +81,7 @@ main() {
 
   if [ $DOCTOR = 1 ]; then
     echo
-    exec "$JSC_APP_DIR/scripts/doctor.sh"
+    exec "$FOGAR_TV_APP_DIR/scripts/doctor.sh"
   fi
 }
 

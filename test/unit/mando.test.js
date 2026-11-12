@@ -279,7 +279,7 @@ test('mando: la voz sincronizada usa el mismo reloj que el servidor (voice-sync.
   assert.deepEqual(voiceWords('Frase aún sin cerrar', 0).words, ['Frase', 'aún', 'sin', 'cerrar'], 'sin punto: lo que haya');
 });
 
-// ── formato de la conversación en la tele desde la hoja de Jota (features/talkform.js, contrato r3 §3) ──
+// ── formato de la conversación en la tele desde la hoja de Fogar (features/talkform.js, contrato r3 §3) ──
 const talkform = () => import(pathToFileURL(path.join(PUB, 'mando', 'features', 'talkform.js')).href);
 
 test('mando: los formatos de la conversación son los del contrato (agent-contract.js FORMS)', async () => {
@@ -329,7 +329,7 @@ test('mando: la velocidad del golpe es la de justo antes de soltar (deprisa, par
   assert.equal(releaseVel([{ x: 0, t: 0 }, { x: 10, t: Wn + 50 }], Wn + 50), 0);
 });
 
-test('mando: hoja de Jota: cada #id de agent.js y talkform.js existe; botón de formato accesible y tarjeta sin robar el desplazamiento', () => {
+test('mando: hoja de Fogar: cada #id de agent.js y talkform.js existe; botón de formato accesible y tarjeta sin robar el desplazamiento', () => {
   const html = fs.readFileSync(path.join(PUB, 'index.html'), 'utf8');
   const ids = new Set([...html.matchAll(/\bid="([^"]+)"/g)].map(m => m[1]));
   for (const f of ['agent.js', 'talkform.js']) {
@@ -356,7 +356,7 @@ test('mando: hoja de Jota: cada #id de agent.js y talkform.js existe; botón de 
   assert.doesNotMatch(card, /touch-action:none/);
 });
 
-/** Hoja de Jota falsa para talkForm: tarjeta, pista y botón con lo justo del DOM. */
+/** Hoja de Fogar falsa para talkForm: tarjeta, pista y botón con lo justo del DOM. */
 function fakeAgentSheet() {
   const node = extra => Object.assign({ hidden: false, attrs: {}, dataset: {}, textContent: '', setAttribute(k, v) { this.attrs[k] = String(v); },
     classList: { set: new Set(), toggle(c, on) { if (on) this.set.add(c); else this.set.delete(c); }, add(c) { this.set.add(c); }, remove(c) { this.set.delete(c); } },

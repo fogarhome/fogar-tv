@@ -1,8 +1,8 @@
 # Arquitectura
 
-jota-screen es la pantalla del ecosistema Jota: un Chrome en modo kiosco en un equipo Linux con X, en la salida de
+fogar-tv es la pantalla del ecosistema Fogar: un Chrome en modo kiosco en un equipo Linux con X, en la salida de
 vídeo que diga la configuración (una tele, un monitor, un kiosco). Su nombre visible es `TV_NAME` («Pantalla» por
-defecto). Se maneja desde un mando web en el móvil (PWA), desde el agente Jota (J Gateway) y desde Claude por el MCP
+defecto). Se maneja desde un mando web en el móvil (PWA), desde el agente Fogar (Fogar Gateway) y desde Claude por el MCP
 `tv-canvas`. Cuando nadie la usa enseña la pantalla en reposo; encima de cualquier web pueden salir Live Activities y
 avisos; el agente puede poner contenido en el escenario; la música va por Spotify (spotifyd como altavoz Connect con el
 nombre de la pantalla + Web API).
@@ -12,17 +12,17 @@ Cómo se hacen los cambios habituales: [como-se-hace.md](como-se-hace.md). Prueb
 ## Visión general
 
 ```
-  Móvil (mando PWA)                     Jota · Claude
+  Móvil (mando PWA)                     Fogar · Claude
   index.html + mando/*.js               MCP tv-canvas (mcp/server.js, stdio)
      │ /ws?t=… (órdenes JSON y puntero)    │ POST /api/cmd, GET /api/state, /api/events
      │ /pair/*  · estáticos                │ (Bearer: token maestro o de un dispositivo)
      │ LAN: mando.local (nginx) · fuera: TV_PUBLIC_URL (p. ej. Tailscale HTTPS)
      ▼                                     ▼
- ┌──────────────── servicio jota-screen · remote/server.js (Node, :8787) ────────────────┐
+ ┌──────────────── servicio fogar-tv · remote/server.js (Node, :8787) ────────────────┐
  │ transport/ (HTTP, WS) ──► commands.dispatch(m) ──► permiso ─► clamp ─► capacidad.run   │
  │ auth/ (tokens, roles, emparejar)   features/ (control, keyboard, stage, spotify, idle, talk)
  └──┬────────────────┬──────────────┬────────────────┬────────────────────┬───────────────┘
-    │ CDP :9222      │ pointer.py   │ wpctl          │ Web API Spotify    │ J Gateway (WS)
+    │ CDP :9222      │ pointer.py   │ wpctl          │ Web API Spotify    │ Fogar Gateway (WS)
     │ (127.0.0.1)    │ (XTest)      │ (PipeWire)     │ (PKCE)             │ (texto y voz)
     ▼                ▼              ▼                ▼                    ▼
  Chrome kiosco ◄── puntero X     volumen        spotifyd (TV_NAME) ──► suena por la tele
@@ -31,11 +31,11 @@ Cómo se hacen los cambios habituales: [como-se-hace.md](como-se-hace.md). Prueb
   └ cualquier web + isla tv-island.js y avisos, inyectados por CDP
 ```
 
-El kiosco es la unidad de sistema `jota-screen-kiosk` (Xorg en tty1 con `kiosk-session.sh` como el usuario de la
+El kiosco es la unidad de sistema `fogar-tv-kiosk` (Xorg en tty1 con `kiosk-session.sh` como el usuario de la
 pantalla): pone la salida y el modo (`TV_DISPLAY_*` o lo que detecte xrandr), arranca openbox y Chrome con
 `--remote-debugging-port=$TV_CDP_PORT` solo en 127.0.0.1 y el perfil en `$TV_STATE_DIR/chrome-profile`, abriendo
 `home.html#port=…&name=…[&home=…]`, que enseña la hora y salta a la página de inicio (`TV_HOME_URL`, por defecto
-`http://127.0.0.1:8787/idle.html`) en cuanto el servidor responde. `mdns-alias.sh` (unidad `jota-screen-mdns`)
+`http://127.0.0.1:8787/idle.html`) en cuanto el servidor responde. `mdns-alias.sh` (unidad `fogar-tv-mdns`)
 publica `TV_MDNS_NAME` (`mando.local`) en la interfaz de la ruta por defecto (o `TV_NET_IFACE`) y el proxy que el
 instalador genera desde `remote/nginx-mando.conf` lo lleva al puerto del servidor. Los scripts de bash comparten
 `scripts/lib.sh` (leer `screen.env`, detectar salida, modo, interfaz y Chrome, rellenar plantillas).
@@ -76,23 +76,23 @@ remote/
     control.js            nav (con `layout` opcional), links, clicktext, click, home, back, forward, reload, shot, pp, seek, fs, vol, volset
     tele.js               power, src, channel, tvkey (sin permiso, también invitados); `state.tv = {power, src}` (`on`/`off`/`null`, `j`/`tv`/`null`).
                           Sondea cada 3 s con mandos conectados y cada 15 s sin ellos; el volumen de Spotify es el de la tele. Al encenderse
-                          la tele (también con el mando original) va a J-Screen; al apagar o pasar a Tele pausa lo que suena; las órdenes que
-                          necesitan la pantalla (`withScreen`/`ensureJ`) la enciende y vuelven a J-Screen antes, 6 s como mucho
+                          la tele (también con el mando original) va a Fogar TV; al apagar o pasar a Tele pausa lo que suena; las órdenes que
+                          necesitan la pantalla (`withScreen`/`ensureJ`) la enciende y vuelven a Fogar TV antes, 6 s como mucho
     keyboard.js           key, text, field (escribir en directo), focus (aviso de foco)
     stage.js              present, show, stage, close, toast; ruta /stage/p*.html; canal /stage-ws
     spotify.js            spotify (todas las acciones), spwatch; rutas /spotify/login y /spotify/callback
     idle.js               envoltorio de remote/idle.js: activity, idle; ruta /idle/art
-    talk.js               ask, vstart, vend, vcancel, stop, hide, talkform: hablar con Jota por el J Gateway, un turno a la vez; la voz sube
+    talk.js               ask, vstart, vend, vcancel, stop, hide, talkform: hablar con Fogar por el Fogar Gateway, un turno a la vez; la voz sube
                           en directo y la respuesta vuelve por el mismo WS del mando (`talk`); suena en la tele, en el móvil o en
                           ninguno. La tele quita la conversación 5 s después del audio (o del texto, si no sonó). `stop` cancela el
                           turno en el Gateway (`cancel`) y corta el audio; `hide` solo la quita; `vstart`/`ask` con `interrupt`
-                          paran lo que haya y siguen (sin él, BUSY mientras hay turno o Jota habla). Interrumpe este servidor:
+                          paran lo que haya y siguen (sin él, BUSY mientras hay turno o Fogar habla). Interrumpe este servidor:
                           el barge-in del Gateway sigue desactivado. Las llamadas a herramientas del turno van a la tele como fichas.
                           `talkform` cambia el formato de la capa y el móvil recibe `ev:'form'`
     agent-ui.js           fichas de herramientas del agente: lista cerrada (`CARD_TOOLS`, por sufijo), `toolCard`, tipos e iconos
                           (`KINDS`); `layoutOf` (el `layout` de tv_open / tv_open_app) y `opensPage` (la herramienta pone otra página)
   src/gateway/
-    client.js             cliente WS del J Gateway: ensure, send, audio, end, cancel y eventos (partial, final, token, tool, audio, turn_end, down)
+    client.js             cliente WS del Fogar Gateway: ensure, send, audio, end, cancel y eventos (partial, final, token, tool, audio, turn_end, down)
   src/tv/ (voz)
     speaker.js            altavoz de la tele: PCM sin cabecera a `TV_SPEAKER_CMD`; onIdle cuando acaba de sonar
     talk-view.js          lo que se dice y la respuesta, pintado en la tele (píldora o panel); hide() y onHide;
@@ -126,10 +126,10 @@ remote/
     stage.css, tpl-tasks.html, tpl-reminder.html, tpl-slides.html   plantillas del escenario
 mcp/server.js             MCP tv-canvas: 26 herramientas tv_* sobre /api (TV_URL, TV_TOKEN o el token de TV_STATE_DIR)
 plugin/tv-canvas/         plugin de Claude Code: copia del MCP (scripts/sync-plugin.sh) y la skill
-config/screen.env.example plantilla de la configuración (~/.config/jota-screen/screen.env)
+config/screen.env.example plantilla de la configuración (~/.config/fogar-tv/screen.env)
 kiosk-session.sh, home.html, mdns-alias.sh   sesión X del kiosco, su portada y el alias mDNS
 scripts/                  install.sh, update.sh, doctor.sh, cdp.js (depurar por CDP), lib.sh (común), spotifyd-run.sh, sync-plugin.sh
-systemd/                  plantillas: user/jota-screen{,-mdns,-spotify}.service, system/jota-screen-kiosk.service
+systemd/                  plantillas: user/fogar-tv{,-mdns,-spotify}.service, system/fogar-tv-kiosk.service
 e2e/                      capturas con Playwright del reposo y del mando, y mando-compara.py
 test/                     contrato (servidor real aislado), unitarias y helpers (servidor, Chrome falso, fetch-spy)
 ```
@@ -194,8 +194,8 @@ talk.js ── mismo filtro de turnId/fantasma que los tokens, rearma el plazo (
    ▼
 talk-view.js ── foto completa cada ≤ 100 ms: TVAgent.render(SNAP)
       {form pill|panel, ctx idle|music|web|video, state listen|think|talk|error|done, live, night, calm, glass, colors,
-       turns: [{id, you, youFinal, jota, tools:[{id, kind, title, detail, status run|ok|fail}], error, hint, media?}], icons,
-       enter open|restore, tab? (solo la foto del cambio de pestaña), shown? {turnId: [tú, Jota]} (con tab),
+       turns: [{id, you, youFinal, fogar, tools:[{id, kind, title, detail, status run|ok|fail}], error, hint, media?}], icons,
+       enter open|restore, tab? (solo la foto del cambio de pestaña), shown? {turnId: [tú, Fogar]} (con tab),
        voice? (solo con voz: talk.js + voice-sync.js)}
       voice? = {anchors:[[ms de audio, carácter]…], rate ms/carácter, head ms sonados (negativo: aún no), upto ms recibidos,
        text largo}: la respuesta del turno actual se enseña frase a frase y se ilumina al ritmo de la voz (al móvil, igual:
@@ -233,7 +233,7 @@ talk-view.js ── foto completa cada ≤ 100 ms: TVAgent.render(SNAP)
 además de dónde sale), con este orden:
 
 1. `override` del usuario (arrastre en la tele u orden `talkform` del mando) para el contenido actual → `user`
-2. `agentLayout`: Jota lo pidió al abrir esta página (`tv_open` / `tv_open_app` con `layout: 'pill' | 'panel'`) → `agent`
+2. `agentLayout`: Fogar lo pidió al abrir esta página (`tv_open` / `tv_open_app` con `layout: 'pill' | 'panel'`) → `agent`
 3. app de contenido (`CONTENT_HOSTS`: Netflix, YouTube, Spotify, Prime Video, Disney+, Max, Movistar+, Twitch, RTVE Play,
    Atresplayer, Filmin, Apple TV…, por sufijo de host con límite de etiqueta y, si lleva ruta, de segmento) o el
    escenario propio (`stageOf(url)`: `tpl-<tipo>.html` o `stage/…`, sacado de la URL y no del estado del escenario, que
@@ -247,15 +247,15 @@ además de dónde sale), con este orden:
   mira una rejilla de `PAINT_GRID`² puntos y cuando `PAINT_MIN_POINTS` caen en contenido de verdad —imagen o vídeo con
   imagen, fondo con imagen o texto, nunca la capa ni las cajas grises de un esqueleto— dos rAF y listo; `PAINT_WAIT_MS`
   como mucho. LCP no sirve: la capa restaurada es el candidato más grande),
-  cuando cambia `playback` y cuando el usuario o Jota piden otro formato. Lo automático (3, 4) solo va de panel a
-  píldora y tras `MORPH_DELAY_MS`; volver al panel es cosa del usuario (al momento) o de Jota (tras el respiro).
+  cuando cambia `playback` y cuando el usuario o Fogar piden otro formato. Lo automático (3, 4) solo va de panel a
+  píldora y tras `MORPH_DELAY_MS`; volver al panel es cosa del usuario (al momento) o de Fogar (tras el respiro).
 - `override` vale mientras siga el mismo contenido (`OVERRIDE_SCOPE = 'content'`: misma entrada de `CONTENT_HOSTS`, mismo
-  host sin `www.`, el mismo escenario o el reposo); al cambiar de contenido se olvida. Lo de Jota vale en cuanto se llega
+  host sin `www.`, el mismo escenario o el reposo); al cambiar de contenido se olvida. Lo de Fogar vale en cuanto se llega
   a la página que abrió y mientras se siga en ese sitio; si no se llega en `AGENT_LAYOUT_TTL_MS`, se olvida.
 - Cierre: un turno con una ficha que pone otra página (`opens`: tv_open, tv_open_app, tv_present, tv_show_html,
   tv_idle show) y sin ninguna página pintada desde que empezó no se cierra hasta que se pinte (`AWAIT_PAGE_MS` como
   mucho); pintada, lo que quede del cierre normal y al menos `AFTER_PAINT_MIN_MS`. Si pasa sola a píldora, se queda
-  `PILL_DWELL_BASE_MS + 45 ms/letra`; si la cambia el usuario o Jota con el turno acabado, el cierre normal desde ahí.
+  `PILL_DWELL_BASE_MS + 45 ms/letra`; si la cambia el usuario o Fogar con el turno acabado, el cierre normal desde ahí.
   Un paso que se cancela en el respiro (se pausó) no deja la espera colgada. Abrir la URL que ya se ve (tv_idle show en el
   reposo, la portada de una app en la que ya se está) o «recargar» es un documento nuevo sin cambio de URL: `control.nav`
   avisa con `onReload` (server.js → `talkView.reset()`), porque `onPage` no lo ve.
@@ -304,7 +304,7 @@ talk-view.userForm(form) ── override del contenido actual, cambio al momento
 talk.js ── {t:'talk', ev:'form', form:'pill'|'panel', canSwitch:true|false} al móvil del intercambio
 ```
 
-- `ev:'form'` llega al empezar cada turno, en cada cambio de formato (automático, de Jota o del usuario) y al
+- `ev:'form'` llega al empezar cada turno, en cada cambio de formato (automático, de Fogar o del usuario) y al
   cerrarse la capa (`canSwitch:false`). El mando pinta con él su control
   («Ampliar en la tele» / «Hacer píldora»). Va al móvil del intercambio, como `hidden`: otro móvil con el agente completo
   puede mandar `talkform` (como `stop`) pero no ve el control. Si el móvil del intercambio se reconecta (otra conexión
@@ -360,7 +360,7 @@ caducar un dispositivo cierra su WebSocket (4001 / 4002).
 
 ## Estado persistido
 
-Todo en `TV_STATE_DIR` (por defecto `~/.local/state/jota-screen`), fuera del repo: la carpeta con 0700 y los
+Todo en `TV_STATE_DIR` (por defecto `~/.local/state/fogar-tv`), fuera del repo: la carpeta con 0700 y los
 ficheros con 0600. Los JSON se escriben con `writeJson`: atómico (temporal + `rename`) y 0600.
 
 | Fichero | Qué guarda | Quién lo escribe |
@@ -379,7 +379,7 @@ el perfil en `~/tv/chrome-profile` o `<repo>/chrome-profile`. Al arrancar, antes
 entre sistemas de ficheros, copia y borra), le pone 0600 y lo apunta en el registro sin enseñar el contenido; si ya
 existe el nuevo, deja el antiguo y lo avisa. Como busca en el `remote/` del código que arranca, hay que arrancar desde
 la misma carpeta del repo de la instalación antigua. El perfil de Chrome lo mueve `kiosk-session.sh`
-(`jsc_migrate_chrome_profile`) con la misma regla.
+(`fogar_tv_migrate_chrome_profile`) con la misma regla.
 
 En el móvil: `localStorage` (`token` del dispositivo, `cfg`, `devid`, `pname`) y la cookie `tvt`. El maestro no se
 guarda nunca en el navegador.
@@ -387,8 +387,8 @@ guarda nunca en el navegador.
 ## Configuración
 
 El servidor no lee ficheros de configuración: recibe el entorno de systemd (`EnvironmentFile=` con
-`~/.config/jota-screen/screen.env`, o `TV_CONFIG`) y `src/core/config.js` es el único que lee `process.env`. Los scripts
-de bash leen el mismo fichero con `scripts/lib.sh` (`jsc_load_config`). Todo es opcional; la lista completa, con sus
+`~/.config/fogar-tv/screen.env`, o `TV_CONFIG`) y `src/core/config.js` es el único que lee `process.env`. Los scripts
+de bash leen el mismo fichero con `scripts/lib.sh` (`fogar_tv_load_config`). Todo es opcional; la lista completa, con sus
 valores por defecto, está en [config/screen.env.example](../config/screen.env.example):
 
 - **Pantalla**: `TV_NAME` (`Pantalla`; título, textos del mando con `{{TV_NAME}}`, altavoz de Spotify),
@@ -397,10 +397,10 @@ valores por defecto, está en [config/screen.env.example](../config/screen.env.e
   de Spotify; por defecto `http://127.0.0.1:<puerto>`), `TV_ADMIN_URL` (por defecto `http://<TV_MDNS_NAME>` o, sin
   alias, `http://<equipo>.local:<puerto>`).
 - **Kiosco**: `TV_CHROME`, `TV_CDP_PORT` (9222), `TV_HOME_URL` (el reposo).
-- **Agente**: `TV_GATEWAY_URL` y `TV_GATEWAY_KEY` (J Gateway; sin URL = «Jota no está disponible.»), `TV_AGENT` (`j-assistant`), `TV_SPEAKER_CMD` (altavoz de la tele), `TV_OWNER`
+- **Agente**: `TV_GATEWAY_URL` y `TV_GATEWAY_KEY` (Fogar Gateway; sin URL = «Fogar no está disponible.»), `TV_AGENT` (`j-assistant`), `TV_SPEAKER_CMD` (altavoz de la tele), `TV_OWNER`
   (nombre del dueño en las instrucciones al agente; vacío = «el dueño»).
 - **Tele**: `TV_ADB` (`ip:5555` de la tele; vacío = sin control nativo, el volumen vuelve a ser el de PipeWire) y `TV_INPUT`
-  (id de la entrada HDMI de J-Screen); `TV_TDT` (id de la entrada de antena: canales por número; vacío = sin canales). Necesita `adb` en el equipo y la depuración USB de la tele; ver
+  (id de la entrada HDMI de Fogar TV); `TV_TDT` (id de la entrada de antena: canales por número; vacío = sin canales). Necesita `adb` en el equipo y la depuración USB de la tele; ver
   [cómo se hace](como-se-hace.md#control-nativo-de-la-tele-por-adb).
 - **Spotify**: `TV_SPOTIFY_DEVICE` (= `TV_NAME`), `TV_SPOTIFYD`, `TV_SPOTIFY_BANNER`.
 - **Tiempo**: `TV_CITY`, `TV_LAT`, `TV_LON`, `TV_TZ` (la del sistema): valores iniciales del reposo; lo guardado desde el
@@ -413,10 +413,10 @@ El MCP usa `TV_URL` (`http://127.0.0.1:8787`), `TV_TOKEN` o, si no, el fichero `
 
 | Unidad | Tipo | Qué es |
 |---|---|---|
-| `jota-screen` | usuario | servidor (`node server.js` en `remote/`) |
-| `jota-screen-mdns` | usuario | alias mDNS (`mdns-alias.sh`), si hay avahi y `TV_MDNS_NAME` |
-| `jota-screen-spotify` | usuario | spotifyd (`scripts/spotifyd-run.sh`), si hay spotifyd |
-| `jota-screen-kiosk` | sistema | Xorg en tty1 + `kiosk-session.sh` como el usuario de la pantalla |
+| `fogar-tv` | usuario | servidor (`node server.js` en `remote/`) |
+| `fogar-tv-mdns` | usuario | alias mDNS (`mdns-alias.sh`), si hay avahi y `TV_MDNS_NAME` |
+| `fogar-tv-spotify` | usuario | spotifyd (`scripts/spotifyd-run.sh`), si hay spotifyd |
+| `fogar-tv-kiosk` | sistema | Xorg en tty1 + `kiosk-session.sh` como el usuario de la pantalla |
 
 Las genera `scripts/install.sh` desde las plantillas de `systemd/` ([systemd/README.md](../systemd/README.md)).
 Sustituyen a las antiguas `tv-remote`, `tv-mdns`, `spotifyd` y `tv-kiosk`: el instalador detiene y deshabilita las
@@ -424,13 +424,13 @@ de usuario y enseña los comandos `sudo` para la del kiosco.
 
 spotifyd puede seguir vivo tras un corte de red pero sin sesión: Spotify deja de ver el altavoz y `Restart=on-failure`
 no actúa porque el proceso no termina. Cuando una acción de Spotify no encuentra el altavoz (o al abrir el panel), el
-mando muestra «Reiniciar altavoz», que hace `systemctl --user restart jota-screen-spotify` (acción `spotify` `restart`).
-Nunca se reinicia solo. A mano, lo mismo: `systemctl --user restart jota-screen-spotify`.
+mando muestra «Reiniciar altavoz», que hace `systemctl --user restart fogar-tv-spotify` (acción `spotify` `restart`).
+Nunca se reinicia solo. A mano, lo mismo: `systemctl --user restart fogar-tv-spotify`.
 
 ## Límites conocidos
 
 - `public/` se carga en memoria al arrancar y solo hasta **2 niveles de carpetas** (`public/a/b/f.js` sí,
-  `public/a/b/c/f.js` no). Cambiar algo de `public/` exige reiniciar `jota-screen`.
+  `public/a/b/c/f.js` no). Cambiar algo de `public/` exige reiniciar `fogar-tv`.
 - **Nombres de carpeta reservados** en `public/`: `api`, `pair`, `stage`, `idle`, `spotify`, `ws`, `idle-ws`,
   `stage-ws` (chocan con rutas del servidor; arrancar con una de ellas da error).
 - Los estáticos no piden token: no debe haber nada secreto en `public/`.
