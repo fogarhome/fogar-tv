@@ -99,7 +99,7 @@ const LAYOUTS = ['margen', 'zonas', 'apilada'];
 
 // en la página: las cajas visibles de cada widget. Para un texto, la caja de su tinta: en horizontal la de su texto (un
 // Range); en vertical, de la línea de base, la altura real de los glifos (measureText de un canvas), no el área de la
-// fuente, que en Fraunces es mucho más alta que las cifras. Recortada a la del elemento si este recorta (overflow hidden).
+// fuente, que es mucho más alta que las cifras. Recortada a la del elemento si este recorta (overflow hidden).
 function measure() {
   const box = r => ({ x: r.left, y: r.top, r: r.right, b: r.bottom });
   const cut = (a, c) => ({ x: Math.max(a.x, c.x), y: Math.max(a.y, c.y), r: Math.min(a.r, c.r), b: Math.min(a.b, c.b) });

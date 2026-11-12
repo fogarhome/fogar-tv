@@ -1,13 +1,13 @@
 'use strict';
 // @ts-check
-// Tokens de Jota Dusk para la tele (public/shared/tokens-tv.css). El reposo los enlaza como CSS; la isla de Live Activities
+// Tokens de Fogar para la tele (public/shared/tokens-tv.css). El reposo los enlaza como CSS; la isla de Live Activities
 // no puede: se inyecta por CDP en webs ajenas (con su propia CSP, sin acceso a nuestra red y sin tiempo para cargar nada),
 // así que el servidor le pasa el cuerpo del bloque :root como texto, delante de tv-island.js (y de la capa del agente).
 // La capa del agente lleva además sus fuentes (public/fonts/, OFL) como bytes: así se ve igual en el reposo y en una web
 // con `font-src 'none'` (FontFace desde un ArrayBuffer no pide nada a la red).
 const fs = require('node:fs');
 const path = require('node:path');
-const { FONT_SERIF, FONT_SANS } = require('./agent-contract');
+const { FONT_TEXTO } = require('./agent-contract');
 const { KINDS } = require('../features/agent-ui');
 
 // iconos de la isla por tipo de actividad (src/features/idle.js): los de las fichas del agente
@@ -16,11 +16,10 @@ const ISLAND_ICONS = JSON.stringify({ timer: KINDS.timer.icon, music: KINDS.musi
 const TOKENS = path.join('shared', 'tokens-tv.css');
 const ISLAND = 'tv-island.js';
 const AGENT = 'tv-agent.js';
-// fuentes de la capa del agente (las mismas de shared/fonts.css): la que falte en public/ no se manda (y la capa usa su
-// pila de reserva)
+// fuentes de la capa del agente (de las de shared/fonts.css, solo Figtree y su trozo latin: la capa no titula): la que
+// falte en public/ no se manda (y la capa usa su pila de reserva)
 const AGENT_FONTS = Object.freeze([
-  { family: FONT_SERIF, file: path.join('fonts', 'fraunces-latin-opsz-normal.woff2'), weight: '100 900' },
-  { family: FONT_SANS, file: path.join('fonts', 'inter-latin-wght-normal.woff2'), weight: '100 900' },
+  { family: FONT_TEXTO, file: path.join('fonts', 'figtree-latin-wght-normal.woff2'), weight: '300 900' },
 ]);
 
 /**

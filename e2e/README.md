@@ -4,14 +4,14 @@ Capturas automáticas con Playwright (y una prueba de la geometría del reposo),
 y el **mando del móvil** (`remote/public/index.html`). Sirven de red de seguridad visual: se saca una tanda antes de un
 cambio, otra después, y se comparan.
 
-Tienen su propio `package.json` (Playwright y la fuente Fraunces) para no cargar las dependencias de la raíz ni las del
+Tienen su propio `package.json` (Playwright) para no cargar las dependencias de la raíz ni las del
 servidor con un navegador.
 
 ## Instalar
 
 ```sh
 cd e2e
-npm ci                                    # instala playwright y @fontsource-variable/fraunces
+npm ci                                    # instala playwright
                                           # y descarga Chromium (postinstall: playwright install chromium)
 npx playwright install-deps chromium      # solo la primera vez en Linux: bibliotecas del sistema (pide sudo)
 ```
@@ -23,8 +23,8 @@ El mando arranca el servidor real (`test/helpers/server.js`), así que necesita 
 ```
 
 Para usar otro navegador ya instalado en vez del de Playwright: `CHROME=/ruta/a/chrome` en cualquiera de los dos scripts
-(y `npm ci --ignore-scripts` para no descargar Chromium). Para que la fuente del reposo salga igual que en la tele,
-conviene tener Inter instalada en el sistema (Fraunces la sirve el propio script).
+(y `npm ci --ignore-scripts` para no descargar Chromium). Las fuentes (Unbounded y Figtree) salen de `remote/public/fonts`,
+como en la tele.
 
 ## Reposo
 

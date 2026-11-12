@@ -28,7 +28,7 @@
 // Fuentes: las suyas (FontFace desde los bytes de __TV_FONTS, con nombre propio), igual en el reposo que en cualquier web.
 // Reglas de la capa:
 // - Como tv-island.js: shadow DOM, solo createElement/createElementNS/textContent (Trusted Types) y estilos en una hoja
-//   construida (la CSP del reposo bloquea <style>); los tokens de Jota Dusk llegan en __TV_TOKENS.
+//   construida (la CSP del reposo bloquea <style>); los tokens de Fogar para la tele llegan en __TV_TOKENS.
 // - render() hace un diff por clave (turn.id, índice de palabra, tool.id): lo que ya está no se recrea, así las animaciones
 //   de entrada no se reinician con cada foto.
 // - Un solo requestAnimationFrame: primero LEE (cajas) y luego ESCRIBE (geometría y radios del cristal); se para cuando la
@@ -133,13 +133,10 @@
     calm: { out: 150, travel: 550, overlap: 200, in: 200, blur: 0 },
     ease: 'cubic-bezier(.32,.72,0,1)', // la de --tv-ease (WAAPI no lee variables CSS)
   };
-  // fuentes propias de la capa (src/tv/agent-contract.js): primero las registradas aquí, luego la misma reserva en todas
-  // partes. Sin Inter vendorizada, la de palo seco cae en la del sistema también en el reposo (que sí tiene Inter): así no
-  // salta al navegar
-  const FONT_SERIF = 'TV Fraunces';
-  const FONT_SANS = 'TV Inter';
-  const SERIF_STACK = `"${FONT_SERIF}","Fraunces",Georgia,serif`;
-  const SANS_STACK = `"${FONT_SANS}",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif`;
+  // fuente propia de la capa (src/tv/agent-contract.js): primero la registrada aquí, luego la misma reserva en todas
+  // partes. La capa solo lee y opera (Figtree): Unbounded titula y aquí no hay titulares
+  const FONT_TEXTO = 'TV Figtree';
+  const TEXTO_STACK = `"${FONT_TEXTO}","Figtree",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif`;
   // animaciones de entrada: al acabar, su elemento queda marcado (.sd) y no se repiten
   const ENTRY_ANIMS = new Set(['wIn', 'wInCalm', 'fadeIn', 'bud', 'draw']);
   const CHECK_D = 'M5 12.5l4.5 4.5L19 7.5';
@@ -175,14 +172,14 @@
   const NO_BACKDROP = [...Object.entries(LOOK.tiers).filter(([, v]) => !v.filter).map(([k]) => `.w[data-tier=${k}] .body`), '.w[data-night] .body'].join(',');
   const STYLE = `
 :host{all:initial;${TOK};
-  --tv-serif:${SERIF_STACK};--tv-sans:${SANS_STACK};
+  --tv-letra-texto:${TEXTO_STACK};
   --u:min(calc(100vw / 1920), calc(100vh / 1080));
   /* área segura contra el sobrebarrido: al menos 5 % del ancho y 6 % del alto */
   --mx:max(${u(SAFE.x.u)}, ${SAFE.x.pct}vw);--my:max(${u(SAFE.y.u)}, ${SAFE.y.pct}vh)}
 .w{--la:${LOOK.orb[0]};--lb:${LOOK.orb[1]};--sheet:${LOOK.sheet};--tint:${LOOK.ctx.idle.tint};--br:${LOOK.ctx.idle.bright};
   --blur:${u(LOOK.tiers.A.blur)};--sat:${LOOK.tiers.A.sat};
   --t-main:${TXT.day.main};--t-you:${TXT.day.you};--t-soft:${TXT.day.soft};--t-old:${TXT.day.old};--warn:${LOOK.warn};--ink:${LOOK.ink};
-  font-family:var(--tv-sans);color:var(--t-main);-webkit-font-smoothing:antialiased}
+  font-family:var(--tv-letra-texto);color:var(--t-main);-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
 ${Object.entries(LOOK.ctx).map(([k, v]) => `.w[data-ctx=${k}]{--tint:${v.tint};--br:${v.bright}}`).join('\n')}
 ${Object.entries(LOOK.tiers).map(([k, v]) => `.w[data-tier=${k}]{--blur:${u(v.blur)};--sat:${v.sat}${v.tint != null ? `;--tint:${v.tint}` : ''}}`).join('\n')}
 .w[data-night]{--sheet:${LOOK.night.sheet};--tint:${LOOK.night.tint};
@@ -234,15 +231,15 @@ ${NO_BACKDROP}{-webkit-backdrop-filter:none;backdrop-filter:none}
 .w[data-form=pill] .tn:not(:last-child){display:none}
 .tn{display:flex;flex-direction:column;gap:${u(14)};min-width:0}
 .u,.j,.hint{margin:0;overflow-wrap:anywhere}
-.u{font:380 ${u(32)}/1.25 var(--tv-serif);font-variation-settings:'opsz' 36;color:var(--t-you)}
-.j{font:400 ${u(44)}/1.18 var(--tv-serif);font-variation-settings:'opsz' 36;color:var(--t-main);text-wrap:pretty}
+.u{font:400 ${u(32)}/1.3 var(--tv-letra-texto);color:var(--t-you)}
+.j{font:500 ${u(44)}/1.2 var(--tv-letra-texto);color:var(--t-main);text-wrap:pretty}
 .j.sm{font-size:${u(38)}}
 .w[data-form=pill] .j{font-size:${u(40)}}
 .w[data-form=pill] .u{font-size:${u(30)}}
 .u:empty,.j:empty,.hint:empty{display:none}
-.hint{font:400 ${u(26)}/1.3 var(--tv-sans);color:var(--t-soft)}
+.hint{font:400 ${u(26)}/1.3 var(--tv-letra-texto);color:var(--t-soft)}
 /* lo que hace Fogar, en palabras, junto al orbe (a 3 m el orbe solo no se distingue; en calma, sin satélite, es lo único) */
-.st{font:400 ${u(26)}/1.3 var(--tv-sans);color:var(--t-soft);margin-left:${u(20)};white-space:nowrap}
+.st{font:400 ${u(26)}/1.3 var(--tv-letra-texto);color:var(--t-soft);margin-left:${u(20)};white-space:nowrap}
 .st:empty{display:none}
 /* el turno anterior se atenúa por color, nunca por opacidad */
 .tn:not(:last-child) :is(.u,.j,.hint){color:var(--t-old)}
@@ -278,7 +275,7 @@ ${BREATHE_STATES.map(k => `.w[data-state=${k}] .orbe`).join(',')}{animation:brea
 .w[data-state=think] .orbe::after{opacity:1;animation:sat 3.1s linear infinite}
 .w[data-form=pill][data-state=think] .orbe::after{animation-name:sat2}
 .w[data-state=error] .orbe::before{content:"!";position:absolute;inset:0;display:grid;place-items:center;z-index:2;
-  font:500 ${u(28)}/1 var(--tv-sans);color:var(--ink)}
+  font:500 ${u(28)}/1 var(--tv-letra-texto);color:var(--ink)}
 .w[data-state=error] .orbe i{background:radial-gradient(circle at 34% 28%,${LOOK.warnOrb[0]},var(--warn) 60%,${LOOK.warnOrb[1]});
   box-shadow:0 0 0 ${u(6)} color-mix(in srgb,var(--warn) 25%,transparent)}
 .w[data-night] .orbe i{background:radial-gradient(circle at 34% 28%,${LOOK.night.orb[0]},${LOOK.night.orb[1]} 70%);box-shadow:none}
@@ -297,8 +294,8 @@ ${BREATHE_STATES.map(k => `.w[data-state=${k}] .orbe`).join(',')}{animation:brea
 .ic{width:${u(52)};height:${u(52)};border-radius:${u(16)};background:color-mix(in srgb,var(--t-you) 14%,transparent);display:grid;place-items:center}
 .ic svg{width:${u(30)};height:${u(30)};stroke:var(--tv-accent);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .tx{min-width:0}
-.tt{font:500 ${u(28)}/1.2 var(--tv-sans);color:var(--t-main);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.tb{font:400 ${u(26)}/1.25 var(--tv-sans);color:var(--t-soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tt{font:500 ${u(28)}/1.2 var(--tv-letra-texto);color:var(--t-main);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tb{font:400 ${u(26)}/1.25 var(--tv-letra-texto);color:var(--t-soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tb:empty{display:none}
 .ss{width:${u(30)};height:${u(30)};justify-self:end;display:grid;place-items:center}
 .spin{box-sizing:border-box;width:100%;height:100%;border-radius:50%;border:${u(3)} solid color-mix(in srgb,var(--t-you) 25%,transparent);
@@ -310,7 +307,7 @@ ${BREATHE_STATES.map(k => `.w[data-state=${k}] .orbe`).join(',')}{animation:brea
 @keyframes draw{from{stroke-dashoffset:1}}
 .w[data-calm] .ss path{animation:none}
 .x{display:grid;place-items:center;width:100%;height:100%;border-radius:50%;background:var(--warn);color:var(--ink);
-  font:500 ${u(24)}/1 var(--tv-sans)}
+  font:500 ${u(24)}/1 var(--tv-letra-texto)}
 /* ficha pequeña: la anterior del turno, las de turnos anteriores y todas en la píldora (sin detalle) */
 .tcs>.tc:not(:last-child),.tn:not(:last-child) .tc,.w[data-form=pill] .tc{grid-template-columns:${u(36)} auto ${u(30)};
   width:auto;max-width:100%;padding:${u(8)} ${u(18)} ${u(8)} ${u(10)};border-radius:${u(999)}}
@@ -320,7 +317,7 @@ ${BREATHE_STATES.map(k => `.w[data-state=${k}] .orbe`).join(',')}{animation:brea
 .w[data-form=pill] .tcs{margin-bottom:${u(12)}}
 /* en la píldora la ficha dice lo concreto («Netflix») si lo hay, no lo genérico («Abrir en la tele») */
 .w[data-form=pill] .tc[data-d] .tt{display:none}
-.w[data-form=pill] .tc[data-d] .tb{display:block;font:500 ${u(26)}/1.2 var(--tv-sans);color:var(--t-main)}
+.w[data-form=pill] .tc[data-d] .tb{display:block;font:500 ${u(26)}/1.2 var(--tv-letra-texto);color:var(--t-main)}
 .w[data-form=pill] .tt{font-size:${u(26)}}
 .w[data-night] .ic svg,.w[data-night] .ss svg{stroke:var(--t-main)}
 .w[data-night] .spin{border-top-color:var(--t-main)}
@@ -340,17 +337,17 @@ ${BREATHE_STATES.map(k => `.w[data-state=${k}] .orbe`).join(',')}{animation:brea
   background:linear-gradient(to top,rgba(${LOOK.media.shade},${LOOK.media.fade[0]}) 0%,rgba(${LOOK.media.shade},${LOOK.media.fade[1]}) 38%,rgba(${LOOK.media.shade},0) 72%)}
 .mp::before{content:"";grid-area:1/1;padding-top:75%}
 .mpc{grid-area:1/1;align-self:end;position:relative;z-index:1;margin:${u(176)} ${u(30)} ${u(26)};display:flex;flex-direction:column;gap:${u(12)}}
-.mk{display:flex;align-items:center;gap:${u(10)};font:600 ${u(24)}/1 var(--tv-sans);letter-spacing:.14em;text-transform:uppercase;color:var(--t-soft)}
+.mk{display:flex;align-items:center;gap:${u(10)};font:600 ${u(24)}/1 var(--tv-letra-texto);letter-spacing:.14em;text-transform:uppercase;color:var(--t-soft)}
 .mk i{width:${u(10)};height:${u(10)};border-radius:50%;background:${LOOK.media.red};box-shadow:0 0 ${u(12)} ${LOOK.media.red}}
-.mt{font:420 ${u(44)}/1.05 var(--tv-serif);font-variation-settings:'opsz' 36;color:var(--t-main);letter-spacing:-.01em;
+.mt{font:600 ${u(44)}/1.08 var(--tv-letra-texto);color:var(--t-main);letter-spacing:-.01em;
   display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
 .mr{display:flex;align-items:center;gap:${u(18)};min-width:0}
 .ms{position:relative;flex:none;width:${u(168)};aspect-ratio:16/9;border-radius:${u(12)};overflow:hidden;
   background:color-mix(in srgb,var(--t-you) 14%,transparent);box-shadow:0 0 0 .5px rgba(255,255,255,.12)} /* filo fino, ver .body */
 .mx{min-width:0;display:flex;flex-direction:column;gap:${u(6)}}
 /* textos de lectura: nunca por debajo de 26u (24u solo en mayúsculas espaciadas, como .mk); el episodio en 2 líneas */
-.msub{font:500 ${u(26)}/1.2 var(--tv-sans);color:var(--t-main);display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere}
-.mleft{font:400 ${u(26)}/1.2 var(--tv-sans);color:var(--t-soft);white-space:nowrap}
+.msub{font:500 ${u(26)}/1.2 var(--tv-letra-texto);color:var(--t-main);display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere}
+.mleft{font:400 ${u(26)}/1.2 var(--tv-letra-texto);color:var(--t-soft);white-space:nowrap}
 .msub:empty,.mleft:empty{display:none}
 .mbar{display:block;height:${u(8)};border-radius:${u(4)};background:rgba(246,243,240,.2);overflow:hidden}
 .mbar i{display:block;height:100%;background:${LOOK.media.red};transform-origin:left;transition:transform .8s var(--tv-ease)}
@@ -358,7 +355,7 @@ ${BREATHE_STATES.map(k => `.w[data-state=${k}] .orbe`).join(',')}{animation:brea
 .mplay{position:absolute;z-index:1;left:50%;top:${u(104)};width:${u(96)};height:${u(96)};margin:${u(-48)} 0 0 ${u(-48)};border-radius:50%;
   background:rgba(${LOOK.media.shade},${LOOK.media.play});box-shadow:0 0 0 ${u(2.5)} rgba(246,243,240,.9);backdrop-filter:blur(${u(8)});
   transition:transform .35s var(--tv-ease),background .35s var(--tv-ease)}
-.mplay i{position:absolute;left:54%;top:50%;transform:translate(-50%,-50%);border-style:solid;border-color:transparent transparent transparent #f6f3f0;
+.mplay i{position:absolute;left:54%;top:50%;transform:translate(-50%,-50%);border-style:solid;border-color:transparent transparent transparent #ece6dc;
   border-width:${u(17)} 0 ${u(17)} ${u(28)}}
 .mplay::after{content:"";position:absolute;inset:0;border-radius:50%;box-shadow:0 0 0 ${u(2)} rgba(246,243,240,.8);opacity:0}
 .md[data-press] .mplay{transform:scale(.9);background:${LOOK.media.red}}
@@ -442,7 +439,7 @@ ${BREATHE_STATES.map(k => `.w[data-state=${k}] .orbe`).join(',')}{animation:brea
         if (!f || typeof f.family !== 'string' || typeof f.data !== 'string' || typeof FontFace !== 'function') continue;
         const bin = atob(f.data), buf = new Uint8Array(bin.length);
         for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
-        // 'block': sin texto un instante antes que Georgia y luego Fraunces (se nota al restaurar tras navegar)
+        // 'block': sin texto un instante antes que la del sistema y luego Figtree (se nota al restaurar tras navegar)
         const face = new FontFace(f.family, buf, { weight: typeof f.weight === 'string' ? f.weight : 'normal', style: 'normal', display: 'block' });
         document.fonts.add(face);
         face.load().catch(() => {});

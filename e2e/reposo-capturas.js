@@ -1,7 +1,7 @@
 // Capturas de la pantalla en reposo (remote/public/idle.html) con datos de ejemplo, sin servidor ni tele.
 // Uso: cd e2e && npm install && node reposo-capturas.js [carpeta-salida]   (CHROME=/ruta para otro navegador)
 // Saca cada distribución en sus tres escenas, más sin música, título largo, tarde y noche, a 1920×1080.
-// Fraunces e Inter salen de remote/public/fonts (shared/fonts.css), como en la tele.
+// Figtree y Unbounded salen de remote/public/fonts (shared/fonts.css), como en la tele.
 'use strict';
 const { chromium } = require('playwright');
 const http = require('http'), fs = require('fs'), path = require('path');

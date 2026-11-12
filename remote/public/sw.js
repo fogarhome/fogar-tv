@@ -2,10 +2,10 @@
 // si al abrir el mando la red no llega a la pantalla (fuera de casa, el servidor caído), en vez de la página de error del
 // navegador sale offline.html, con la marca y un «Reintentar». No guarda el mando ni la API: todo lo demás va a la red
 // tal cual (el mando cambia con cada versión y lo de la tele tiene que ser de ahora).
-const CACHE = 'mando-offline-1';
+const CACHE = 'mando-offline-2';
 const OFFLINE = '/offline.html';
 const KEEP = [OFFLINE, '/mando/theme.js', '/shared/fonts.css', '/shared/tokens-mando.css', '/mando/styles/mando.css',
-  '/fonts/fraunces-latin-opsz-normal.woff2', '/fonts/inter-latin-wght-normal.woff2', '/icon-192.png'];
+  '/fonts/unbounded-latin-wght-normal.woff2', '/fonts/figtree-latin-wght-normal.woff2', '/icon-192.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(KEEP)).then(() => self.skipWaiting()));

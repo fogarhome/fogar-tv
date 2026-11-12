@@ -468,8 +468,7 @@ test('servidor y página comparten los enumerados de la foto (src/tv/agent-contr
   assert.deepEqual(val('ENTERS'), [...C.ENTERS]);
   assert.deepEqual(['auto', ...val('TIERS')], [...C.GLASS]);
   assert.deepEqual(Object.keys(lookOf(SRC).ctx).sort(), [...C.CTXS].sort(), 'contextos: los de LOOK.ctx');
-  assert.equal(val('FONT_SERIF'), C.FONT_SERIF);
-  assert.equal(val('FONT_SANS'), C.FONT_SANS);
+  assert.equal(val('FONT_TEXTO'), C.FONT_TEXTO);
   assert.ok(!/\bconst (FORMS|STATES|CTXS|GLASS|COLOR_RE) =/.test(VIEW_SRC), 'talk-view.js no lleva copias: las toma del módulo');
 });
 
@@ -583,17 +582,17 @@ test('sin documentElement (script de documento nuevo): espera a que exista y pin
 
 test('fuentes: __TV_FONTS se registra una vez con FontFace desde los bytes, con el nombre propio de la capa', () => {
   const faces = [];
-  const p = loadPage('var __TV_FONTS=[{family:"TV Fraunces",weight:"100 900",data:"AAEC"},{family:7}];\n' + SRC, win => {
+  const p = loadPage('var __TV_FONTS=[{family:"TV Figtree",weight:"300 900",data:"AAEC"},{family:7}];\n' + SRC, win => {
     win.atob = b => Buffer.from(b, 'base64').toString('binary');
     win.FontFace = class { constructor(f, buf, d) { Object.assign(this, { family: f, bytes: [...buf], d }); } load() { return Promise.resolve(this); } };
     win.document.fonts = { add: f => faces.push(f) };
   });
   assert.equal(faces.length, 1, 'la mal formada se ignora');
-  assert.deepEqual([faces[0].family, faces[0].bytes, faces[0].d.weight], ['TV Fraunces', [0, 1, 2], '100 900']);
+  assert.deepEqual([faces[0].family, faces[0].bytes, faces[0].d.weight], ['TV Figtree', [0, 1, 2], '300 900']);
   p.win.TVAgent.render(snap());
   const css = p.host().shadowRoot.adoptedStyleSheets[0].css;
-  assert.match(css, /--tv-serif:"TV Fraunces","Fraunces",Georgia,serif/);
-  assert.match(css, /--tv-sans:"TV Inter",system-ui/, 'misma reserva de palo seco en todas partes (sin «Inter» suelta)');
+  assert.match(css, /--tv-letra-texto:"TV Figtree","Figtree",system-ui/, 'misma reserva en todas partes');
+  assert.doesNotMatch(css, /Fraunces|Inter|Georgia/);
 });
 
 // ── Ronda 3: arrastre con el puntero de la tele (solo la membrana) y aviso al servidor por el binding

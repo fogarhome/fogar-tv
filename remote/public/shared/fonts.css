@@ -1,5 +1,9 @@
-/* Fuentes de Jota Dusk servidas por el propio mando (public/fonts/, OFL): sin Google Fonts, la página pinta sin esperar a
-   internet y sale igual sin él. Los nombres son los de --serif/--tv-serif y --sans/--tv-sans. La capa del agente no usa
-   este fichero: lleva los mismos bytes con FontFace (src/tv/tokens.js), porque se inyecta en webs ajenas. */
-@font-face{font-family:"Fraunces";src:url(/fonts/fraunces-latin-opsz-normal.woff2) format("woff2");font-weight:100 900;font-style:normal;font-display:swap}
-@font-face{font-family:"Inter";src:url(/fonts/inter-latin-wght-normal.woff2) format("woff2");font-weight:100 900;font-style:normal;font-display:swap}
+/* Fuentes de Fogar (fogar-brand/fuentes, OFL) servidas por la propia tele en public/fonts/: sin Google Fonts, la página
+   pinta sin esperar a internet y sale igual sin él. Unbounded solo titula; Figtree hace el resto, también las cifras.
+   Los nombres son los de --titular/--tv-titular y --texto/--tv-texto. Cada una en dos trozos (latin y latin-ext, los
+   rangos de fontsource 5.3.0): el navegador solo baja el segundo si hace falta. La capa del agente no usa este fichero:
+   lleva el trozo latin con FontFace (src/tv/tokens.js), porque se inyecta en webs ajenas. */
+@font-face{font-family:"Unbounded";src:url(/fonts/unbounded-latin-ext-wght-normal.woff2) format("woff2");font-weight:200 900;font-style:normal;font-display:swap;unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"Unbounded";src:url(/fonts/unbounded-latin-wght-normal.woff2) format("woff2");font-weight:200 900;font-style:normal;font-display:swap;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Figtree";src:url(/fonts/figtree-latin-ext-wght-normal.woff2) format("woff2");font-weight:300 900;font-style:normal;font-display:swap;unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"Figtree";src:url(/fonts/figtree-latin-wght-normal.woff2) format("woff2");font-weight:300 900;font-style:normal;font-display:swap;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}

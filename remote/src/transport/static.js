@@ -8,7 +8,7 @@ const crypto = require('node:crypto');
 const { TYPES, send } = require('./http-util');
 
 // el mando: su CSS y su JS van en ficheros (mando/styles/mando.css, mando/theme.js, mando/app.js), así que nada en línea;
-// las fuentes de Jota Dusk (Fraunces, Inter) también son nuestras (public/fonts, shared/fonts.css), como en el reposo
+// las fuentes de Fogar (Unbounded, Figtree) también son nuestras (public/fonts, shared/fonts.css), como en el reposo
 const CSP = "default-src 'self'; style-src 'self'; font-src 'self'; script-src 'self'; " +
   "connect-src 'self' ws: wss:; img-src 'self' data: https://*.scdn.co https://*.spotifycdn.com; media-src 'self' data: blob:; manifest-src 'self'; base-uri 'none'; " +
   "form-action 'none'; object-src 'none'; frame-ancestors 'none'";
