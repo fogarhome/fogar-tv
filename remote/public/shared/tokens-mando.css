@@ -21,7 +21,7 @@
   --play-shadow:none;
   --contra:#7cc792;   /* la línea viva al escuchar y pensar (fogar-brand) */
   /* voz: velo sobre el mando y luces más intensas; ahora suena: fondo más hondo y luces de la carátula al 40 % */
-  --veil:linear-gradient(180deg,rgba(11,16,18,.86),rgba(11,16,18,.72) 60%,rgba(11,16,18,.6));--vz-a:.32;--vz-b:.28;
+  --veil:linear-gradient(180deg,rgba(11,16,18,.86),rgba(11,16,18,.72) 60%,rgba(11,16,18,.6));--vz-a:.6;--vz-b:.5;   /* niebla y rescoldo son oscuras: más opacas para que se vea crecer al pensar */
   --sp-bg:#070b0c;--sp-orb:.4;--sp-track:rgba(236,230,220,.18);
   /* escribir en la tele: la miniatura es una tele (siempre noche y hueso-tele) y la barra va pegada al teclado del móvil */
   --tv:#070b0c;--tv-text:#d6cfc5;--tv-ink:#d6cfc5;--tv-field:rgba(236,230,220,.12);--kbd:#0e1416;--kbd-text:#8b969f;

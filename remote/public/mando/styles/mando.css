@@ -383,7 +383,7 @@ a.bt{text-decoration:none}
 .nm2 b{font:600 15px/1.2 var(--texto);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .app2 .dot,.app2 .dot.ok,.app2 .dot.bad{width:7px;height:7px;box-shadow:none}
 .now2{min-height:18px;margin-top:-4px;display:flex}
-.sub2{display:flex;align-items:center;gap:8px;min-width:0;font-size:13px;line-height:1.35;color:var(--text-soft);transition:opacity .5s ease,transform .6s var(--ease)}
+.sub2{flex:1;display:flex;align-items:center;gap:8px;min-width:0;font-size:13px;line-height:1.35;color:var(--text-soft);transition:opacity .5s ease,transform .6s var(--ease)}
 .sub2.out{opacity:0;transform:translateY(4px);transition-duration:.3s}
 .thumb2{width:12px;height:12px;border-radius:4px;flex:none;background:linear-gradient(135deg,var(--ca),var(--cb) 75%)}
 #t1{color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:0 1 auto}
@@ -421,7 +421,7 @@ a.bt{text-decoration:none}
 .srcP[data-src=tv] .kF,.srcP[data-src=tv] .sLj{opacity:0}
 .srcP[data-src=tv] .sLj{filter:blur(2px)}
 .srcP[data-src=tv] .kT,.srcP[data-src=tv] .sLt{opacity:1;filter:none}
-.srcP.busy .sL{opacity:.55}
+.srcP.busy[data-src=j] .sLj,.srcP.busy[data-src=tv] .sLt{opacity:.55}   /* solo el nombre a la vista */
 /* Fogar, arriba y solo asistente (A3): la línea en reposo dibuja la palabra con la brasa en la «r»; escuchando, la misma
    cabecera sigue tu voz y dice lo que entiende, sin cambiar de alto (el trackpad y el volumen no se mueven) */
 .fogar2{width:100%;height:74px;display:flex;align-items:center;gap:16px;padding:0 0 4px;border:0;border-bottom:1px solid var(--line);border-radius:0;background:transparent;color:var(--text);font:inherit;text-align:left;cursor:pointer;touch-action:manipulation}
