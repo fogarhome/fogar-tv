@@ -44,7 +44,7 @@ test('los velos y brillos del contexto viven solo en LOOK (no hay copias sueltas
   const i = SRC.indexOf('// @look:fin');
   assert.ok(i > 0);
   const rest = SRC.slice(i);
-  for (const v of ['0.76', '0.88', '0.90', '0.97', '#a39cad', '#6e6e6e', '#0c0c0c', '#2a2233', '#ddd6d0'])
+  for (const v of ['0.76', '0.88', '0.90', '0.97', '#8b969f', '#6e6e6e', '#0c0c0c', '#1a2325', '#d6cfc5'])
     assert.ok(!rest.includes(v) && !rest.includes(v.replace(/^0\./, '.')), `«${v}» aparece fuera de LOOK`);
 });
 

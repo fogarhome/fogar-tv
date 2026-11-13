@@ -58,7 +58,7 @@
   // (entre las marcas) y comprueba el contraste en el peor fondo: si cambias un valor, la prueba lo vigila.
   // @look:inicio
   const LOOK = {
-    sheet: '#2a2233',              // tinta de la lámina (día)
+    sheet: '#1a2325',              // tinta de la lámina (día): la superficie de Fogar
     ctx: {                         // por contexto: brillo del fondo bajo el cristal y velo de tinta encima
       idle: { bright: 0.6, tint: 0.76 },
       music: { bright: 0.6, tint: 0.76 },
@@ -78,17 +78,17 @@
     card: { fill: '#ffffff', alpha: 0.05 }, // fondo de las fichas
     prov: 0.8,                     // opacidad de la palabra provisional de lo que dices
     text: {
-      day: { main: '#ddd6d0', you: '#c3b7e3', soft: '#d0c9d9', old: '#a39cad' },
+      day: { main: '#d6cfc5', you: '#b8bec2', soft: '#a3acb3', old: '#8b969f' }, // hueso-tele, y los grises del mando
       night: { main: '#8a8a8a', you: '#808080', soft: '#808080', old: '#6e6e6e' },
     },
     warn: '#e3a46f',               // ámbar de los fallos (también la línea, recta, cuando algo falla)
-    ink: '#14101a',                // tinta del «!» sobre ámbar de la ficha: ≥ 3:1
-    lights: ['#7c6aae', '#6e8cc4'], // malva y cielo de los brillos sin carátula (hasta la fase 4)
+    ink: '#0b1012',                // tinta del «!» sobre ámbar de la ficha: ≥ 3:1
+    lights: ['#20332a', '#5a1a10'], // niebla y rescoldo de los brillos sin carátula (LUZ.sin de idle-app.js)
     // la línea viva (fogar-brand): hueso-tele en reposo, contra al escuchar, pensar y usar una herramienta, y la llama al
     // hablar (chispa, llama y ascua de arriba abajo). `foco`: su luz, debajo del cristal, como mucho al 42 %
     line: { rest: '#d6cfc5', contra: '#7cc792', speak: ['#ffe1b8', '#ee6a2c', '#b8361a'], foco: 0.42 },
     media: {                       // tarjeta de contenido (Netflix): su rojo y la tinta del degradado de lectura sobre la imagen
-      red: '#e50914', redOn: '#ff2a35', shade: '16,12,22', fade: [0.95, 0.78], play: 0.45,
+      red: '#e50914', redOn: '#ff2a35', shade: '11,16,18', fade: [0.95, 0.78], play: 0.45,
     },
   };
   // @look:fin
@@ -219,7 +219,7 @@ ${Object.entries(LOOK.tiers).map(([k, v]) => `.w[data-tier=${k}]{--blur:${u(v.bl
 .body{pointer-events:auto;cursor:grab;touch-action:none}
 .body.off,.w[data-pass] .body{pointer-events:none}
 .w[data-drag] .body{cursor:grabbing}
-.halo{box-shadow:0 ${u(2)} ${u(6)} rgba(10,6,16,.35),0 ${u(30)} ${u(70)} ${u(-18)} rgba(10,6,16,.6)}
+.halo{box-shadow:0 ${u(2)} ${u(6)} rgba(5,8,9,.35),0 ${u(30)} ${u(70)} ${u(-18)} rgba(5,8,9,.6)}
 /* sobre una web clara la sombra entera deja un borrón alrededor del cristal: ahí, a un cuarto */
 .w[data-ctx=web] .halo:not(.off){opacity:.25}
 .body{overflow:hidden;background:color-mix(in srgb,var(--sheet) calc(var(--tint) * 100%),transparent);

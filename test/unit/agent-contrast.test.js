@@ -69,7 +69,7 @@ test('LOOK tiene los valores fijados en el contrato', () => {
   assert.equal(LOOK.ctx.idle.bright, 0.6); assert.equal(LOOK.ctx.web.bright, 0.5);
   assert.equal(LOOK.tiers.A.blur, 42); assert.equal(LOOK.tiers.A.sat, 1.7); assert.equal(LOOK.tiers.B.blur, 20); assert.equal(LOOK.tiers.C.tint, 0.97);
   assert.equal(LOOK.night.sheet, '#0c0c0c'); assert.equal(LOOK.night.tint, 1);
-  assert.equal(LOOK.text.day.old, '#a39cad'); assert.equal(LOOK.text.night.old, '#6e6e6e');
+  assert.equal(LOOK.text.day.old, '#8b969f'); assert.equal(LOOK.text.night.old, '#6e6e6e');
 });
 
 test('contraste en el peor fondo: contexto × día/noche × nivel × fondo', () => {
