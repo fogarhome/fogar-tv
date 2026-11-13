@@ -58,6 +58,8 @@
 <symbol id="l-spotify" viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#1ED760" stroke="none"/><g fill="none" stroke="#000" stroke-linecap="round"><path d="M5.9 9.1c4-1.25 8.6-.95 12.2 1.05" stroke-width="2.1"/><path d="M6.8 12.6c3.3-.95 6.9-.65 9.9.95" stroke-width="1.8"/><path d="M7.6 15.9c2.7-.75 5.4-.55 7.8.75" stroke-width="1.5"/></g></symbol>
 <symbol id="l-netflix" viewBox="0 0 24 24"><rect width="24" height="24" rx="5" fill="#000" stroke="none"/><path d="M7.2 3.5h2.7v17l-2.7-.3zM14.1 3.5h2.7v16.7l-2.7.3z" fill="#B1060F" stroke="none"/><path d="M7.2 3.5h2.7l6.9 16.7-2.7.3z" fill="#E50914" stroke="none"/></symbol>
 <symbol id="l-youtube" viewBox="0 0 24 24"><rect x=".5" y="4.5" width="23" height="15" rx="4.5" fill="#FF0000" stroke="none"/><path d="M9.7 8.6v6.8l5.9-3.4z" fill="#fff" stroke="none"/></symbol>
+<symbol id="i-f" viewBox="-90.96 19.67 303.16 303.16"><path stroke-width="24" d="M-57.86 162.25c-10.86-7.82-18.68-18.68-16.94-31.72 2.6-19.55 23.46-31.71 58.21-32.58 39.1-.87 86.89 17.38 121.64 23.89 34.75 6.52 69.51 7.39 86.88-6.51 8.69-8.69 4.35-22.59-13.03-24.33-26.06-2.61-47.79 15.64-54.3 37.36-5.65 19.55-3.91 47.79-6.52 69.51-4.34 34.75-30.41 53-71.68 53.87-36.92.43-67.33-19.12-76.89-46.05m88.62-29.98c33.89-3.04 72.98-4.78 106.87-3.47"/></symbol>
+<symbol id="i-tv" viewBox="0 0 24 24"><rect x="2.5" y="7" width="19" height="14" rx="2.5"/><path d="M16.5 2.5L12 7 7.5 2.5"/></symbol>
 <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
 <symbol id="i-fwd" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></symbol>
 <symbol id="i-home" viewBox="0 0 24 24"><path d="M3.5 11.2L12 4l8.5 7.2M6 9.8V19h12V9.8"/></symbol>
@@ -94,32 +96,40 @@
 <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7.5 3v5.5c0 4.5-3.2 8-7.5 9.5-4.3-1.5-7.5-5-7.5-9.5V6zM9 12l2 2 4-4"/></symbol>
 </defs></svg>
 
-<!-- ambiente: dos luces en órbita con el color de lo que hay en la tele (features/ambient.js) -->
+<!-- ambiente: dos luces en órbita con el color de lo que hay en la tele; sin nada, niebla y rescoldo (features/ambient.js) -->
 <div class="amb" id="amb" aria-hidden="true"><i class="orb oa"></i><i class="orb ob"></i></div>
 
 <main class="app2">
+  <!-- sala (A3): Apagar solo y aparte (se mantiene pulsado), el nombre, la píldora de fuente y Ajustes; los dos de la
+       tele solo con la tele por ADB (features/tele.js) -->
   <header class="top2">
-    <div class="ttl2">
-      <div class="nm2"><b>{{TV_NAME}}</b><i class="dot" id="dot" role="img" aria-label="Conectando"></i></div>
-      <div class="sub2" id="sub2" aria-live="polite"><i class="thumb2" aria-hidden="true"></i><span id="t1">Conectando…</span><span id="t2"></span></div>
-      <button class="re2" id="re2" type="button" hidden>Sin conexión · <u>Reintentar</u></button>
-    </div>
+    <button class="b2 pw2" id="pw2" type="button" aria-label="Apagar la tele: mantén pulsado" hidden>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 3.5v8"/><path d="M7 6.2a7.5 7.5 0 1 0 10 0"/></svg>
+      <span class="pwR" aria-hidden="true"></span>
+    </button>
+    <div class="nm2"><b>{{TV_NAME}}</b><i class="dot" id="dot" role="img" aria-label="Conectando"></i></div>
+    <!-- de dónde sale la imagen: se toca en cualquier punto y cambia a la otra -->
+    <button class="srcP" id="srcP" type="button" data-src="j" aria-label="Fuente: Fogar TV. Cambiar a Tele" hidden>
+      <svg class="sI sF" aria-hidden="true"><use href="#i-f"/></svg><svg class="sI sT" aria-hidden="true"><use href="#i-tv"/></svg>
+      <span class="sL sLj" aria-hidden="true">Fogar TV</span><span class="sL sLt" aria-hidden="true">Tele</span>
+      <span class="knob" aria-hidden="true"><svg class="kF"><use href="#i-f"/></svg><svg class="kT"><use href="#i-tv"/></svg></span>
+    </button>
     <button class="b2 set2" data-a="more" data-click aria-label="Ajustes">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg>
     </button>
   </header>
-
-  <!-- dónde está la tele (Fogar TV o su Google TV) y el encendido; solo con la tele por ADB (features/tele.js) -->
-  <div class="srcRow" id="srcRow" hidden>
-    <div class="srcSeg" id="srcSeg" role="radiogroup" aria-label="Qué se ve en la tele">
-      <span class="ind" id="srcInd" aria-hidden="true"></span>
-      <button type="button" role="radio" aria-checked="true" data-src="j">Fogar TV</button>
-      <button type="button" role="radio" aria-checked="false" data-src="tv" tabindex="-1">Tele</button>
-    </div>
-    <button class="b2 pw2" data-a="pwoff" data-click aria-label="Apagar la tele">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 3.5v8"/><path d="M7 6.2a7.5 7.5 0 1 0 10 0"/></svg>
-    </button>
+  <!-- qué hay en la tele (o el estado de la conexión), en una línea discreta -->
+  <div class="now2">
+    <div class="sub2" id="sub2" aria-live="polite"><i class="thumb2" aria-hidden="true"></i><span id="t1">Conectando…</span><span id="t2"></span></div>
+    <button class="re2" id="re2" type="button" hidden>Sin conexión · <u>Reintentar</u></button>
   </div>
+
+  <!-- Fogar arriba, solo como asistente (A3): la línea en reposo dibuja la palabra; al hablar con el micro del pulgar,
+       escucha aquí mismo sin cambiar de alto (features/agent.js y linea.js) -->
+  <button class="fogar2" data-a="ag" data-click aria-label="Hablar con Fogar">
+    <canvas class="fLine" id="fLine" aria-hidden="true"></canvas>
+    <span class="jt2"><b id="fT">Dime qué quieres ver</b><small id="fS">Habla o escribe</small></span>
+  </button>
 
   <!-- conexión con Fogar (solo administradores): en la columna, entre la cabecera y el trackpad, para no tapar nada; no
        bloquea, se cierra con ✕ y no vuelve hasta que cambie el estado -->
@@ -141,7 +151,7 @@
         <i class="cr"><svg viewBox="0 0 24 24"><path d="M9.5 6l6 6-6 6"/></svg></i>
         <span class="ok">OK</span>
       </div>
-      <span class="hint2" id="hint"><span class="h-j">Desliza para mover el cursor.<br>Toca para elegir. Con dos dedos o por el borde, sube y baja.</span><span class="h-tv">Desliza o toca una flecha para moverte.<br>Toca en el centro para elegir.</span></span>
+      <span class="hint2" id="hint"><span class="h-j">Desliza y toca para elegir.<br>Por el borde, sube y baja.</span><span class="h-tv">Toca una flecha o el centro</span></span>
     </section>
     <div class="vcol2">
       <button class="b2 vb2" data-a="vu" data-rep aria-label="Subir volumen">
@@ -181,6 +191,7 @@
     </nav>
 
     <div class="play2">
+      <span class="ph2" aria-hidden="true"></span>
       <button class="b2 sk2" data-a="s10b" aria-label="Retroceder 10 segundos">
         <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 12a7.5 7.5 0 1 0 2.4-5.5"/><path d="M4 4.5V8h3.5"/><text x="12" y="15.2" text-anchor="middle" font-size="7.5" font-weight="600" font-family="Figtree,sans-serif" fill="currentColor" stroke="none">10</text></svg>
       </button>
@@ -191,15 +202,14 @@
       <button class="b2 sk2" data-a="s10f" aria-label="Adelantar 10 segundos">
         <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19.5 12a7.5 7.5 0 1 1-2.4-5.5"/><path d="M20 4.5V8h-3.5"/><text x="12" y="15.2" text-anchor="middle" font-size="7.5" font-weight="600" font-family="Figtree,sans-serif" fill="currentColor" stroke="none">10</text></svg>
       </button>
+      <!-- el micro del pulgar: se mantiene para hablar (la cabecera escucha) y un toque abre la hoja para escribir -->
+      <button class="b2 mic2" id="mic2" type="button" data-a="ag" data-click aria-label="Micrófono de Fogar">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+      </button>
     </div>
 
     <div class="apps2" id="apps2"></div>
 
-    <button class="fogar2" data-a="ag" data-click aria-label="Hablar con Fogar">
-      <span class="orb2" aria-hidden="true"></span>
-      <span class="jt2"><b>Dime qué quieres ver</b><small>Habla o escribe</small></span>
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
-    </button>
   </div>
 </main>
 
@@ -382,7 +392,7 @@
   <div class="grab"></div>
   <div class="sp" data-p="home">
     <header class="stH">
-      <div class="stR"><span class="stO" aria-hidden="true"></span><div><h2 class="stT">Ajustes</h2><div class="me" id="meBox"></div></div></div>
+      <div class="stR"><span class="stO" aria-hidden="true"><svg><use href="#i-f"/></svg></span><div><h2 class="stT">Ajustes</h2><div class="me" id="meBox"></div></div></div>
       <div class="stC"><span class="dot ok" id="footDot" aria-hidden="true"></span><span id="foot">—</span></div>
       <div class="stK" id="clBox" hidden><label for="clCode">¿Tienes un código de administrador?</label>
         <div class="tms"><input class="in" id="clCode" placeholder="XXXXX-XXXXX" maxlength="11" autocapitalize="characters" spellcheck="false"><button class="bt big dv" id="clGo" type="button">Canjear</button></div></div>

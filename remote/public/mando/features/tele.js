@@ -1,13 +1,12 @@
 // Modos del mando según la tele (state.tv; solo con TV_ADB): Fogar TV (el mando de siempre), Tele (el trackpad es la
-// cruceta del Google TV) y Apagada (queda el botón de encender). Pinta la fila «Fogar TV | Tele» y ⏻, manda power, src
-// y tvkey, y avisa con la píldora de lo que cambia sin una orden de este mando. Clases en <html>: tele, tv, off, waking y tvq
+// cruceta del Google TV) y Apagada (queda el botón de encender). Pinta la píldora de fuente y ⏻ de la sala (A3), manda
+// power, src y tvkey, y avisa con la píldora de lo que cambia sin una orden de este mando. Clases en <html>: tele, tv, off, waking y tvq
 // (la tele no responde). Lo leen controls (botones a tvkey) y trackpad (gesto a la cruceta) con inTv() y padGesture().
 import { $ } from '../core/dom.js';
 import { on } from '../core/store.js';
 import { rpc } from '../core/api.js';
 import { pill } from '../ui/pill.js';
 import { buzz } from '../ui/haptics.js';
-import { segOn, segPaint } from '../ui/seg.js';
 
 /** Dirección de un gesto del trackpad: menos de 18 px de recorrido es OK; si no, gana el eje mayor. */
 export function swipeDir(dx, dy) {
@@ -66,11 +65,27 @@ export function padGesture(dx, dy, x, y) {
 const modeOf = t => (t.power === 'off' ? 'off' : t.src === 'tv' && Date.now() > bootUntil ? 'tv' : 'j');
 const matches = t => (expect.power ? t.power === expect.power && (expect.power === 'off' || t.src === 'j') : t.power === 'on' && t.src === expect.src);
 
-/* el resaltado de la píldora Fogar TV | Tele se desliza al botón elegido (con la fila oculta no hay medidas) */
-function ind() {
-  const b = /** @type {HTMLElement} */ ($('#srcSeg [aria-checked=true]')), i = $('#srcInd');
-  if (!b || !b.offsetWidth) return;
-  i.style.width = b.offsetWidth + 'px'; i.style.transform = 'translateX(' + (b.offsetLeft - 3) + 'px)';
+const SRC_NAME = { j: 'Fogar TV', tv: 'Tele' };
+/** La píldora de fuente: el pomo al modo que se ve y, mientras la tele no lo confirma, «Cambiando» para el lector.
+ *  @param {string} v 'j' | 'tv' */
+function pill2(v) {
+  const p = $('#srcP'), busy = !!(expect && expect.src);
+  p.dataset.src = v; p.classList.toggle('busy', busy);
+  p.setAttribute('aria-label', 'Fuente: ' + SRC_NAME[v] + (busy ? ', cambiando' : '') + '. Cambiar a ' + SRC_NAME[v === 'tv' ? 'j' : 'tv']);
+}
+/* ⏻ se mantiene HOLD_MS para apagar (un toque en plena película no apaga nada). El temporizador manda, no la transición:
+   con movimiento reducido no hay transiciones y el aro aparece lleno de golpe */
+const HOLD_MS = 600;
+let holdT = 0;
+function holdStart() {
+  if (!usable() || mode === 'off' || holdT) return;
+  $('#pw2').classList.add('hold'); buzz(6);
+  holdT = setTimeout(() => { holdT = 0; $('#pw2').classList.remove('hold'); buzz(14); order({ t: 'power', on: false }, { power: 'off' }); view('off'); }, HOLD_MS);
+}
+function holdEnd() {
+  if (!holdT) return;
+  clearTimeout(holdT); holdT = 0; $('#pw2').classList.remove('hold');
+  pill('Mantén pulsado para apagar');
 }
 function unwake() { document.documentElement.classList.remove('waking'); $('#offS').textContent = 'Toca para encender'; }
 
@@ -79,7 +94,7 @@ function view(v) {
   if (v === mode) return;
   const r = document.documentElement, was = mode;
   mode = v;
-  if (v !== 'off') { segPaint($('#srcSeg'), 'src', v); ind(); }
+  if (v !== 'off') pill2(v);
   r.classList.toggle('off', v === 'off');
   if (was === 'off') { clearTimeout(wakeT); setTimeout(unwake, 900); }   // el orbe lleno mientras vuelve el mando
   // la ayuda sale, cambia el modo y entra la nueva
@@ -103,13 +118,11 @@ function setHome(h) {
 
 function paint(s) {
   setHome(!!s.amb);
-  const t = s.tv || null, r = document.documentElement, row = $('#srcRow');
-  const wasHidden = row.hidden;
-  row.hidden = !t; r.classList.toggle('tele', !!t);   // tele: hay tele por ADB (el CSS nuevo solo vale entonces)
-  if (wasHidden && t) ind();
+  const t = s.tv || null, r = document.documentElement, btns = [$('#srcP'), $('#pw2')];
+  r.classList.toggle('tele', !!t);   // tele: hay tele por ADB (el CSS nuevo solo vale entonces)
   const lost = !!t && t.power === null;
   r.classList.toggle('tvq', lost);
-  for (const b of row.querySelectorAll('button')) { if (lost) b.setAttribute('aria-disabled', 'true'); else b.removeAttribute('aria-disabled'); }
+  for (const b of btns) { b.hidden = !t; if (lost) b.setAttribute('aria-disabled', 'true'); else b.removeAttribute('aria-disabled'); }
   const prev = last; last = t;
   if (!t) { known = null; view('j'); return; }                          // sin tele configurada: el mando de siempre
   if (lost) return;                                       // sin respuesta: se queda como estaba
@@ -118,7 +131,7 @@ function paint(s) {
     quietUntil = bootUntil = Date.now() + 6000;
     setTimeout(() => { if (last && last.power === 'on' && !expect) view(modeOf(last)); }, 6100);   // si se quedó en Tele
   }
-  if (expect) { if (matches(t)) { expect = null; view(modeOf(t)); } return; }
+  if (expect) { if (matches(t)) { expect = null; view(modeOf(t)); if (mode !== 'off') pill2(mode); } return; }
   // lo que cambia sin una orden de este mando se dice (no al conectar, ni al volver de «sin respuesta»)
   let note = '';
   if (prev && prev.power === 'on' && Date.now() > quietUntil) {
@@ -134,7 +147,7 @@ function paint(s) {
 /** Orden propia de power o src: el mando cambia ya y, si falla, vuelve a lo que diga la tele y lo cuenta. */
 function order(o, want) {
   expect = want;
-  const back = () => { if (expect === want) expect = null; if (last && last.power !== null) view(modeOf(last)); };
+  const back = () => { if (expect === want) expect = null; if (last && last.power !== null) view(modeOf(last)); if (mode !== 'off') pill2(mode); };
   return rpc(o).then(res => {
     quietUntil = Date.now() + 4000;
     if (res.error) { pill(res.error); back(); }
@@ -148,7 +161,6 @@ const usable = () => !!last && last.power !== null;
 export const tele = {
   name: 'tele',
   clicks: {
-    pwoff: () => { if (!usable() || mode === 'off') return; order({ t: 'power', on: false }, { power: 'off' }); view('off'); },
     pwon: () => {
       const r = document.documentElement;
       if (mode !== 'off' || r.classList.contains('waking')) return;
@@ -162,12 +174,18 @@ export const tele = {
     // --o: orden de arriba abajo de los bloques, para la cascada al apagar y encender
     document.querySelectorAll('.app2>:not(.dock2),.dock2>*').forEach((e, i) => /** @type {HTMLElement} */ (e).style.setProperty('--o', String(i)));
     $('#offV').inert = true;
-    segOn($('#srcSeg'), 'src', s => {
-      if (!usable() || mode === 'off' || s === mode) return;
-      buzz(7); view(s); order({ t: 'src', s }, { src: s });
+    // la píldora entera cambia a la otra fuente (misma orden src de siempre)
+    $('#srcP').addEventListener('click', () => {
+      if (!usable() || mode === 'off') return;
+      const s = mode === 'tv' ? 'j' : 'tv';
+      buzz(7); expect = { src: s }; view(s); order({ t: 'src', s }, { src: s }); pill2(s);
     });
+    const pw = $('#pw2');
+    pw.addEventListener('pointerdown', e => { e.preventDefault(); pw.setPointerCapture(e.pointerId); holdStart(); });
+    for (const ev of ['pointerup', 'pointercancel']) pw.addEventListener(ev, holdEnd);
+    pw.addEventListener('contextmenu', e => e.preventDefault());
+    pw.addEventListener('keydown', e => { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); holdStart(); } });
+    pw.addEventListener('keyup', e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); holdEnd(); } });
     on('state', paint);
-    addEventListener('resize', ind);
-    document.fonts.ready.then(ind);
   },
 };

@@ -68,8 +68,8 @@ a.bt{text-decoration:none}
 .tvC{width:2px;height:18px;margin-left:-6px;background:var(--tv-ink);flex:none;animation:blk 1.1s steps(1) infinite}
 .tvM.none .tvC{display:none}.tvM.none .tvF svg{opacity:.5}
 @keyframes blk{50%{opacity:0}}
-.tvOn{position:absolute;right:14px;bottom:10px;display:flex;align-items:center;gap:6px;font-size:12px;color:#d6d0de}
-.tvOn i{width:6px;height:6px;border-radius:999px;background:#8fa8d8}
+.tvOn{position:absolute;right:14px;bottom:10px;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--tv-text)}
+.tvOn i{width:6px;height:6px;border-radius:999px;background:#78b8f0}
 .kbE{flex:1;min-height:0;padding:10px 2px 4px;display:flex;flex-direction:column;gap:10px}
 .kbE label{font-size:14px;font-weight:500;color:var(--text-soft)}
 .kbE.none label{color:var(--warn)}
@@ -129,7 +129,7 @@ a.bt{text-decoration:none}
 .sw[aria-pressed=true]::after{transform:translateX(20px)}
 .seg{display:flex;gap:4px;background:var(--bg);border:1px solid var(--edge);border-radius:var(--r-m);padding:3px;grid-column:1/-1}
 .seg button{flex:1;height:44px;border:0;border-radius:var(--r-s);background:transparent;color:var(--dim);font:600 13.5px var(--texto);touch-action:manipulation}
-/* el anillo malva: el tinte solo apenas se distingue de la pista (≈1,5:1 en oscuro) */
+/* el aro de acento: el tinte solo apenas se distingue de la pista (≈1,5:1 en oscuro) */
 .seg button[aria-checked=true]{color:var(--tx);box-shadow:inset 0 0 0 1.5px var(--accent)}
 /* zona de toque de 48 px en los conmutadores sin cambiar su aspecto (::after es el botón) */
 .sw::before{content:"";position:absolute;inset:-9px 0}
@@ -148,8 +148,8 @@ a.bt{text-decoration:none}
 .n2{font-size:14.5px;color:var(--dim);margin-top:3px;min-height:1.3em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* ahora suena (v3): la hoja casi entera, sobre un fondo hondo con dos luces del color de la carátula (--sa/--sb, que
    cambian en 4 s); al cambiar de canción el texto sale en 200 ms, la carátula entra en 800 ms y el texto nuevo, escalonado */
-@property --sa{syntax:'<color>';inherits:true;initial-value:#7c6aae}
-@property --sb{syntax:'<color>';inherits:true;initial-value:#6e8cc4}
+@property --sa{syntax:'<color>';inherits:true;initial-value:#20332a}
+@property --sb{syntax:'<color>';inherits:true;initial-value:#5a1a10}
 #spS{max-height:calc(100% - 56px - var(--kb));height:calc(100% - 56px - var(--kb));overflow:hidden;padding:0;background:var(--sp-bg);border:0;transition:transform .24s var(--ease),bottom .12s,--sa 4s,--sb 4s,visibility 0s .24s}
 #spS.on{transition:transform .24s var(--ease),bottom .12s,--sa 4s,--sb 4s}
 .spL{position:absolute;border-radius:50%;opacity:var(--sp-orb);pointer-events:none;will-change:transform}
@@ -202,7 +202,7 @@ a.bt{text-decoration:none}
 .spCtl .bt.big{width:76px;height:76px;border-radius:999px;box-shadow:var(--play-shadow);transition:transform .2s var(--ease)}
 .spCtl .bt.big.dn,.spCtl .bt.big:active{transform:scale(.94)}
 .spCtl .bt.big svg{width:30px;height:30px}
-/* pestañas: texto con un subrayado malva, sin control segmentado */
+/* pestañas: texto con un subrayado de acento, sin control segmentado */
 #spTabs{display:flex;gap:22px;background:transparent;border:0;border-radius:0;padding:0;margin-top:10px}
 #spTabs button{flex:none;height:48px;padding:0 2px;border-radius:0;background:transparent;color:var(--text-soft);font:500 15px var(--texto)}
 #spTabs button[aria-pressed=true]{background:transparent;color:var(--text);font-weight:600;box-shadow:inset 0 -2px 0 var(--accent-text)}
@@ -285,8 +285,8 @@ a.bt{text-decoration:none}
 /* hablar con Fogar (v3): la hoja es transparente y la sombra se vuelve un velo con dos luces que crecen mientras piensa */
 .shade.vz{background:var(--veil);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);overflow:hidden}
 .shade.vz::before,.shade.vz::after{content:"";position:absolute;border-radius:50%;pointer-events:none;transition:scale 1.6s var(--ease),opacity 1.2s ease}
-.shade.vz::before{left:calc(50% - 315px);bottom:-200px;width:520px;height:520px;opacity:var(--vz-a);background:radial-gradient(closest-side,var(--malva),transparent);animation:orbV 41s linear infinite}
-.shade.vz::after{left:calc(50% - 155px);bottom:-310px;width:460px;height:460px;opacity:var(--vz-b);background:radial-gradient(closest-side,var(--cielo),transparent);animation:orbW 53s linear infinite}
+.shade.vz::before{left:calc(50% - 315px);bottom:-200px;width:520px;height:520px;opacity:var(--vz-a);background:radial-gradient(closest-side,var(--luz-a),transparent);animation:orbV 41s linear infinite}
+.shade.vz::after{left:calc(50% - 155px);bottom:-310px;width:460px;height:460px;opacity:var(--vz-b);background:radial-gradient(closest-side,var(--luz-b),transparent);animation:orbW 53s linear infinite}
 .shade.vz.think::before,.shade.vz.think::after{scale:1.12}
 @keyframes orbV{from{transform:rotate(0deg) translateX(80px) rotate(0deg)}to{transform:rotate(360deg) translateX(80px) rotate(-360deg)}}
 @keyframes orbW{from{transform:rotate(360deg) translateX(70px) rotate(-360deg)}to{transform:rotate(0deg) translateX(70px) rotate(0deg)}}
@@ -352,11 +352,12 @@ a.bt{text-decoration:none}
 .pill.on{opacity:1;transform:translate(-50%,0)}
 
 /* ── mando (TVC Diseño - Mando v3 y crítica de la tele) ──
-   Flotar: el trackpad es la única superficie y play el único relleno malva; el resto son glifos y texto con un halo que
-   florece al pulsar. Ambiente: dos luces en órbita (solo transform, 61 s y 83 s) con el color de lo que hay en la tele
+   A3 de fogar-tv.pen: la sala arriba (Apagar aparte, la píldora de fuente y Ajustes), Fogar como asistente en la cabecera,
+   el trackpad como única superficie y play como único disco lleno; el resto son glifos y texto con un halo que florece al
+   pulsar. Ambiente: dos luces en órbita (solo transform, 61 s y 83 s) con el color de lo que hay en la tele
    (--ca/--cb, de features/ambient.js), que cambian en 4 s. Se paran con la página oculta y con el teclado abierto. */
-@property --ca{syntax:'<color>';inherits:true;initial-value:#7c6aae}
-@property --cb{syntax:'<color>';inherits:true;initial-value:#6e8cc4}
+@property --ca{syntax:'<color>';inherits:true;initial-value:#20332a}
+@property --cb{syntax:'<color>';inherits:true;initial-value:#5a1a10}
 :root{transition:--ca 4s,--cb 4s}
 .amb{position:fixed;inset:0;overflow:hidden;pointer-events:none}
 .orb{position:absolute;border-radius:50%;opacity:var(--orb);will-change:transform}
@@ -368,36 +369,74 @@ a.bt{text-decoration:none}
 .app2{position:fixed;inset:0;display:flex;flex-direction:column;gap:10px;padding:max(24px,calc(env(safe-area-inset-top) + 9px)) max(20px,env(safe-area-inset-right)) max(20px,calc(env(safe-area-inset-bottom) + 4px)) max(20px,env(safe-area-inset-left));color:var(--text);font-family:var(--texto)}
 .app2>*,.dock2>*{flex-shrink:0}
 .dock2{display:contents}
-/* glifo flotante: sin caja; al pulsar florece un halo malva detrás (::before) */
+/* glifo flotante: sin caja; al pulsar florece un halo detrás (::before) */
 .b2{position:relative;display:flex;align-items:center;justify-content:center;gap:12px;padding:0;border:0;background:transparent;color:var(--text);font:inherit;cursor:pointer;touch-action:none;transition:color .2s ease}
 .b2 svg,.b2 span{position:relative;flex:none;pointer-events:none}
 .b2::before{content:"";position:absolute;inset:0;margin:auto;width:min(100%,56px);height:min(100%,56px);border-radius:999px;background:var(--halo);opacity:0;transform:scale(.55);transition:opacity .35s var(--ease),transform .35s var(--ease);pointer-events:none}
 .b2.dn::before,.b2:active::before{opacity:1;transform:none;transition-duration:.08s}
 @media (hover:hover){.b2:hover{color:var(--accent-text)}.pp2:hover{filter:brightness(1.08);color:var(--on-accent)}}
 .b2:focus-visible,.fogar2:focus-visible,.re2:focus-visible{outline:2px solid var(--accent-text);outline-offset:2px;border-radius:var(--r-m)}
-/* cabecera: el nombre de la pantalla y, debajo, lo que hay en la tele con su color; al cambiar, sale con un fundido */
-.top2{display:flex;align-items:flex-start;gap:12px}
-.ttl2{flex:1;min-width:0;display:flex;flex-direction:column;gap:10px}
-.nm2{display:flex;align-items:center;gap:10px}
-.nm2 b{font:400 30px/1.05 var(--titular);letter-spacing:-.035em;overflow-wrap:anywhere}
-.app2 .dot,.app2 .dot.ok,.app2 .dot.bad{width:8px;height:8px;box-shadow:none}
-.sub2{display:flex;align-items:center;gap:10px;min-width:0;font-size:15px;line-height:1.3;transition:opacity .5s ease,transform .6s var(--ease)}
-.sub2.out{opacity:0;transform:translateY(6px);transition-duration:.3s}
-.thumb2{width:26px;height:26px;border-radius:8px;flex:none;background:linear-gradient(135deg,var(--ca),var(--cb) 75%)}
-#t1{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:0 1 auto}
-#t2{color:var(--text-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:0 0 auto;max-width:40%}   /* cede el título (#t1), no el origen («YouTube» no se queda en «Y.») */
+/* sala (A3): ⏻ aparte a la izquierda, el nombre con su punto, la píldora de fuente y Ajustes; debajo, en una línea
+   discreta, lo que hay en la tele con su color (al cambiar, sale con un fundido) */
+.top2{display:flex;align-items:center;gap:8px;height:44px}
+.nm2{flex:1;min-width:0;display:flex;align-items:center;gap:8px}
+.nm2 b{font:600 15px/1.2 var(--texto);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.app2 .dot,.app2 .dot.ok,.app2 .dot.bad{width:7px;height:7px;box-shadow:none}
+.now2{min-height:18px;margin-top:-4px;display:flex}
+.sub2{display:flex;align-items:center;gap:8px;min-width:0;font-size:13px;line-height:1.35;color:var(--text-soft);transition:opacity .5s ease,transform .6s var(--ease)}
+.sub2.out{opacity:0;transform:translateY(4px);transition-duration:.3s}
+.thumb2{width:12px;height:12px;border-radius:4px;flex:none;background:linear-gradient(135deg,var(--ca),var(--cb) 75%)}
+#t1{color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:0 1 auto}
+#t2{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:0 0 auto;max-width:40%}   /* cede el título (#t1), no el origen («YouTube» no se queda en «Y.») */
 .sub2[hidden],.re2[hidden]{display:none}
-.re2{align-self:flex-start;font:inherit;font-size:15px;line-height:1.3;color:var(--text-soft);background:none;border:0;padding:13px 0;margin:-13px 0;cursor:pointer;touch-action:manipulation}
+.re2{align-self:flex-start;font:inherit;font-size:13px;line-height:1.35;color:var(--text-soft);background:none;border:0;padding:15px 0;margin:-15px 0;cursor:pointer;touch-action:manipulation}
 .re2 u{text-decoration:none;font-weight:600;color:var(--accent-text)}
-.set2{width:48px;height:48px;margin-right:-8px}
+.set2{width:44px;height:44px;margin-right:-6px}
+/* ⏻: solo, arriba a la izquierda, lejos de lo de cada día; apaga al mantenerlo 600 ms (features/tele.js). El aro se llena
+   de abajo arriba en lineal (es progreso) y al soltar antes vuelve en 200 ms */
+.pw2{width:44px;height:44px;margin-left:-6px;color:var(--text-soft)}
+.pw2[hidden]{display:none}
+.pw2 .pwR{position:absolute;inset:4px;border-radius:999px;box-shadow:inset 0 0 0 2px var(--accent);clip-path:inset(100% 0 0 0);transition:clip-path .2s cubic-bezier(.23,1,.32,1)}
+.pw2.hold{color:var(--text)}
+.pw2.hold .pwR{clip-path:inset(0);transition:clip-path .6s linear}
+/* la píldora de fuente (A3): 150 × 44, el pomo con el icono del modo, el nombre dentro y el icono del otro modo, tenue.
+   Se toca entera; el pomo cruza con la curva de las hojas y el nombre se cruza con un desenfoque corto */
+.srcP{position:relative;flex:none;width:150px;height:44px;padding:0;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--text);font:600 14px var(--texto);cursor:pointer;touch-action:manipulation}
+.srcP[hidden]{display:none}
+.srcP:focus-visible{outline:2px solid var(--accent-text);outline-offset:2px}
+.srcP svg{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.sI{position:absolute;top:50%;width:22px;height:22px;margin-top:-11px;color:var(--text-faint);transition:opacity .15s ease}
+.sF{left:11px}.sT{right:12px;width:20px;height:20px;margin-top:-10px}
+.sL{position:absolute;top:50%;transform:translateY(-50%);line-height:1;white-space:nowrap;transition:opacity .15s ease,filter .15s ease}
+.sLj{left:49px}.sLt{right:51px}
+.knob{position:absolute;left:3px;top:3px;width:36px;height:36px;border-radius:999px;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;box-shadow:0 2px 8px rgba(0,0,0,.3);transition:transform .25s var(--ease)}
+.knob svg{grid-area:1/1;width:20px;height:20px;transition:opacity .15s ease}
+.knob .kF{width:22px;height:22px}
+.srcP:active .knob{transform:scale(.97)}
+.srcP .sT,.srcP .sLt,.srcP .kT{opacity:0}
+.srcP .sLt{filter:blur(2px)}
+.srcP[data-src=j] .sF{opacity:0}
+.srcP[data-src=j] .sT{opacity:1}
+.srcP[data-src=tv] .knob{transform:translateX(106px)}
+.srcP[data-src=tv] .kF,.srcP[data-src=tv] .sLj{opacity:0}
+.srcP[data-src=tv] .sLj{filter:blur(2px)}
+.srcP[data-src=tv] .kT,.srcP[data-src=tv] .sLt{opacity:1;filter:none}
+.srcP.busy .sL{opacity:.55}
+/* Fogar, arriba y solo asistente (A3): la línea en reposo dibuja la palabra con la brasa en la «r»; escuchando, la misma
+   cabecera sigue tu voz y dice lo que entiende, sin cambiar de alto (el trackpad y el volumen no se mueven) */
+.fogar2{width:100%;height:74px;display:flex;align-items:center;gap:16px;padding:0 0 4px;border:0;border-bottom:1px solid var(--line);border-radius:0;background:transparent;color:var(--text);font:inherit;text-align:left;cursor:pointer;touch-action:manipulation}
+.fLine{display:block;width:118px;height:58px;flex:none;pointer-events:none}
+.jt2{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.jt2 b{font:500 17px/1.2 var(--texto);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.jt2 small{font-size:13px;line-height:1.25;color:var(--text-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* trackpad (la única superficie) y, al lado, el volumen flotando */
-.mid2{flex:1 1 0!important;display:flex;gap:8px;min-height:0;margin-top:8px}
-.pad2{position:relative;flex:1;min-width:0;border-radius:var(--r-xl);border:0;background:var(--pad);overflow:hidden;cursor:pointer;touch-action:none}
-.halo2{position:absolute;left:0;top:0;width:96px;height:96px;margin:-48px 0 0 -48px;border-radius:999px;background:radial-gradient(circle,rgba(195,183,227,.5) 0%,rgba(124,106,174,.14) 55%,rgba(124,106,174,0) 72%);pointer-events:none;opacity:0;transform:scale(.5);transition:opacity .25s ease,transform .35s var(--ease)}
+.mid2{flex:1 1 0!important;display:flex;gap:10px;min-height:0;margin-top:4px}
+.pad2{position:relative;flex:1;min-width:0;border-radius:28px;border:0;background:var(--pad2);overflow:hidden;cursor:pointer;touch-action:none}
+.halo2{position:absolute;left:0;top:0;width:96px;height:96px;margin:-48px 0 0 -48px;border-radius:999px;background:radial-gradient(circle,color-mix(in srgb,var(--text) 26%,transparent) 0%,color-mix(in srgb,var(--text) 7%,transparent) 55%,transparent 72%);pointer-events:none;opacity:0;transform:scale(.5);transition:opacity .25s ease,transform .35s var(--ease)}
 .halo2.on{opacity:1;transform:scale(1)}
 /* carril (TVC Diseño - Carril de desplazamiento): mide 8 px y en reposo se ve de 3 (scaleX .375, sin animar width).
-   Al tocarlo crece y el pulgar se pone malva; entra en 200 ms y sale antes, en 160 (features/trackpad.js decide cuándo) */
-.rail2{position:absolute;top:32px;bottom:32px;right:7.5px;width:8px;pointer-events:none;transform:scaleX(.375);transition:transform .16s var(--ease),opacity .15s var(--ease)}
+   Al tocarlo crece y el pulgar se pone brasa (la brasa solo es luz: aquí y en la línea viva); entra en 200 ms y sale antes, en 160 (features/trackpad.js decide cuándo) */
+.rail2{position:absolute;top:32px;bottom:32px;right:8px;width:8px;pointer-events:none;transform:scaleX(.375);transition:transform .16s var(--ease),opacity .15s var(--ease)}
 /* en reposo el radio va compensado (4px / 1.5px × scaleX .375 = 1,5 px en los dos ejes): puntas redondas de 3 px, no elipses */
 .rail2::before{content:"";position:absolute;inset:0;border-radius:4px/1.5px;background:var(--rail);transition:background-color .16s var(--ease),border-radius .16s var(--ease)}
 /* sin dato de scroll: se funde (antes, display:none de golpe); visibility al final para que no tape nada */
@@ -407,18 +446,19 @@ a.bt{text-decoration:none}
 .rail2 i{position:absolute;left:0;right:0;top:0;height:0;border-radius:4px/1.5px;background:var(--rail-thumb);transition:transform .25s linear,background-color .16s var(--ease),box-shadow .16s var(--ease),border-radius .16s var(--ease)}
 .rail2.on{transform:none;transition-duration:.2s}
 .rail2.on::before{background:var(--rail-on);border-radius:4px;transition-duration:.2s}
-.rail2.on i{background:var(--accent);border-radius:4px;transition:transform .25s linear,background-color .2s var(--ease),box-shadow .2s var(--ease),border-radius .2s var(--ease)}
+.rail2.on i{background:var(--brasa);border-radius:4px;transition:transform .25s linear,background-color .2s var(--ease),box-shadow .2s var(--ease),border-radius .2s var(--ease)}
 /* empujando contra un extremo, o con el pulgar estimado (trackpad.js), sigue al dedo sin retraso; al soltar lo aplastado
    vuelve con la curva de las hojas */
 .rail2 i.rb,.rail2 i.live{transition:background-color .2s var(--ease),box-shadow .2s var(--ease)}
 .rail2 i.back{transition:transform .3s var(--ease),background-color .2s var(--ease),box-shadow .2s var(--ease)}
-.hint2{position:absolute;left:24px;right:24px;bottom:26px;text-align:center;font-size:14px;line-height:1.5;color:var(--text-soft);pointer-events:none;transition:opacity .6s ease}
+.hint2{position:absolute;left:22px;right:26px;bottom:24px;text-align:center;font-size:14px;line-height:1.5;color:var(--text-soft);pointer-events:none;transition:opacity .6s ease}
 .hint2.off{opacity:0}
 #agS[data-st=rec] .vzH{visibility:hidden}   /* mientras grabas, el estado ya dice qué hacer */
-.vcol2{width:64px;display:flex;flex-direction:column;align-items:center;flex-shrink:0}
-.vb2{width:64px;height:64px}
-/* el número del volumen, como el reloj del reposo: al cambiar, el dígito cae (o sube) */
-.vol2{flex:1;position:relative;width:72px;min-height:56px;overflow:hidden;font:500 44px/1 var(--texto);letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--text);transition:opacity .2s ease}
+.vcol2{width:64px;display:flex;flex-direction:column;align-items:center;flex-shrink:0;padding:6px 0}
+.vb2{width:56px;height:56px}
+.vb2 svg{width:26px;height:26px}
+/* el número del volumen (A3: Figtree 46): al cambiar, el dígito cae (o sube); si la tele no dice su nivel, tenue */
+.vol2{flex:1;position:relative;width:72px;min-height:56px;overflow:hidden;font:400 46px/1 var(--texto);letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--text);transition:opacity .2s ease}
 .vol2.w3{font-size:36px}
 .vol2.muted{opacity:.4}
 .vol2.unknown{color:var(--text-faint)}
@@ -428,49 +468,38 @@ a.bt{text-decoration:none}
 .vn.up{opacity:0;transform:translateY(-.4em);transition:none}
 .vn.dn{opacity:0;transform:translateY(.4em);transition:none}
 .vn.vout{transition:opacity .15s var(--ease),transform .3s var(--ease)}
-.mute2{width:64px;height:56px;margin-top:6px}
+.mute2{width:48px;height:48px;color:var(--text-soft)}
 .mute2[aria-pressed=true]{color:var(--accent-text)}
 .mute2 .m-off,.mute2[aria-pressed=true] .m-on{display:none}
 .mute2[aria-pressed=true] .m-off{display:block}
-/* navegación, reproducción (play, el único relleno malva), accesos */
-.nav2{height:56px;display:flex;align-items:center}
-.nav2 .b2{flex:1;height:56px}
-.play2{height:88px;display:flex;align-items:center;justify-content:center;gap:40px}
-.sk2{width:64px;height:64px}
-.pp2{width:84px;height:84px;border-radius:999px;background:var(--accent);color:var(--on-accent);box-shadow:var(--play-shadow);transition:transform .2s var(--ease),filter .2s ease}
+/* navegación, transporte (play, el único disco lleno; a la izquierda el hueco de Apagar, a la derecha el micro del pulgar)
+   y accesos */
+.nav2{height:52px;display:flex;align-items:center;justify-content:space-between;margin-top:4px}
+.nav2 .b2{flex:0 1 48px;height:48px}
+.play2{height:84px;display:flex;align-items:center;justify-content:space-between}
+.ph2{width:48px;height:48px;flex:none}
+.sk2{width:56px;height:56px}
+.mic2{width:48px;height:48px}
+.mic2::after{content:"";position:absolute;inset:0;border-radius:999px;box-shadow:inset 0 0 0 2px var(--accent);opacity:0;transform:scale(.9);transition:opacity .15s ease,transform .2s cubic-bezier(.23,1,.32,1)}
+:root.escucha .mic2::after{opacity:1;transform:none}
+.play2 .mic2[data-hide]{display:flex!important;visibility:hidden}   /* sin permiso de Fogar, el hueco se queda: play sigue en el centro */
+.pp2{width:80px;height:80px;border-radius:999px;background:var(--accent);color:var(--on-accent);box-shadow:var(--play-shadow);transition:transform .2s var(--ease),filter .2s ease}
 .pp2::before{display:none}
 .pp2.dn,.pp2:active{transform:scale(.94)}
-.apps2{display:flex;justify-content:center;gap:4px}
-.apps2 .b2{height:52px;padding:0 12px 0 8px;gap:8px;font-size:16px;font-weight:500}
+.apps2{display:flex;justify-content:space-between;gap:4px}
+.apps2 .b2{height:48px;padding:0 4px;gap:8px;font-size:15px;font-weight:500}
 .apps2 .b2::before{width:100%;height:100%}
-.apps2 .logo{width:28px;height:28px;flex:none;fill:none;stroke:none}
-@media (max-width:380px){.apps2 .b2{padding:0 8px 0 4px;gap:6px;font-size:15px}.apps2 .logo{width:26px;height:26px}}
+.apps2 .logo{width:24px;height:24px;flex:none;fill:none;stroke:none}
+@media (max-width:380px){.apps2 .b2{gap:6px;font-size:14px}}
 /* un bloque sin nada visible (por el rol, o una lista de accesos vacía) no ocupa sitio */
 .nav2:not(:has(>:not([data-hide]))),.play2:not(:has(>:not([data-hide]))),.apps2:not(:has(>:not([data-hide]))){display:none}
-/* Fogar, sin barra: el orbe que respira, la frase y el micro */
-.fogar2{width:100%;height:68px;border-radius:var(--r-l);background:transparent;color:var(--text);border:0;display:flex;align-items:center;gap:14px;padding:0 6px;font:inherit;text-align:left;cursor:pointer;touch-action:manipulation}
-.orb2{display:block;width:46px;height:46px;border-radius:999px;flex-shrink:0;background:radial-gradient(circle at 35% 30%,#a99ad1 0%,#7c6aae 55%,#6e8cc4 120%);box-shadow:0 0 0 8px rgba(124,106,174,.14),0 0 36px rgba(124,106,174,.5);animation:breathe 3.4s ease-in-out infinite}
-@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
-.jt2{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
-.jt2 b{font:600 18px/1.15 var(--texto);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.jt2 small{font-size:14px;color:var(--text-soft)}
-.fogar2>svg{flex:none}
 /* ── modos de la tele (TVC Diseño - Control nativo de la tele; features/tele.js): Fogar TV, Tele (:root.tv) y Apagada
    (:root.off). Las luces de Tele (azul y verde azulado) salen de ambient.js; aquí cambian en 1,4 s si hay tele (:root.tele). */
 :root.tele{transition:--ca 1.4s ease,--cb 1.4s ease}
 :root.tele .amb{transition:opacity 1.2s ease}
 :root.off .amb{opacity:.18}
-/* fila nueva: dónde está la tele (Fogar TV | Tele) y el encendido */
-.srcRow{display:flex;align-items:center;justify-content:space-between;margin-top:2px}
-.srcRow[hidden]{display:none}
-.srcSeg{position:relative;display:flex;padding:3px;border-radius:999px;background:var(--pad)}
-.srcSeg button{position:relative;z-index:1;height:44px;padding:0 18px;border:0;border-radius:999px;background:transparent;color:var(--text-soft);font:600 14px var(--texto);cursor:pointer;touch-action:manipulation;transition:color .4s ease}
-.srcSeg button[aria-checked=true]{color:var(--text)}
-.srcSeg button:focus-visible{outline:2px solid var(--accent-text);outline-offset:2px}
-.srcSeg .ind{position:absolute;top:3px;bottom:3px;left:3px;border-radius:999px;box-shadow:inset 0 0 0 1.5px var(--accent);transition:transform .55s var(--ease),width .55s var(--ease)}
-.pw2{width:48px;height:48px;margin-right:-8px}
-/* la tele no responde: la fila y ⏻ apagados y el punto de estado en aviso */
-.srcRow [aria-disabled=true]{opacity:.4;cursor:default}
+/* la tele no responde: la píldora y ⏻ apagados y el punto de estado en aviso */
+.top2 [aria-disabled=true]{opacity:.4;cursor:default}
 :root.tvq .app2 .dot{background:var(--warn)}
 /* trackpad ↔ cruceta: la misma superficie; en la tele se desliza para moverse y se toca para elegir */
 .cross{position:absolute;inset:0 0 72px 0;pointer-events:none;opacity:0;transform:scale(.9);transition:opacity .45s ease,transform .7s var(--ease)}
@@ -501,53 +530,54 @@ a.bt{text-decoration:none}
 :root.off .offV{opacity:1;pointer-events:auto;transition-delay:.35s}
 .pwOrb{position:relative;width:132px;height:132px;border-radius:999px;border:0;background:transparent;color:var(--text);cursor:pointer;display:grid;place-items:center;touch-action:manipulation}
 .pwOrb:focus-visible{outline:2px solid var(--accent-text);outline-offset:4px}
-.pwOrb::before{content:"";position:absolute;inset:0;border-radius:999px;box-shadow:inset 0 0 0 1.5px var(--line),0 0 0 14px rgba(124,106,174,.08);animation:breathe 3.4s ease-in-out infinite}
-.pwOrb::after{content:"";position:absolute;inset:0;border-radius:999px;background:radial-gradient(circle at 35% 30%,#a99ad1,#7c6aae 55%,#6e8cc4 120%);opacity:0;transform:scale(.6);transition:opacity .4s ease,transform .9s var(--ease)}
+.pwOrb::before{content:"";position:absolute;inset:0;border-radius:999px;box-shadow:inset 0 0 0 1.5px var(--line),0 0 0 14px var(--accent-tint);animation:breathe 3.4s ease-in-out infinite}
+@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+.pwOrb::after{content:"";position:absolute;inset:0;border-radius:999px;background:var(--accent);opacity:0;transform:scale(.6);transition:opacity .4s ease,transform .9s var(--ease)}
 .pwOrb svg{position:relative;z-index:1;width:40px;height:40px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round}
 :root.waking .pwOrb::after{opacity:1;transform:scale(1)}
-:root.waking .pwOrb svg{color:#fff}
+:root.waking .pwOrb svg{color:var(--on-accent)}
 .offT{text-align:center}
 .offT b{display:block;font:400 26px/1.15 var(--titular);letter-spacing:-.035em}
 .offT small{display:block;margin-top:6px;font-size:15px;color:var(--text-soft);transition:opacity .3s ease}
 /* pantallas bajas (iPhone SE, Safari con barras): todo un poco más compacto para que el trackpad no desaparezca */
 @media (orientation:portrait) and (max-height:720px){
   .app2{gap:6px}
-  .nm2 b{font-size:30px}.ttl2{gap:6px}
-  .vb2{width:56px;height:56px}.vol2{font-size:40px}.vol2.w3{font-size:30px}.mute2{height:48px}
-  .nav2,.nav2 .b2{height:50px}.play2{height:72px;gap:32px}.sk2{width:56px;height:56px}.pp2{width:72px;height:72px}
-  .apps2,.apps2 .b2{height:48px}.fogar2{height:58px}.orb2{width:40px;height:40px}.jt2 b{font-size:19px}
+  .fogar2{height:62px}.fLine{width:100px;height:49px}
+  .vb2{width:52px;height:52px}.vol2{font-size:40px}.vol2.w3{font-size:30px}
+  .nav2{height:48px}.play2{height:72px}.sk2{width:52px;height:52px}.pp2{width:72px;height:72px}
+  .apps2,.apps2 .b2{height:44px}
 }
 /* apaisado o tablet: trackpad a la izquierda; cabecera y botones en una columna a la derecha */
 @media (orientation:landscape) and (min-width:640px){
   .app2{display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,36vw);grid-template-rows:auto minmax(0,1fr);column-gap:18px;row-gap:10px}
   .mid2{grid-column:1;grid-row:1/-1;margin-top:0}
-  .top2{grid-column:2;grid-row:1;align-self:start}
-  .dock2{grid-column:2;grid-row:2;display:flex;flex-direction:column;justify-content:flex-end;gap:8px;min-height:0}
-  /* con la fila Fogar TV | Tele, debajo de la cabecera */
-  :root.tele .app2{grid-template-rows:auto auto minmax(0,1fr)}
-  .srcRow{grid-column:2;grid-row:2;margin-top:0}
-  :root.tele .app2 .dock2{grid-row:3}
+  .app2{grid-template-rows:auto auto auto minmax(0,1fr)}
+  .top2{grid-column:2;grid-row:1}
+  .now2{grid-column:2;grid-row:2;margin-top:0}
+  .fogar2{grid-column:2;grid-row:3}
+  .dock2{grid-column:2;grid-row:4;display:flex;flex-direction:column;justify-content:flex-end;gap:8px;min-height:0}
   :root.tv .apps2{margin:-4px 0}
   .gwN{grid-column:1;grid-row:1;align-self:start;z-index:2;margin:10px;box-shadow:var(--shadow-2)}   /* sobre el trackpad */
 }
 @media (orientation:landscape) and (min-width:640px) and (max-height:520px){
   .app2{row-gap:6px}.dock2{gap:4px}
-  .nm2 b{font-size:28px}.ttl2{gap:6px}
-  .vb2{width:48px;height:48px}.vol2{font-size:36px}.vol2.w3{font-size:28px}.mute2{height:48px}
-  .nav2,.nav2 .b2{height:48px}.play2{height:62px;gap:28px}.sk2{width:52px;height:52px}.pp2{width:62px;height:62px}
-  .apps2,.apps2 .b2{height:48px}.fogar2{height:52px}
-  :root.tv .apps2{margin:-2px 0}.orb2{width:36px;height:36px}.jt2 b{font-size:18px}
+  .fogar2{height:56px}.fLine{width:92px;height:45px}
+  .vb2{width:48px;height:48px}.vol2{font-size:36px}.vol2.w3{font-size:28px}
+  .nav2{height:48px}.play2{height:62px}.sk2{width:52px;height:52px}.pp2{width:62px;height:62px}
+  .apps2,.apps2 .b2{height:44px}
+  :root.tv .apps2{margin:-2px 0}
 }
 /* ajustes: portada por alcance y una página por tema (TVC Diseño - Ajustes del mando) */
 #setS [hidden]{display:none!important}  /* .nv, .stK y compañía ponen display: hidden tiene que ganar */
 .stH{position:relative;overflow:hidden;border-radius:var(--r-l);padding:20px 18px 18px;background:var(--bg);display:flex;flex-direction:column;gap:12px;margin-bottom:4px}
 .stH::before,.stH::after{content:"";position:absolute;border-radius:50%;pointer-events:none;opacity:var(--orb)}
-.stH::before{left:-70px;top:-110px;width:260px;height:260px;background:radial-gradient(closest-side,var(--malva),transparent)}
-.stH::after{right:-80px;top:-30px;width:220px;height:220px;background:radial-gradient(closest-side,var(--cielo),transparent)}
+.stH::before{left:-70px;top:-110px;width:260px;height:260px;background:radial-gradient(closest-side,var(--luz-a),transparent)}
+.stH::after{right:-80px;top:-30px;width:220px;height:220px;background:radial-gradient(closest-side,var(--luz-b),transparent)}
 .stH>*{position:relative}
 :root[data-theme=claro] .stH{background:var(--surface-2)}
 .stR{display:flex;align-items:center;gap:14px}
-.stO{width:44px;height:44px;border-radius:50%;flex:none;background:radial-gradient(circle at 35% 30%,#a99ad1,var(--malva) 55%,var(--cielo));box-shadow:0 0 0 6px color-mix(in srgb,var(--malva) 16%,transparent),0 0 30px color-mix(in srgb,var(--malva) 45%,transparent)}
+.stO{width:44px;height:44px;border-radius:50%;flex:none;display:grid;place-items:center;color:var(--text);box-shadow:inset 0 0 0 1.5px var(--line)}   /* la F de Fogar */
+.stO svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round}
 .stT{font:400 24px/1.1 var(--titular);letter-spacing:-.035em}
 .stH .me{margin:2px 0 0}
 .stC{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--dim);font-variant-numeric:tabular-nums}
@@ -579,9 +609,9 @@ a.bt{text-decoration:none}
 .pick small{font-size:12px;color:var(--dim);line-height:1.3;padding:0 2px}
 .mini{position:relative;display:block;height:78px;border-radius:var(--r-s);overflow:hidden;background:var(--tv)}
 .mini i{position:absolute;border-radius:4px}
-.mini i:nth-child(1){background:rgba(246,243,240,.85)}
-.mini i:nth-child(2){background:rgba(210,201,238,.55);border-radius:3px}
-.mini i:nth-child(3){background:color-mix(in srgb,var(--cielo) 70%,transparent)}
+.mini i:nth-child(1){background:rgba(236,230,220,.85)}
+.mini i:nth-child(2){background:rgba(214,207,197,.5);border-radius:3px}
+.mini i:nth-child(3){background:color-mix(in srgb,#ee6a2c 60%,transparent)}
 /* hora · contexto · música, en % de la tele, como las tres distribuciones de idle-app.js */
 .ly-rotar i:nth-child(1),.ly-margen i:nth-child(1){left:6%;top:50%;width:46%;height:38%}
 .ly-rotar i:nth-child(2),.ly-margen i:nth-child(2){left:66%;top:12%;width:28%;height:14%}
@@ -592,14 +622,14 @@ a.bt{text-decoration:none}
 .ly-apilada i:nth-child(1){left:28%;top:8%;width:44%;height:40%}
 .ly-apilada i:nth-child(2){left:34%;top:54%;width:32%;height:10%}
 .ly-apilada i:nth-child(3){left:30%;top:72%;width:40%;height:16%}
-.ly-rotar::after{content:"";position:absolute;left:6px;top:6px;width:16px;height:16px;border-radius:50%;border:2px solid rgba(246,243,240,.7);border-right-color:transparent;box-sizing:border-box}
-.gl{background:linear-gradient(120deg,#3b2a4a,#1d2a44 50%,#5a3b2e)}
+.ly-rotar::after{content:"";position:absolute;left:6px;top:6px;width:16px;height:16px;border-radius:50%;border:2px solid rgba(236,230,220,.7);border-right-color:transparent;box-sizing:border-box}
+.gl{background:linear-gradient(120deg,#20332a,#13201b 50%,#5a1a10)}
 .gl i{left:30%;top:12px;right:10px;bottom:12px;border-radius:9px}
-.gl-A i{background:rgba(246,243,240,.16)!important;box-shadow:inset 0 0 0 1px rgba(246,243,240,.18);backdrop-filter:blur(8px)}
-.gl-B i{background:rgba(39,32,48,.62)!important}
-.gl-C i{background:#2d2637!important}
+.gl-A i{background:rgba(236,230,220,.16)!important;box-shadow:inset 0 0 0 1px rgba(236,230,220,.18);backdrop-filter:blur(8px)}
+.gl-B i{background:rgba(18,25,27,.62)!important}
+.gl-C i{background:#1a2325!important}
 
-/* movimiento reducido: luces quietas, orbe sin respirar y sin transiciones */
+/* movimiento reducido: luces quietas y sin transiciones */
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}}
 
 @media (prefers-reduced-motion:reduce){.spin2,.rep.wait::after,.kbSt.busy i{animation:rmPulse 1.6s ease-in-out infinite!important}}

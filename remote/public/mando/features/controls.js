@@ -109,7 +109,7 @@ export const controls = {
     on('me', j => {                                     // el mando se adapta a lo que puede hacer cada uno
       const P = j.perms || {};
       hide('[data-a=go],[data-url]', !P.web);
-      hide('[data-a=ag]', P.agent === 'off');
+      hide('[data-a=ag],#mic2', P.agent === 'off');
     });
   },
 };

@@ -23,8 +23,8 @@ function spPos() { return !sp.now || sp.now.empty ? 0 : Math.min(sp.now.duration
 /* luces del panel: los dos primeros colores de la carátula ([h, s, l] del servidor, o su fondo y acento) */
 function spLights(n) {
   const c = n && !n.empty && n.colors, lim = LIMITS.sp[themeOf()], S = $('#spS');
-  const a = c ? (Array.isArray(c.hsl) && c.hsl[0]) || c.accent : '#7c6aae';
-  const b = c ? (Array.isArray(c.hsl) && c.hsl[1]) || c.bg : '#6e8cc4';
+  const a = c ? (Array.isArray(c.hsl) && c.hsl[0]) || c.accent : '#20332a';
+  const b = c ? (Array.isArray(c.hsl) && c.hsl[1]) || c.bg : '#5a1a10';
   S.style.setProperty('--sa', a ? tone(a, lim) : 'transparent'); S.style.setProperty('--sb', b ? tone(b, lim) : 'transparent');
 }
 /* título, artista, contexto y carátula; al cambiar de canción, con el relevo (sin él con movimiento reducido) */

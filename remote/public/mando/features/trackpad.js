@@ -27,7 +27,7 @@ function releaseV(t) {
   return w.reduce((a, s) => a + s.d, 0) / Math.max(1, t - w[0].t + Math.min(w[0].dt, VWIN));
 }
 const r2 = n => Math.round(n * 100) / 100;
-/* un halo malva sigue al dedo mientras toca (en vez de la onda) y la ayuda se esconde solo mientras se toca */
+/* un halo sigue al dedo mientras toca (en vez de la onda) y la ayuda se esconde solo mientras se toca */
 let haloId = null;
 let pad, hint, halo;
 /* la ayuda se retira para siempre tras HINT_USES gestos: es la pantalla que más se ve y ya se sabe usar */
@@ -39,7 +39,7 @@ function haloAt(e) { const b = pad.getBoundingClientRect(); halo.style.left = (e
    El gesto es del carril si el primer dedo cae en ella. Toque corto: clic, como en el resto. Pasados RAIL_ARM px se decide el
    eje: en horizontal (|dx| > 1,5·|dy|) el gesto pasa al cursor; si no, arrastre: desplazamiento relativo con aceleración e
    inercia, en el sentido de una barra (bajar el pulgar baja la página), sea cual sea «Desplazamiento natural». Activo, crece
-   y el pulgar se enciende en malva. Sin halo: con el mapeo relativo el dedo no está sobre el pulgar, y un halo a su lado diría
+   y el pulgar se enciende en brasa. Sin halo: con el mapeo relativo el dedo no está sobre el pulgar, y un halo a su lado diría
    que sí. En un extremo, si el dedo sigue empujando, el pulgar se aplasta contra el borde (rubber-banding) */
 const RAIL_ZONE = 44, RAIL_ARM = 10, RAIL_HOLD = 600, VMAX = 8;   // VMAX: px por ms, tope de la inercia
 /* Medido en la tele el 2026-11-03 (Chrome 155 del kiosco, DPR 1,5): un golpe de rueda XTest desplaza 120 px CSS, que Chromium

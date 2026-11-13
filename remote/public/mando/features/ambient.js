@@ -1,5 +1,6 @@
-// Ambiente del mando (v3): dos luces en órbita con el color de lo que hay en la tele (malva y cielo en reposo, los colores
-// de la carátula si suena algo, el color de la app si hay una abierta) y la cabecera que dice qué es. Los colores pasan a
+// Ambiente del mando (v3): dos luces en órbita con el color de lo que hay en la tele (niebla y rescoldo sin nada, como el
+// reposo sin música; los colores
+// de la carátula si suena algo; el color de la app si hay una abierta) y la cabecera que dice qué es. Los colores pasan a
 // --ca/--cb de <html>, que cambian en 4 s (@property en mando.css); las luces se paran con la página oculta.
 // Los colores de fuera se recortan en luminancia: con las dos luces superpuestas, el fondo no pasa de 0,05 (en oscuro).
 import { cfg } from '../core/store.js';
@@ -9,16 +10,17 @@ import { setTitle } from '../ui/status.js';
  * Luminancia relativa permitida a cada luz [mínima, máxima]. En oscuro, el tope por luminancia de Fogar (TVC Decisión -
  * Reloj, acento y tokens de la tele): en el peor punto (los dos centros encima) el fondo no pasa de 0,05 detrás de ningún
  * texto. Manda la miniatura de la tele (luces al 45 y 35 % sobre #070b0c); el fondo con el relleno del trackpad (24 %
- * sobre #0b1012) y ahora suena (40 % sobre #070b0c) quedan por debajo. Lo comprueba test/unit/luz.test.js. En claro, el
- * texto secundario a 4,5:1 o más como antes (se rehace en la fase 4 del rediseño, con el mando).
+ * sobre #0b1012) y ahora suena (40 % sobre #070b0c) quedan por debajo. Lo comprueba test/unit/luz.test.js. En claro, al
+ * revés: las luces no bajan de 0,11 para que no oscurezcan el fondo crema detrás del texto secundario (4,5:1 o más).
  */
 export const LIMITS = {
   mando: { oscuro: [0, 0.1], claro: [0.11, 1] },
   sp: { oscuro: [0, 0.1], claro: [0.17, 1] },
 };
-const MALVA = '#7c6aae', CIELO = '#6e8cc4';
+// sin nada en la tele, niebla y rescoldo (LUZ.sin de idle-app.js): Fogar ya no usa la malva y el cielo de Jota
+const NIEBLA = '#20332a', RESCOLDO = '#5a1a10';
 
-/* apps conocidas por su dominio: nombre y color (el segundo, malva) */
+/* apps conocidas por su dominio: nombre y color (el segundo, rescoldo) */
 /** @type {[RegExp, string, string][]} */
 const APPS = [
   [/(^|\.)netflix\.com$/, 'Netflix', '#b8323c'],
@@ -58,7 +60,7 @@ function hslOf(hex) {
 export function tone(c, lim) {
   const [ymin, ymax] = lim;
   let [h, s, l] = typeof c === 'string' ? hslOf(c) : c;
-  if (![h, s, l].every(Number.isFinite)) return MALVA;
+  if (![h, s, l].every(Number.isFinite)) return NIEBLA;
   s = Math.min(0.75, Math.max(0.3, s)); l = Math.min(0.9, Math.max(0.1, l));
   const y = lum(rgbOf(h, s, l));
   if (y > ymax || y < ymin) {                            // bisección sobre la luminosidad hasta caer dentro
@@ -78,17 +80,17 @@ const clean = (t, n) => (n ? t.replace(new RegExp('\\s*[-–—|·]\\s*' + n.rep
 export function contextOf(s) {
   // en la entrada del Google TV (modo Tele) la página de Fogar TV no se ve: azul y verde azulado
   if (s && s.tv && s.tv.power === 'on' && s.tv.src === 'tv') return { t: 'Google TV', m: 'Inicio', a: '#4f78b8', b: '#3f8f94' };
-  if (!s || !s.cdp) return { t: 'Navegador no disponible', m: '', a: MALVA, b: CIELO };
+  if (!s || !s.cdp) return { t: 'Navegador no disponible', m: '', a: NIEBLA, b: RESCOLDO };
   const amb = s.amb;
-  if (amb) {                                             // reposo: malva y cielo, o la carátula si suena algo
+  if (amb) {                                             // reposo: niebla y rescoldo, o la carátula si suena algo
     const mu = amb.music;
-    if (mu && mu.title) return { t: mu.title, m: (mu.artist ? mu.artist + ' en ' : 'En ') + 'Spotify', a: mu.colors ? mu.colors[0] : MALVA, b: mu.colors ? mu.colors[1] : CIELO };
-    return { t: 'En reposo', m: 'Hora y tiempo', a: MALVA, b: CIELO };
+    if (mu && mu.title) return { t: mu.title, m: (mu.artist ? mu.artist + ' en ' : 'En ') + 'Spotify', a: mu.colors ? mu.colors[0] : NIEBLA, b: mu.colors ? mu.colors[1] : RESCOLDO };
+    return { t: 'En reposo', m: 'Hora y tiempo', a: NIEBLA, b: RESCOLDO };
   }
-  if (!s.host) return { t: 'Inicio', m: '', a: MALVA, b: CIELO };
+  if (!s.host) return { t: 'Inicio', m: '', a: NIEBLA, b: RESCOLDO };
   const app = appOf(s.host);
   const t = clean(String(s.title || ''), app && app.n) || (app ? app.n : s.host);
-  return { t, m: app ? (t === app.n ? '' : app.n) : s.host === t ? '' : s.host, a: app ? app.c : [hueOf(s.host), 0.5, 0.5], b: MALVA };
+  return { t, m: app ? (t === app.n ? '' : app.n) : s.host === t ? '' : s.host, a: app ? app.c : [hueOf(s.host), 0.5, 0.5], b: RESCOLDO };
 }
 
 let last = null;
@@ -105,6 +107,6 @@ export const ambient = {
   init() {
     const pause = () => document.documentElement.classList.toggle('ambOff', document.hidden);
     document.addEventListener('visibilitychange', pause); pause();
-    paintAmbient(null);                                  // malva y cielo hasta que llegue el estado
+    paintAmbient(null);                                  // niebla y rescoldo hasta que llegue el estado
   },
 };

@@ -1,4 +1,4 @@
-// Voz (v4): mantener pulsada la línea de «Hablar con Fogar» para hablar. El micrófono del móvil sube en directo al servidor como
+// Voz (v4): mantener pulsada la línea de «Hablar con Fogar» (o el micro del pulgar, que escucha en la cabecera) para hablar. El micrófono del móvil sube en directo al servidor como
 // PCM (Float32 LE, 16 kHz, mono, trozos de 100 ms) por el WebSocket del mando: `vstart`, audio binario y `vend`. La vista
 // del agente enseña la frase mientras se dice (`talk` partial) y la respuesta. La respuesta suena en UN solo sitio: la
 // tele (por defecto), este móvil o ninguno (solo texto). No es un módulo del mando: la hoja `agS` es de agent.js, que
@@ -37,6 +37,10 @@ let tapT = 0, stopT = 0, flushT = 0;
 let pending = [];                                       // los primeros trozos, en memoria hasta saber que no es un toque
 /** @type {{ stage: (st: string) => void, said: (t: string) => void, rep: (t: string, cls?: string) => void, focus: () => void, press?: () => void }} */
 let ui;
+/** Lo propio del botón de la pulsación en curso: al empezar, con un toque corto (por defecto, ui.focus) y al enviar.
+ *  @typedef {{ press?: () => void, tap?: () => void, sent?: () => void }} Who */
+/** @type {Who} */
+let who = {};
 
 export const canRecord = () => !!(window.isSecureContext && navigator.mediaDevices && navigator.mediaDevices.getUserMedia &&
   window.AudioContext && window.AudioWorkletNode);
@@ -96,11 +100,12 @@ function go() {
   pending = [];
 }
 
-/** @param {boolean} [key] con teclado no hay toque corto: soltar siempre envía */
-async function start(key = false) {
+/** @param {boolean} [key] con teclado no hay toque corto: soltar siempre envía @param {Who} [h] */
+async function start(key = false, h = {}) {
   if (held || node || stream) return;                   // ya hay una pulsación en curso (o se está pidiendo el micro)
-  held = true; long = key; started = false; pending = [];
-  if (ui.press) ui.press();                             // una pulsación nueva corta la respuesta que aún suene en el móvil (si interrumpe)
+  held = true; long = key; started = false; pending = []; who = h;
+  if (ui.press) ui.press();
+  if (h.press) h.press();                             // una pulsación nueva corta la respuesta que aún suene en el móvil (si interrumpe)
   const me = ++press;
   // iOS: el contexto se crea (o se reanuda) dentro del propio gesto, antes de cualquier await
   if (!ensureAudioCtx()) {
@@ -141,9 +146,10 @@ function stop() {
   held = false;
   const tap = !long, sent = started;
   if (tap || !sent || !node) { release(); started = false; }
-  if (tap) { ui.stage('idle'); ui.focus(); return; }
+  if (tap) { ui.stage('idle'); (who.tap || ui.focus)(); return; }
   if (!sent) return;                                    // aún sin micrófono: start() avisa al volver
   buzz(6); ui.rep('Pensando', 'wait'); ui.stage('wait');
+  if (who.sent) who.sent();
   if (node) finish(); else sendEnd();
 }
 
@@ -185,6 +191,16 @@ export const voice = {
     if (!held && !started && !node && !stream) return;
     held = false; started = false; press++; release();
   },
+  /** Otro botón que graba igual que la línea (el micro del pulgar), con lo suyo al empezar, al tocar y al enviar.
+   *  @param {HTMLElement} b @param {Who} [h] */
+  bind(b, h = {}) {
+    b.addEventListener('pointerdown', e => { e.preventDefault(); b.setPointerCapture(e.pointerId); start(false, h); });
+    for (const ev of ['pointerup', 'pointercancel']) b.addEventListener(ev, stop);
+    b.addEventListener('contextmenu', e => e.preventDefault());
+    // teclado: espacio o Intro mantenidos
+    b.addEventListener('keydown', e => { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); start(true, h); } });
+    b.addEventListener('keyup', e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); stop(); } });
+  },
   /** @param {typeof ui} hooks @returns {boolean} true si hay micrófono (la línea graba) */
   init(hooks) {
     ui = hooks;
@@ -193,12 +209,7 @@ export const voice = {
     b.setAttribute('aria-label', 'Mantén para hablar con Fogar; toca para escribir');
     $('#agH').textContent = 'Mantén pulsada la línea para hablar · toca para escribir';
     o.hidden = false; paintOut();
-    b.addEventListener('pointerdown', e => { e.preventDefault(); b.setPointerCapture(e.pointerId); start(); });
-    for (const ev of ['pointerup', 'pointercancel']) b.addEventListener(ev, stop);
-    b.addEventListener('contextmenu', e => e.preventDefault());
-    // teclado: espacio o Intro mantenidos
-    b.addEventListener('keydown', e => { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); start(true); } });
-    b.addEventListener('keyup', e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); stop(); } });
+    voice.bind(b);
     // un solo destino, y se recuerda en este móvil
     o.addEventListener('click', () => { cfg.voiceOut = OUTS[(OUTS.indexOf(out()) + 1) % OUTS.length]; saveCfg(); paintOut(); buzz(8); });
     return true;

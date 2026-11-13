@@ -55,10 +55,10 @@ test('mando: tone() en oscuro deja las luces por debajo de 0,05 en el peor punto
     const { tone, LIMITS } = await import(pathToFileURL(path.join(tmp, 'mando', 'features', 'ambient.js')).href);
     const t = lim => COVERS.map(c => tone(c, lim));
     const m = t(LIMITS.mando.oscuro), s = t(LIMITS.sp.oscuro);
-    // mando.css: luces al 24 % sobre --bg con el relleno del trackpad encima; la miniatura de la tele, al 45 y 35 % sobre --tv;
+    // mando.css: luces al 24 % sobre --bg con el relleno del trackpad (--pad2, su parte más clara) encima; la miniatura de la tele, al 45 y 35 % sobre --tv;
     // ahora suena, al 40 % sobre --sp-bg
     const cases = {
-      trackpad: Math.max(...m.map(A => lum(mix(mix(mix(rgb('#0b1012'), rgb(A), 0.24), rgb(A), 0.24), rgb('#ece6dc'), 0.045)))),
+      trackpad: Math.max(...m.map(A => lum(mix(mix(mix(rgb('#0b1012'), rgb(A), 0.24), rgb(A), 0.24), rgb('#ece6dc'), 0.06)))),   // --pad2: arriba, 6 % de hueso
       miniatura: worst('#070b0c', [], { a: m, b: m.filter((_, i) => i % 5 === 0), aa: 0.45, ab: 0.35 }),
       ahoraSuena: worst('#070b0c', [], { a: s, b: s.filter((_, i) => i % 5 === 0), aa: 0.4, ab: 0.4 }),
     };
