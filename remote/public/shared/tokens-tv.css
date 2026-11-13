@@ -5,7 +5,8 @@
      secundario (hueso-tenue no llega a 4,5:1 sobre la luz del fondo vivo);
    - el acento es hueso: un disco lleno solo para la acción principal (play), un aro para lo activo;
    - la escala a 3 m: tamaños en múltiplos de --u (1 px de la tele de 1920×1080). Van sin unidad para multiplicarlos por
-     --u o por la --s del reposo (--u por el ajuste de su celda). Nada baja de 26 (24 solo en mayúsculas espaciadas).
+     --u o por la --s del reposo (--u por el ajuste de su celda). Nada baja de 30, tampoco en mayúsculas espaciadas (30 px de la tele a
+     1080p, decidido por Sito el 2026-11-13; lo comprueba test/unit/tv-min-text.test.js).
    Un solo bloque :root de declaraciones simples: el servidor lo lee tal cual y se lo inyecta a la isla (src/tv/tokens.js). */
 :root{
   --tv-text:#d6cfc5;
@@ -28,7 +29,7 @@
   --tv-destacado:44;
   --tv-texto:36;
   --tv-secundario:30;
-  --tv-metadato:26;
+  --tv-metadato:30;
   --tv-ease:cubic-bezier(.32,.72,0,1);
   --tv-pulse:1.6s;
   --tv-tick:1s;

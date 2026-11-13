@@ -22,16 +22,16 @@
   border-radius .55s var(--tv-ease),padding .55s var(--tv-ease);will-change:height,max-width}
 .pill.exp{height:${u(120)};min-width:${u(720)};max-width:${u(780)};border-radius:${u(60)};padding:0 ${u(32)} 0 ${u(22)};gap:${u(20)}}
 .ic svg,.mini .mi svg{width:58%;height:58%;fill:none;stroke:var(--a);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.ic{flex:none;width:${u(42)};height:${u(42)};border-radius:50%;display:grid;place-items:center;font-size:${u(24)};line-height:1;
+.ic{flex:none;width:${u(42)};height:${u(42)};border-radius:50%;display:grid;place-items:center;font-size:${u(30)};line-height:1;
   background:color-mix(in srgb,var(--a) 22%,transparent);transition:width .55s var(--tv-ease),height .55s var(--tv-ease),font-size .55s}
 .exp .ic{width:${u(76)};height:${u(76)};font-size:${u(38)}}
 .tx{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center}
-.t{font-size:${u(26)};font-weight:500;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:font-size .55s}
+.t{font-size:${u(30)};font-weight:500;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:font-size .55s}
 .exp .t{font-size:${u(30)}}
 .s{font-size:0;opacity:0;color:var(--tv-text-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:opacity .4s,font-size .55s}
-.exp .s{font-size:${u(26)};opacity:1;margin-top:${u(4)}}
+.exp .s{font-size:${u(30)};opacity:1;margin-top:${u(4)}}
 /* la cifra siempre en el color del texto: un acento oscuro no se lee sobre la isla (el acento queda para anillo y barra) */
-.v{flex:none;font-size:${u(28)};font-weight:500;color:var(--tv-text);letter-spacing:-.01em;display:flex;align-items:center;gap:${u(8)};transition:font-size .55s}
+.v{flex:none;font-size:${u(30)};font-weight:500;color:var(--tv-text);letter-spacing:-.01em;display:flex;align-items:center;gap:${u(8)};transition:font-size .55s}
 .exp .v{font-size:${u(48)};font-weight:380}
 .ring{width:${u(32)};height:${u(32)};transform:rotate(-90deg);transition:width .55s,height .55s}
 .exp .ring{width:${u(52)};height:${u(52)}}
@@ -44,7 +44,7 @@
 .done .v{animation:blink var(--tv-pulse) ease-in-out 3}
 @keyframes pulse{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--a) 50%,transparent)}50%{box-shadow:0 0 0 ${u(10)} transparent}}
 @keyframes blink{50%{opacity:.55}}
-.mini{width:${u(60)};height:${u(60)};border-radius:50%;background:var(--tv-surface);display:grid;place-items:center;font-size:${u(24)};position:relative;
+.mini{width:${u(60)};height:${u(60)};border-radius:50%;background:var(--tv-surface);display:grid;place-items:center;font-size:${u(30)};position:relative;
   box-shadow:var(--tv-shadow-float)}
 .mini>.ring{position:absolute;inset:${u(4)};width:${u(52)};height:${u(52)};transform:rotate(-90deg)}
 .mini .mi{display:grid;place-items:center;width:100%;height:100%}

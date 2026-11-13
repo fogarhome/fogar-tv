@@ -264,15 +264,15 @@ ${NO_BACKDROP}{-webkit-backdrop-filter:none;backdrop-filter:none}
 .w[data-form=pill] .j{font-size:${u(40)}}
 .w[data-form=pill] .u{font-size:${u(30)}}
 .u:empty,.j:empty,.hint:empty{display:none}
-.hint{font:400 ${u(26)}/1.3 var(--tv-letra-texto);color:var(--t-soft)}
+.hint{font:400 ${u(30)}/1.3 var(--tv-letra-texto);color:var(--t-soft)}
 /* lo que hace Fogar, en palabras, junto a la línea (a 3 m, en calma, la forma quieta no basta) */
-.st{font:400 ${u(26)}/1.3 var(--tv-letra-texto);color:var(--t-soft);margin-left:${u(20)};white-space:nowrap}
+.st{font:400 ${u(30)}/1.3 var(--tv-letra-texto);color:var(--t-soft);margin-left:${u(20)};white-space:nowrap}
 .st:empty{display:none}
 /* el turno anterior se atenúa por color, nunca por opacidad */
 .tn:not(:last-child) :is(.u,.j,.hint){color:var(--t-old)}
 /* y pesa menos que el actual: a 3 m se ve de un vistazo cuál es la respuesta de ahora */
 .tn:not(:last-child) .j{font-size:${u(30)}}
-.tn:not(:last-child) .u{font-size:${u(26)}}
+.tn:not(:last-child) .u{font-size:${u(30)}}
 /* panel → píldora: el contenido sale (opacidad y desenfoque), viaja oculto y vuelve a entrar ya en la píldora */
 .log{transition:opacity ${MORPH.normal.in}ms var(--tv-ease),filter ${MORPH.normal.in}ms var(--tv-ease)}
 .w[data-morph=out] .log{opacity:0;filter:blur(${u(MORPH.normal.blur)});transition-duration:${MORPH.normal.out}ms}
@@ -305,8 +305,8 @@ ${NO_BACKDROP}{-webkit-backdrop-filter:none;backdrop-filter:none}
 .ic{width:${u(52)};height:${u(52)};border-radius:${u(16)};background:color-mix(in srgb,var(--t-you) 14%,transparent);display:grid;place-items:center}
 .ic svg{width:${u(30)};height:${u(30)};stroke:var(--tv-accent);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .tx{min-width:0}
-.tt{font:500 ${u(28)}/1.2 var(--tv-letra-texto);color:var(--t-main);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.tb{font:400 ${u(26)}/1.25 var(--tv-letra-texto);color:var(--t-soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tt{font:500 ${u(30)}/1.2 var(--tv-letra-texto);color:var(--t-main);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tb{font:400 ${u(30)}/1.25 var(--tv-letra-texto);color:var(--t-soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tb:empty{display:none}
 .ss{width:${u(30)};height:${u(30)};justify-self:end;display:grid;place-items:center}
 .spin{box-sizing:border-box;width:100%;height:100%;border-radius:50%;border:${u(3)} solid color-mix(in srgb,var(--t-you) 25%,transparent);
@@ -318,7 +318,7 @@ ${NO_BACKDROP}{-webkit-backdrop-filter:none;backdrop-filter:none}
 @keyframes draw{from{stroke-dashoffset:1}}
 .w[data-calm] .ss path{animation:none}
 .x{display:grid;place-items:center;width:100%;height:100%;border-radius:50%;background:var(--warn);color:var(--ink);
-  font:500 ${u(24)}/1 var(--tv-letra-texto)}
+  font:500 ${u(30)}/1 var(--tv-letra-texto)}
 /* ficha pequeña: la anterior del turno, las de turnos anteriores y todas en la píldora (sin detalle) */
 .tcs>.tc:not(:last-child),.tn:not(:last-child) .tc,.w[data-form=pill] .tc{grid-template-columns:${u(36)} auto ${u(30)};
   width:auto;max-width:100%;padding:${u(8)} ${u(18)} ${u(8)} ${u(10)};border-radius:${u(999)}}
@@ -328,8 +328,8 @@ ${NO_BACKDROP}{-webkit-backdrop-filter:none;backdrop-filter:none}
 .w[data-form=pill] .tcs{margin-bottom:${u(12)}}
 /* en la píldora la ficha dice lo concreto («Netflix») si lo hay, no lo genérico («Abrir en la tele») */
 .w[data-form=pill] .tc[data-d] .tt{display:none}
-.w[data-form=pill] .tc[data-d] .tb{display:block;font:500 ${u(26)}/1.2 var(--tv-letra-texto);color:var(--t-main)}
-.w[data-form=pill] .tt{font-size:${u(26)}}
+.w[data-form=pill] .tc[data-d] .tb{display:block;font:500 ${u(30)}/1.2 var(--tv-letra-texto);color:var(--t-main)}
+.w[data-form=pill] .tt{font-size:${u(30)}}
 .w[data-night] .ic svg,.w[data-night] .ss svg{stroke:var(--t-main)}
 .w[data-night] .spin{border-top-color:var(--t-main)}
 
@@ -348,7 +348,7 @@ ${NO_BACKDROP}{-webkit-backdrop-filter:none;backdrop-filter:none}
   background:linear-gradient(to top,rgba(${LOOK.media.shade},${LOOK.media.fade[0]}) 0%,rgba(${LOOK.media.shade},${LOOK.media.fade[1]}) 38%,rgba(${LOOK.media.shade},0) 72%)}
 .mp::before{content:"";grid-area:1/1;padding-top:75%}
 .mpc{grid-area:1/1;align-self:end;position:relative;z-index:1;margin:${u(176)} ${u(30)} ${u(26)};display:flex;flex-direction:column;gap:${u(12)}}
-.mk{display:flex;align-items:center;gap:${u(10)};font:600 ${u(24)}/1 var(--tv-letra-texto);letter-spacing:.14em;text-transform:uppercase;color:var(--t-soft)}
+.mk{display:flex;align-items:center;gap:${u(10)};font:600 ${u(30)}/1 var(--tv-letra-texto);letter-spacing:.14em;text-transform:uppercase;color:var(--t-soft)}
 .mk i{width:${u(10)};height:${u(10)};border-radius:50%;background:${LOOK.media.red};box-shadow:0 0 ${u(12)} ${LOOK.media.red}}
 .mt{font:600 ${u(44)}/1.08 var(--tv-letra-texto);color:var(--t-main);letter-spacing:-.01em;
   display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
@@ -357,8 +357,8 @@ ${NO_BACKDROP}{-webkit-backdrop-filter:none;backdrop-filter:none}
   background:color-mix(in srgb,var(--t-you) 14%,transparent);box-shadow:0 0 0 .5px rgba(255,255,255,.12)} /* filo fino, ver .body */
 .mx{min-width:0;display:flex;flex-direction:column;gap:${u(6)}}
 /* textos de lectura: nunca por debajo de 26u (24u solo en mayúsculas espaciadas, como .mk); el episodio en 2 líneas */
-.msub{font:500 ${u(26)}/1.2 var(--tv-letra-texto);color:var(--t-main);display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere}
-.mleft{font:400 ${u(26)}/1.2 var(--tv-letra-texto);color:var(--t-soft);white-space:nowrap}
+.msub{font:500 ${u(30)}/1.2 var(--tv-letra-texto);color:var(--t-main);display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere}
+.mleft{font:400 ${u(30)}/1.2 var(--tv-letra-texto);color:var(--t-soft);white-space:nowrap}
 .msub:empty,.mleft:empty{display:none}
 .mbar{display:block;height:${u(8)};border-radius:${u(4)};background:rgba(246,243,240,.2);overflow:hidden}
 .mbar i{display:block;height:100%;background:${LOOK.media.red};transform-origin:left;transition:transform .8s var(--tv-ease)}
@@ -379,7 +379,7 @@ ${NO_BACKDROP}{-webkit-backdrop-filter:none;backdrop-filter:none}
 .mli-i{position:relative;aspect-ratio:16/9;border-radius:${u(14)};overflow:hidden;background:color-mix(in srgb,var(--t-you) 14%,transparent);
   box-shadow:0 0 0 .5px rgba(255,255,255,.12),0 ${u(10)} ${u(26)} rgba(0,0,0,.3)} /* filo fino, ver .body */
 .mli .mt{font-size:${u(32)};-webkit-line-clamp:1}
-.mli .msub{font-weight:400;font-size:${u(26)};color:var(--t-soft)}
+.mli .msub{font-weight:400;font-size:${u(30)};color:var(--t-soft)}
 .mli .mbar{margin-top:${u(4)}}
 .w[data-calm] .md[data-press] .mplay::after{animation:none}
 

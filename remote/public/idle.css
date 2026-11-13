@@ -3,7 +3,7 @@
    Las medidas van en --s: la unidad de escala de la pantalla (--u) por el ajuste de su celda (--fit, lo pone el JS si el
    contenido no cabe, p. ej. con dos actividades). La hora se ajusta sola a su celda con cqh/cqw.
    Legible a 3 m: la escala de shared/tokens-tv.css (--tv-cifra, --tv-destacado, --tv-texto…, por --s), ningún texto por
-   debajo de 26 --u (24 solo en mayúsculas con .14em de espaciado) y barras de 8.
+   debajo de 30 --u (tampoco en mayúsculas espaciadas; fit() no encoge por debajo) y barras de 8.
    Tokens: Fogar para la tele (shared/tokens-tv.css; aquí, alias locales). Unbounded solo titula y aquí no hay titulares:
    todo va en Figtree, también las cifras (tabulares). El fondo vivo y la firma son los del A3 «Rincón vivo» (TVC Decisión -
    Reposo de Fogar). Presupuestos: TVC Diseño - Reposo v2 (diagnóstico). */
@@ -109,6 +109,9 @@ html[data-tv-firma=swap] .firma{transition:none;transform:none}
 #wCtx[data-v=row] .wxt br{display:none}
 #wCtx[data-v=row] .wxt .w2::before{content:", "}
 #wCtx[data-v=row] .acts{margin:0 0 0 auto;flex-direction:row;gap:calc(48 * var(--s))}
+/* sin sitio a 30 px (fit(), data-cut): fuera el subtítulo de cada actividad, luego el texto del tiempo y luego las
+   actividades de más (queda la primera, la más urgente) */
+#wCtx[data-cut] .act .as,#wCtx:is([data-cut="2"],[data-cut="3"]) .wxt,#wCtx[data-cut="3"] .act~.act{display:none}
 
 /* música */
 #wMus>.wi{display:flex;align-items:center;gap:calc(28 * var(--s))}
@@ -166,11 +169,11 @@ body.night,body.cinema{--text:#808080;--clock:#7a7a7a;--clock2:#767676;--soft:#7
 /* degradado de lectura: la tinta de la base sube desde abajo y desde el lado del texto */
 .nf-hero::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(11,16,18,.94) 0%,rgba(11,16,18,.72) 30%,rgba(11,16,18,0) 62%),linear-gradient(to right,rgba(11,16,18,.5),rgba(11,16,18,0) 55%)}
 .nf-hero figcaption{position:absolute;z-index:1;left:calc(44 * var(--s));right:calc(44 * var(--s));bottom:calc(38 * var(--s))}
-.nf-k{display:flex;align-items:center;gap:calc(14 * var(--s));font-size:calc(26 * var(--s));font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--soft)}
+.nf-k{display:flex;align-items:center;gap:calc(14 * var(--s));font-size:calc(30 * var(--s));font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--soft)}
 .nf-k i{width:calc(12 * var(--s));height:calc(12 * var(--s));border-radius:50%;background:var(--nf);box-shadow:0 0 calc(14 * var(--s)) var(--nf)}
 .nf-t{font-weight:600;font-size:calc(76 * var(--s));line-height:1;letter-spacing:-.015em;margin-top:calc(14 * var(--s));
   display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;text-wrap:balance}
-.nf-p{display:flex;align-items:center;gap:calc(22 * var(--s));margin-top:calc(22 * var(--s));font-size:calc(28 * var(--s));color:var(--soft);white-space:nowrap}
+.nf-p{display:flex;align-items:center;gap:calc(22 * var(--s));margin-top:calc(22 * var(--s));font-size:calc(30 * var(--s));color:var(--soft);white-space:nowrap}
 .nf-p #nfS{color:var(--text);font-weight:500}
 .nf-tr,.nf-bar{display:block;height:calc(8 * var(--s));border-radius:var(--tv-track-radius);background:var(--track);overflow:hidden}
 .nf-tr{flex:1;max-width:calc(260 * var(--s))}
@@ -185,14 +188,14 @@ body.night,body.cinema{--text:#808080;--clock:#7a7a7a;--clock2:#767676;--soft:#7
 .nf-play::after{content:"";position:absolute;left:54%;top:50%;transform:translate(-50%,-50%);border-style:solid;border-color:transparent transparent transparent #ece6dc;
   border-width:calc(13 * var(--s)) 0 calc(13 * var(--s)) calc(21 * var(--s))}
 .nf-epm{min-width:0}
-.nf-epk{font-size:calc(26 * var(--s));color:var(--soft);white-space:nowrap}
+.nf-epk{font-size:calc(30 * var(--s));color:var(--soft);white-space:nowrap}
 .nf-ept{font-weight:600;font-size:calc(42 * var(--s));line-height:1.12;margin-top:calc(8 * var(--s));display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
-.nf-mk{font-size:calc(24 * var(--s));font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--soft);margin-bottom:calc(16 * var(--s))}
+.nf-mk{font-size:calc(30 * var(--s));font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--soft);margin-bottom:calc(16 * var(--s))}
 .nf-row{display:flex;gap:calc(32 * var(--s))}
 .nf-card{flex:none;width:calc(392 * var(--s));min-width:0}
 .nf-cimg{position:relative;aspect-ratio:16/9;border-radius:calc(16 * var(--s));overflow:hidden;background:var(--tv-veil);box-shadow:0 calc(14 * var(--s)) calc(34 * var(--s)) rgba(0,0,0,.36),0 0 0 1px rgba(236,230,220,.06)}
 .nf-cimg .nf-bar{position:absolute;z-index:1;left:0;right:0;bottom:0;border-radius:0;height:calc(8 * var(--s));background:rgba(236,230,220,.22)}
-.nf-cs{font-size:calc(26 * var(--s));color:var(--soft);margin-top:calc(12 * var(--s));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nf-cs{font-size:calc(30 * var(--s));color:var(--soft);margin-top:calc(12 * var(--s));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .nf-more:empty,.nf-row:empty{display:none}
 .night #wNfx,.cinema #wNfx,.dim #wNfx{opacity:0!important}
 
@@ -214,7 +217,7 @@ body.night,body.cinema{--text:#808080;--clock:#7a7a7a;--clock2:#767676;--soft:#7
 .sg-c[data-cap=over] .sg-m{text-align:left;position:absolute;z-index:1;left:calc(44 * var(--s));right:calc(44 * var(--s));bottom:calc(38 * var(--s))}
 .sg-m{min-width:0;flex:1 1 auto;max-width:calc(640 * var(--s))}
 .sg-c[data-size=side] .sg-m{max-width:100%;width:calc(var(--iw) * var(--s))}
-.sg-k{display:flex;align-items:center;gap:calc(12 * var(--s));font-size:calc(24 * var(--s));font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--soft);white-space:nowrap}
+.sg-k{display:flex;align-items:center;gap:calc(12 * var(--s));font-size:calc(30 * var(--s));font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--soft);white-space:nowrap}
 .sg[data-dir=rev] .sg-k{justify-content:flex-end}
 .sg-c[data-cap=over] .sg-k{justify-content:flex-start}
 .sg-k span{overflow:hidden;text-overflow:ellipsis}
@@ -223,8 +226,8 @@ body.night,body.cinema{--text:#808080;--clock:#7a7a7a;--clock2:#767676;--soft:#7
   display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;text-wrap:balance}
 .sg-c[data-size=lead] .sg-t{font-size:calc(72 * var(--s));line-height:1}
 .sg-c[data-size=row] .sg-t{font-size:calc(40 * var(--s))}
-.sg-s{font-size:calc(28 * var(--s));color:var(--soft);margin-top:calc(14 * var(--s));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sg-c[data-size=row] .sg-s{font-size:calc(26 * var(--s))}
+.sg-s{font-size:calc(30 * var(--s));color:var(--soft);margin-top:calc(14 * var(--s));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sg-c[data-size=row] .sg-s{font-size:calc(30 * var(--s))}
 .sg-bar{display:block;height:calc(8 * var(--s));border-radius:var(--tv-track-radius);background:var(--track);overflow:hidden}
 .sg-img .sg-bar{position:absolute;z-index:1;left:0;right:0;bottom:0;border-radius:0;height:calc(8 * var(--s));background:rgba(236,230,220,.22)}
 .sg-m .sg-bar{margin-top:calc(20 * var(--s));max-width:calc(300 * var(--s))}
@@ -237,13 +240,13 @@ body.night,body.cinema{--text:#808080;--clock:#7a7a7a;--clock2:#767676;--soft:#7
 .sg-cards{display:flex;gap:calc(32 * var(--s))}
 .sg-card{flex:none;width:calc(var(--iw) * var(--s));min-width:0}
 .sg-card .sg-img{border-radius:calc(16 * var(--s));aspect-ratio:16/9}
-.sg-ct{font-size:calc(28 * var(--s));font-weight:500;margin-top:calc(12 * var(--s));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sg-cs{font-size:calc(26 * var(--s));color:var(--soft);margin-top:calc(4 * var(--s));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sg-ct{font-size:calc(30 * var(--s));font-weight:500;margin-top:calc(12 * var(--s));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sg-cs{font-size:calc(30 * var(--s));color:var(--soft);margin-top:calc(4 * var(--s));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sg-c[data-size=tile]{flex-direction:column;align-items:flex-start;gap:calc(20 * var(--s))}
 .sg[data-dir=rev] .sg-c[data-size=tile]{flex-direction:column;align-items:flex-end}
 .sg-c[data-size=tile] .sg-m{max-width:100%}
 .sg-c[data-size=tile] .sg-t,.sg-c[data-size=mini] .sg-t{font-size:calc(36 * var(--s))}
-.sg-c[data-size=tile] .sg-s,.sg-c[data-size=mini] .sg-s{font-size:calc(26 * var(--s))}
+.sg-c[data-size=tile] .sg-s,.sg-c[data-size=mini] .sg-s{font-size:calc(30 * var(--s))}
 .sg-c[data-size=mini]{gap:calc(24 * var(--s))}
 .sg-c[data-size=mini] .sg-img{border-radius:calc(16 * var(--s))}
 /* bloque caducado: se funde en su sitio (solo opacidad) y el hueco espera al próximo reacomodo; con calma, igual */
@@ -275,11 +278,11 @@ body.night,body.cinema{--text:#808080;--clock:#7a7a7a;--clock2:#767676;--soft:#7
   background:rgba(26,35,37,.92);scale:1;transition:scale .2s var(--ease),background-color .2s ease,box-shadow .2s ease}
 .rc-c.fx{scale:1.04;background:rgba(51,58,59,.96);box-shadow:0 calc(24 * var(--u)) calc(60 * var(--u)) rgba(0,0,0,.35)}
 .rc-c.fx.press{scale:1;transition-duration:.1s}
-.rc-s{display:flex;align-items:center;gap:calc(12 * var(--u));font-size:calc(26 * var(--u));color:var(--soft)}
+.rc-s{display:flex;align-items:center;gap:calc(12 * var(--u));font-size:calc(30 * var(--u));color:var(--soft)}
 .rc-s i{width:calc(12 * var(--u));height:calc(12 * var(--u));border-radius:50%;background:var(--dot,var(--soft))}
 .rc-t{margin-top:calc(16 * var(--u));font-size:calc(40 * var(--u));font-weight:600;line-height:1.15;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
-.rc-d{margin-top:calc(8 * var(--u));font-size:calc(26 * var(--u));color:var(--soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rc-d{margin-top:calc(8 * var(--u));font-size:calc(30 * var(--u));color:var(--soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rc-none{font-size:calc(var(--tv-destacado) * var(--u));color:var(--soft)}
 /* con la fila abierta el reposo se aparta (opacidad en #dy: #dx lleva la deriva lenta en su transform) */
 html.rcing #dy{opacity:.06}

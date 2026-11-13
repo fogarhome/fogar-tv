@@ -20,6 +20,7 @@ if (SHOTS) fs.mkdirSync(SHOTS, { recursive: true });
 const SAFE = 0.03;
 // un texto recortado con elipsis necesita al menos esta anchura (en em de su propia letra) para leerse
 const MIN_EM = 5;
+const MIN_TEXT = 30; // ningún texto por debajo de 30 px de la tele a 1080p (tokens-tv.css)
 
 // tamaños en píxeles CSS (w×h) y escala del dispositivo: la tele del kiosco va a 1920×1080 con --force-device-scale-factor=1.5
 const SIZES = [
@@ -148,6 +149,7 @@ function measure() {
     out.widgets.push(w);
   }
   const u = Math.min(innerWidth / 1920, innerHeight / 1080);
+  out.u = u;
   out.imgs = [...document.querySelectorAll('.sg-img[data-w]')].filter(e => e.getClientRects().length && !e.closest('.gone')).map(e => ({ w: e.getBoundingClientRect().width / u, max: +e.dataset.w }));
   return out;
 }
@@ -164,6 +166,7 @@ function check(m) {
       else if (p.x < w.cell.x - half - T || p.y < w.cell.y - half - T || p.r > w.cell.r + half + T || p.b > w.cell.b + half + T) bad.push(`fuera de su celda [${f(w.cell.x)},${f(w.cell.y)}→${f(w.cell.r)},${f(w.cell.b)}]: ${desc(w, p)}`);
       if (p.trunc && p.cw < MIN_EM * p.fs) bad.push(`texto en una columna estrecha (${f(p.cw)} px = ${(p.cw / p.fs).toFixed(1)} em): ${desc(w, p)}`);
       if (p.lines > 2) bad.push(`texto partido en ${p.lines} líneas: ${desc(w, p)}`);
+      if (p.text && p.fs < MIN_TEXT * m.u - 0.5) bad.push(`texto por debajo de ${MIN_TEXT} px de la tele (${(p.fs / m.u).toFixed(1)}): ${desc(w, p)}`);
     }
   }
   for (let i = 0; i < m.widgets.length; i++) for (let j = i + 1; j < m.widgets.length; j++) {

@@ -4,7 +4,7 @@
 // visual (K3 de la auditoría de experiencia).
 //   node tele-capturas.js [carpeta]     (por defecto e2e/capturas-tele)
 // En el escenario comprueba además (K4, legible a 3 m) que lo visible queda dentro del área segura (5 % del ancho, 6 %
-// del alto) y que ningún texto baja de 24u, también con una diapositiva y una tarea que no caben.
+// del alto) y que ningún texto baja de 30u, también con una diapositiva y una tarea que no caben.
 // Avisa de errores de la página y de la CSP; los cuenta en la última línea (y sale con 1 si hay alguno).
 const { chromium } = require('playwright');
 const http = require('http'), fs = require('fs'), path = require('path');
@@ -63,7 +63,7 @@ async function stage(b, vp, s) {
   await p.goto(`${base()}/${s.tpl}`);
   await p.evaluate(d => { window.tv.data = d; for (const f of window.tv._h) f(d); }, s.data);
   await p.waitForTimeout(2000);
-  // a 3 m: lo visible dentro del área segura (5 % del ancho, 6 % del alto) y ningún texto por debajo de 24u
+  // a 3 m: lo visible dentro del área segura (5 % del ancho, 6 % del alto) y ningún texto por debajo de 30u
   const bad = await p.evaluate(() => {
     const W = innerWidth, H = innerHeight, u = Math.min(W / 1920, H / 1080), out = [];
     for (const e of document.querySelectorAll('body *')) {
@@ -75,7 +75,7 @@ async function stage(b, vp, s) {
       const rr = c ? Math.min(r.right, c.right) : r.right, bb = c ? Math.min(r.bottom, c.bottom) : r.bottom;
       if (rr <= l || bb <= t) continue; // recortado del todo
       const own = [...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim());
-      if (own && parseFloat(cs.fontSize) < 24 * u - 0.5) out.push(`${e.tagName}.${e.className} a ${(parseFloat(cs.fontSize) / u).toFixed(0)}u`);
+      if (own && parseFloat(cs.fontSize) < 30 * u - 0.5) out.push(`${e.tagName}.${e.className} a ${(parseFloat(cs.fontSize) / u).toFixed(0)}u`);
       if (['MAIN', 'HEADER', 'SECTION'].includes(e.tagName) || e.id === 'st' || e.id === 'l' || e.classList.contains('wrap')) continue;
       if (l < W * .05 - 1 || rr > W * .95 + 1 || t < H * .06 - 1 || bb > H * .94 + 1) out.push(`${e.tagName}.${e.className} fuera del área segura`);
     }

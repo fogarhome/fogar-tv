@@ -77,17 +77,28 @@ function place(sc) {
   fit();
 }
 // si el contenido de un widget no cabe en su celda (más media separación, como mucho), se encoge entero: --fit < 1
-// escala todas sus medidas (--s en idle.css). La hora no lo necesita: se ajusta a su celda con cqh/cqw.
+// escala todas sus medidas (--s en idle.css). La hora no lo necesita: se ajusta a su celda con cqh/cqw. Nunca deja un
+// texto por debajo de MIN_TEXT px de la tele: si no cabe así, el contexto quita líneas por orden (data-cut, idle.css:
+// subtítulos de las actividades, el texto del tiempo, las actividades de más) y solo entonces se encoge hasta el suelo.
+const MIN_TEXT = 30, CUTS = { wCtx: 3 };
 function fit() {
   const g = parseFloat(getComputedStyle(G).rowGap) || 0;
-  for (const e of [W.ctx, W.mus, W.nfx, W.s0, W.s1, W.s2]) {
+  const u = Math.min(innerWidth / 1920, innerHeight / 1080);
+  const need = e => {   // lo que hay que encoger para caber (1: cabe) y lo más que se puede sin bajar del mínimo
     e.style.setProperty('--fit', '1');
     const kids = [...e.firstElementChild.children].map(c => c.getBoundingClientRect()).filter(r => r.width || r.height);
-    if (!kids.length || !e.clientHeight) continue;
+    if (!kids.length || !e.clientHeight) return [1, 0];
     const h = Math.max(...kids.map(r => r.bottom)) - Math.min(...kids.map(r => r.top));
     const w = Math.max(...kids.map(r => r.right)) - Math.min(...kids.map(r => r.left));
     const k = Math.min(1, (e.clientHeight + g / 2) / h, (e.clientWidth + g / 2) / w);
-    if (k < 1) e.style.setProperty('--fit', (k * .98).toFixed(3));
+    const fs = k < 1 ? [...e.querySelectorAll('*')].filter(c => c.getClientRects().length && [...c.childNodes].some(n => n.nodeType === 3 && n.textContent.trim()))
+      .map(c => parseFloat(getComputedStyle(c).fontSize)) : [];
+    return [k, fs.length ? MIN_TEXT * u / Math.min(...fs) : 0];
+  };
+  for (const e of [W.ctx, W.mus, W.nfx, W.s0, W.s1, W.s2]) {
+    let cut = 0, [k, floor] = (delete e.dataset.cut, need(e));
+    while (k * .98 < floor && cut < (CUTS[e.id] || 0)) { e.dataset.cut = ++cut; [k, floor] = need(e); }
+    if (k < 1) e.style.setProperty('--fit', Math.min(1, Math.max(k * .98, floor)).toFixed(3));
   }
 }
 // reacomodo (la tabla de movimiento de TVC Crítica 2026-11-12 - Tele A3): lo que salta poco (≤ 300 px de la tele) viaja

@@ -11,7 +11,7 @@
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;overflow:hidden;cursor:default}
 body{
-  font:500 calc(28 * var(--u))/1.35 var(--tv-letra-texto);font-variant-numeric:tabular-nums;color:var(--fg);
+  font:500 calc(30 * var(--u))/1.35 var(--tv-letra-texto);font-variant-numeric:tabular-nums;color:var(--fg);
   /* las dos luces del reposo sin música (niebla y rescoldo, LUZ.sin de idle-app.js), quietas */
   background:radial-gradient(calc(1200 * var(--u)) calc(700 * var(--u)) at 78% -10%,rgba(32,51,42,.42),transparent 60%),
              radial-gradient(calc(900 * var(--u)) calc(600 * var(--u)) at -10% 110%,rgba(90,26,16,.42),transparent 55%),var(--bg);
