@@ -11,14 +11,14 @@ const STATUS_CMD = "dumpsys power | grep -m1 mWakefulness=; dumpsys activity act
 /**
  * @param {string} out salida de STATUS_CMD
  * @param {string} input inputId de TV Input Framework donde está Fogar TV (HDMI)
- * @returns {{ power: 'on'|'off'|null, src: 'j'|'tv'|null, vol: number|null, muted: boolean }}
+ * @returns {{ power: 'on'|'off'|null, src: 'fogar'|'tv'|null, vol: number|null, muted: boolean }}
  */
 function parseStatus(out, input) {
   const wake = /mWakefulness=(\w+)/.exec(out);
   const power = !wake ? null : /^(Awake|Dreaming)$/.test(wake[1]) ? 'on' : /^(Asleep|Dozing)$/.test(wake[1]) ? 'off' : null;
   // Dreaming sigue siendo «encendida»: el salvapantallas no apaga la tele.
   const front = /mResumedActivity:.*TurnkeyUiMainActivity/.test(out);
-  const src = power !== 'on' ? null : front && mainInput(out) === input ? 'j' : 'tv';
+  const src = power !== 'on' ? null : front && mainInput(out) === input ? 'fogar' : 'tv';
   const vol = /streamVolume:(\d+)/.exec(out);
   return { power, src, vol: vol ? Number(vol[1]) : null, muted: /Muted: true/.test(out) };
 }
@@ -145,7 +145,7 @@ function createAndroidTv({ addr, input, tdt = '', log, adb }) {
   /** @param {keyof typeof TV_KEYS} k */
   const key = k => press(TV_KEYS[k], k);
   const set = (/** @type {number} */ v) => sh(`cmd media_session volume --stream 3 --set ${Math.max(0, Math.min(100, Math.round(v)))} --show`);
-  const toJ = () => sh('am start -a android.intent.action.VIEW -d ' + passthroughUri(input));
+  const toFogar = () => sh('am start -a android.intent.action.VIEW -d ' + passthroughUri(input));
   // la TDT (antena) también se abre por passthrough: 0,3 s medidos en la tele, y luego vale marcar el canal con los dígitos
   const toTdt = () => sh('am start -a android.intent.action.VIEW -d ' + passthroughUri(tdt));
   return {
@@ -161,11 +161,11 @@ function createAndroidTv({ addr, input, tdt = '', log, adb }) {
     status,
     // to 'tv': el inicio de Google TV con am start (0,2-0,45 s medidos), no con monkey, que recién despierta tarda en
     // arrancar (>15 s), ni con input, que recién despierta puede pasar de 8 s
-    async power(/** @type {boolean} */ on, /** @type {'j'|'tv'|'tdt'} */ to = 'j') {
+    async power(/** @type {boolean} */ on, /** @type {'fogar'|'tv'|'tdt'} */ to = 'fogar') {
       await sh('input keyevent ' + (on ? 'KEYCODE_WAKEUP' : 'KEYCODE_SLEEP'));
-      if (on) await (to === 'tv' ? sh('am start -a android.intent.action.MAIN -c android.intent.category.HOME') : to === 'tdt' ? toTdt() : toJ());
+      if (on) await (to === 'tv' ? sh('am start -a android.intent.action.MAIN -c android.intent.category.HOME') : to === 'tdt' ? toTdt() : toFogar());
     },
-    toJ,
+    toFogar,
     toTv: () => key('home'),
     hasTdt: !!tdt,
     toTdt,

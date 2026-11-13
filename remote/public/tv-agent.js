@@ -257,21 +257,21 @@ ${NO_BACKDROP}{-webkit-backdrop-filter:none;backdrop-filter:none}
 .w[data-form=pill] .log.over{-webkit-mask-image:linear-gradient(180deg,transparent 0,#000 45%);mask-image:linear-gradient(180deg,transparent 0,#000 45%)}
 .w[data-form=pill] .tn:not(:last-child){display:none}
 .tn{display:flex;flex-direction:column;gap:${u(14)};min-width:0}
-.u,.j,.hint{margin:0;overflow-wrap:anywhere}
+.u,.fogar,.hint{margin:0;overflow-wrap:anywhere}
 .u{font:400 ${u(32)}/1.3 var(--tv-letra-texto);color:var(--t-you)}
-.j{font:500 ${u(44)}/1.2 var(--tv-letra-texto);color:var(--t-main);text-wrap:pretty}
-.j.sm{font-size:${u(38)}}
-.w[data-form=pill] .j{font-size:${u(40)}}
+.fogar{font:500 ${u(44)}/1.2 var(--tv-letra-texto);color:var(--t-main);text-wrap:pretty}
+.fogar.sm{font-size:${u(38)}}
+.w[data-form=pill] .fogar{font-size:${u(40)}}
 .w[data-form=pill] .u{font-size:${u(30)}}
-.u:empty,.j:empty,.hint:empty{display:none}
+.u:empty,.fogar:empty,.hint:empty{display:none}
 .hint{font:400 ${u(30)}/1.3 var(--tv-letra-texto);color:var(--t-soft)}
 /* lo que hace Fogar, en palabras, junto a la línea (a 3 m, en calma, la forma quieta no basta) */
 .st{font:400 ${u(30)}/1.3 var(--tv-letra-texto);color:var(--t-soft);margin-left:${u(20)};white-space:nowrap}
 .st:empty{display:none}
 /* el turno anterior se atenúa por color, nunca por opacidad */
-.tn:not(:last-child) :is(.u,.j,.hint){color:var(--t-old)}
+.tn:not(:last-child) :is(.u,.fogar,.hint){color:var(--t-old)}
 /* y pesa menos que el actual: a 3 m se ve de un vistazo cuál es la respuesta de ahora */
-.tn:not(:last-child) .j{font-size:${u(30)}}
+.tn:not(:last-child) .fogar{font-size:${u(30)}}
 .tn:not(:last-child) .u{font-size:${u(30)}}
 /* panel → píldora: el contenido sale (opacidad y desenfoque), viaja oculto y vuelve a entrar ya en la píldora */
 .log{transition:opacity ${MORPH.normal.in}ms var(--tv-ease),filter ${MORPH.normal.in}ms var(--tv-ease)}
@@ -286,7 +286,7 @@ ${NO_BACKDROP}{-webkit-backdrop-filter:none;backdrop-filter:none}
 .wd.prov{opacity:${LOOK.prov}}
 /* con voz: la frase en curso en tenue y lo ya dicho iluminado. Opacidad (se compone sin repintar); wIn va sin fill
    forwards, así que al acabar su entrada la palabra se queda en el tenue de esta regla */
-.j[data-voice] .wd:not(.said){opacity:.45}
+.fogar[data-voice] .wd:not(.said){opacity:.45}
 @keyframes wIn{from{opacity:0;filter:blur(${u(4)})}}
 
 /* la línea viva: un canvas que pinta el rAF; nace al tamaño del logo (transform desde la esquina) y se funde al final */
@@ -778,7 +778,7 @@ ${NO_BACKDROP}{-webkit-backdrop-filter:none;backdrop-filter:none}
   }
   function makeTurn() {
     const e = el('div', 'tn');
-    const you = line('p', 'u'), tcs = el('div', 'tcs'), fogar = line('p', 'j'), hint = el('p', 'hint'), md = el('div', 'md');
+    const you = line('p', 'u'), tcs = el('div', 'tcs'), fogar = line('p', 'fogar'), hint = el('p', 'hint'), md = el('div', 'md');
     e.append(you.el, tcs, fogar.el, hint, md);
     return { el: e, you, fogar, tcs, hint, md, media: '', tools: new Map(), said: { you: false, fogar: false, fails: new Set() }, sm: null };
   }

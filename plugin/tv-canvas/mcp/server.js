@@ -45,7 +45,7 @@ const out = (j, ok) => ({
 const server = new McpServer({ name: 'tv-canvas', version: '0.1.0' });
 const tool = (name, description, shape, fn) => server.registerTool(name, { description, inputSchema: shape }, fn);
 
-tool('tv_state', 'Current state of the TV browser: page title, URL, volume, tv: { power, src } (the TV itself over ADB: power on/off, src j = Fogar TV / tv = Google TV; null when TV control is not set up), whether a video is playing (media: 1 playing, 0 paused, -1 no video) and what is on the stage.', {},
+tool('tv_state', 'Current state of the TV browser: page title, URL, volume, tv: { power, src } (the TV itself over ADB: power on/off, src fogar = Fogar TV / tv = Google TV; null when TV control is not set up), whether a video is playing (media: 1 playing, 0 paused, -1 no video) and what is on the stage.', {},
   async () => out(await api('GET', '/api/state')));
 
 // formato de la conversación en la tele para la página que se abre (lo mismo que FORMS de remote/src/tv/agent-contract.js;
@@ -118,7 +118,7 @@ tool('tv_power', 'Turn the TV on or off. Turning it on always lands on Fogar TV 
 
 tool('tv_source', "Switch what the TV shows: fogar-tv (this canvas, HDMI) or tv (the TV's own Google TV home, for live TV). Anything opened on the canvas switches back to fogar-tv by itself.",
   { source: z.enum(['fogar-tv', 'tv']) },
-  async ({ source }) => out(await cmd({ t: 'src', s: source === 'tv' ? 'tv' : 'j' })));
+  async ({ source }) => out(await cmd({ t: 'src', s: source === 'tv' ? 'tv' : 'fogar' })));
 
 tool('tv_channel', "Put a live TV (antenna/TDT) channel by its number on the TV's own channel list, e.g. 3 for «la 3». Turns the TV on if needed and leaves Fogar TV for the TV tuner. Only numbers: a channel name works only if you know its number on this TV.",
   { number: z.number().int().min(1).max(9999) },

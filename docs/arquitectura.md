@@ -74,10 +74,10 @@ remote/
     tokens.js             lee shared/tokens-tv.css y arma la fuente de la isla (tokens delante)
   src/features/           capacidades: cada una devuelve sus `commands` (y `routes`, si tiene)
     control.js            nav (con `layout` opcional), links, clicktext, click, home, back, forward, reload, shot, pp, seek, fs, vol, volset
-    tele.js               power, src, channel, tvkey (sin permiso, también invitados); `state.tv = {power, src}` (`on`/`off`/`null`, `j`/`tv`/`null`).
+    tele.js               power, src, channel, tvkey (sin permiso, también invitados); `state.tv = {power, src}` (`on`/`off`/`null`, `fogar`/`tv`/`null`).
                           Sondea cada 3 s con mandos conectados y cada 15 s sin ellos; el volumen de Spotify es el de la tele. Al encenderse
                           la tele (también con el mando original) va a Fogar TV; al apagar o pasar a Tele pausa lo que suena; las órdenes que
-                          necesitan la pantalla (`withScreen`/`ensureJ`) la enciende y vuelven a Fogar TV antes, 6 s como mucho
+                          necesitan la pantalla (`withScreen`/`ensureFogar`) la enciende y vuelven a Fogar TV antes, 6 s como mucho
     keyboard.js           key, text, field (escribir en directo), focus (aviso de foco)
     stage.js              present, show, stage, close, toast; ruta /stage/p*.html; canal /stage-ws
     spotify.js            spotify (todas las acciones), spwatch; rutas /spotify/login y /spotify/callback
@@ -397,7 +397,7 @@ valores por defecto, está en [config/screen.env.example](../config/screen.env.e
   de Spotify; por defecto `http://127.0.0.1:<puerto>`), `TV_ADMIN_URL` (por defecto `http://<TV_MDNS_NAME>` o, sin
   alias, `http://<equipo>.local:<puerto>`).
 - **Kiosco**: `TV_CHROME`, `TV_CDP_PORT` (9222), `TV_HOME_URL` (el reposo).
-- **Agente**: `TV_GATEWAY_URL` y `TV_GATEWAY_KEY` (Fogar Gateway; sin URL = «Fogar no está disponible.»), `TV_AGENT` (`j-assistant`), `TV_SPEAKER_CMD` (altavoz de la tele), `TV_OWNER`
+- **Agente**: `TV_GATEWAY_URL` y `TV_GATEWAY_KEY` (Fogar Gateway; sin URL = «Fogar no está disponible.»), `TV_AGENT` (vacío: lo decide el Gateway), `TV_SPEAKER_CMD` (altavoz de la tele), `TV_OWNER`
   (nombre del dueño en las instrucciones al agente; vacío = «el dueño»).
 - **Tele**: `TV_ADB` (`ip:5555` de la tele; vacío = sin control nativo, el volumen vuelve a ser el de PipeWire) y `TV_INPUT`
   (id de la entrada HDMI de Fogar TV); `TV_TDT` (id de la entrada de antena: canales por número; vacío = sin canales). Necesita `adb` en el equipo y la depuración USB de la tele; ver

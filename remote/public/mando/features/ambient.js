@@ -17,7 +17,7 @@ export const LIMITS = {
   mando: { oscuro: [0, 0.1], claro: [0.11, 1] },
   sp: { oscuro: [0, 0.1], claro: [0.17, 1] },
 };
-// sin nada en la tele, niebla y rescoldo (LUZ.sin de idle-app.js): Fogar ya no usa la malva y el cielo de Jota
+// sin nada en la tele, niebla y rescoldo (LUZ.sin de idle-app.js): sin la malva ni el cielo de antes
 const NIEBLA = '#20332a', RESCOLDO = '#5a1a10';
 
 /* apps conocidas por su dominio: nombre y color (el segundo, rescoldo) */

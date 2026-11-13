@@ -24,12 +24,12 @@ async function fakeGw({ service = 'fogar-gateway', code = '123456', status } = {
     req.on('data', d => { body += d; });
     req.on('end', () => {
       const send = (s, j) => { res.writeHead(s, { 'content-type': 'application/json' }); res.end(JSON.stringify(j)); };
-      if (req.method === 'GET' && req.url === '/.well-known/fogar-gateway') return send(200, { service, version: '1.29.0', name: 'green-house', pairing: true });
+      if (req.method === 'GET' && req.url === '/.well-known/fogar-gateway') return send(200, { service, version: '2.0.0', name: 'green-house', instance_id: 'b05b7beb649879e8' });
       if (req.method === 'POST' && req.url === '/pair') {
         const j = JSON.parse(body); got.push(j);
         if (status) return send(status, {});
         if (j.code !== code) return send(400, { detail: 'invalid or expired code' });
-        return send(201, { client_id: 'c1', name: j.name, client_key: 'clave-secreta', gateway: { name: 'green-house', version: '1.29.0' } });
+        return send(201, { client_id: 'c1', name: body.name, client_key: 'clave-secreta', gateway: { name: 'green-house', version: '2.0.0' } });
       }
       send(404, {});
     });
@@ -53,7 +53,7 @@ test('probe: solo cuenta un Fogar de verdad', async () => {
   try {
     const g = await discover.probe(ok.host);
     assert.equal(g.name, 'green-house');
-    assert.equal(g.version, '1.29.0');
+    assert.equal(g.version, '2.0.0');
     assert.equal(g.ws, `ws://${ok.host}/ws/stream`);
     assert.equal(await discover.probe(other.host), null);
     assert.equal(await discover.probe('127.0.0.1:1'), null);
@@ -91,7 +91,7 @@ test('redeem: manda tipo screen y lo que sabe reproducir; errores claros y gené
   const g = await fakeGw();
   const base = `http://${g.host}`;
   try {
-    assert.deepEqual(await pair.redeem({ http: base, code: '12 34 56', name: 'Salón' }), { key: 'clave-secreta', name: 'green-house', version: '1.29.0' });
+    assert.deepEqual(await pair.redeem({ http: base, code: '12 34 56', name: 'Salón' }), { key: 'clave-secreta', name: 'green-house', version: '2.0.0' });
     assert.deepEqual(g.got[0], { code: '123456', name: 'Salón', client_type: 'screen', output_mode: ['audio', 'text', 'status'] });
     assert.deepEqual(await pair.redeem({ http: base, code: '999999', name: 'x' }), { error: 'Código no válido o caducado' });
     assert.deepEqual(await pair.redeem({ http: base, code: '12', name: 'x' }), { error: 'El código son 6 cifras' });
@@ -105,8 +105,10 @@ test('redeem: manda tipo screen y lo que sabe reproducir; errores claros y gené
 test('localCode: `fogar-gw --json pair --type screen --name … --no-wait`', async () => {
   let args = null;
   const exec = (cmd, a, o, cb) => { args = [cmd, ...a]; cb(null, JSON.stringify({ id: 'p1', code: '482913', expires_at: 'x' })); };
-  assert.deepEqual(await pair.localCode({ name: 'Salón', agent: 'j-assistant', exec }), { code: '482913' });
-  assert.deepEqual(args, ['fogar-gw', '--json', 'pair', '--type', 'screen', '--name', 'Salón', '--agent', 'j-assistant', '--allowed-agent', 'j-assistant', '--no-wait']);
+  assert.deepEqual(await pair.localCode({ name: 'Salón', agent: 'salon', exec }), { code: '482913' });
+  assert.deepEqual(args, ['fogar-gw', '--json', 'pair', '--type', 'screen', '--name', 'Salón', '--agent', 'salon', '--allowed-agent', 'salon', '--no-wait']);
+  await pair.localCode({ name: 'Salón', agent: '', exec });
+  assert.deepEqual(args, ['fogar-gw', '--json', 'pair', '--type', 'screen', '--name', 'Salón', '--no-wait'], 'sin agente: lo decide el Gateway');
   const missing = (c, a, o, cb) => cb(Object.assign(new Error('x'), { code: 'ENOENT' }), '');
   assert.deepEqual(await pair.localCode({ name: 'x', agent: 'a', exec: missing }), { error: 'fogar-gw no está instalado en este equipo' });
   const junk = (c, a, o, cb) => cb(null, 'no json');
@@ -124,7 +126,7 @@ function mkLink() {
 test('orden pair: comprueba que es un Fogar, canjea, guarda y conecta; la clave no vuelve al mando', async () => {
   const g = await fakeGw();
   const { store, made, link } = mkLink();
-  const f = createGatewayFeature({ link, name: 'Salón', agent: 'j-assistant', log: nolog });
+  const f = createGatewayFeature({ link, name: 'Salón', agent: 'salon', log: nolog });
   const run = m => f.commands[0].run({ t: 'gateway', ...m });
   try {
     assert.equal(f.commands[0].perm, 'admin');
@@ -144,7 +146,7 @@ test('orden pair: comprueba que es un Fogar, canjea, guarda y conecta; la clave 
 test('orden local: sin gateway en este equipo no ejecuta fogar-gw', async () => {
   const { link } = mkLink();
   let ran = false;
-  const f = createGatewayFeature({ link, name: 'Salón', agent: 'j-assistant', log: nolog,
+  const f = createGatewayFeature({ link, name: 'Salón', agent: 'salon', log: nolog,
     discover: { ...discover, probe: async () => null }, pair: { ...pair, localCode: async () => { ran = true; return { code: '123456' }; } } });
   assert.deepEqual(await f.commands[0].run({ t: 'gateway', op: 'local' }), { error: 'No hay un gateway en este equipo' });
   assert.equal(ran, false);
@@ -153,7 +155,7 @@ test('orden local: sin gateway en este equipo no ejecuta fogar-gw', async () => 
 test('orden local: saca el código con fogar-gw y lo canjea por la misma ruta', async () => {
   const g = await fakeGw();
   const { store, link } = mkLink();
-  const f = createGatewayFeature({ link, name: 'Salón', agent: 'j-assistant', log: nolog,
+  const f = createGatewayFeature({ link, name: 'Salón', agent: 'salon', log: nolog,
     discover: { ...discover, probe: h => discover.probe(h === '127.0.0.1' ? g.host : h) }, pair: { ...pair, localCode: async () => ({ code: '123456' }) } });
   try {
     assert.equal((await f.commands[0].run({ t: 'gateway', op: 'local' })).status, 'ok');

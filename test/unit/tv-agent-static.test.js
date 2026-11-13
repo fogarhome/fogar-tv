@@ -436,7 +436,7 @@ test('la respuesta en directo no encoge de letra a media lectura; un turno pasad
   const p = loadPage();
   const A = p.win.TVAgent;
   const t = fogar => ({ ...snap().turns[0], fogar });
-  const jEl = () => p.host().shadowRoot.all().filter(n => n.tagName === 'P' && n.className.split(' ').includes('j'));
+  const jEl = () => p.host().shadowRoot.all().filter(n => n.tagName === 'P' && n.className.split(' ').includes('fogar'));
   A.render(snap({ turns: [t('a '.repeat(55))] }));
   assert.ok(!jEl()[0].className.includes('sm'));
   A.render(snap({ turns: [t('a '.repeat(65))] }));
@@ -662,7 +662,7 @@ test('sin documentElement (script de documento nuevo): espera a que exista y pin
   p.observers[0].fire();
   const h = html.childNodes.find(n => n.tagName === 'DIV');
   assert.ok(h && h.shadowRoot, 'montada en <html> en cuanto existe');
-  assert.match(h.shadowRoot.all().filter(n => cls(n).includes('j'))[0].textContent, /Otra/);
+  assert.match(h.shadowRoot.all().filter(n => cls(n).includes('fogar'))[0].textContent, /Otra/);
   assert.equal(p.observers[0].on, false, 'deja de observar');
 });
 
@@ -981,7 +981,7 @@ test('tarjeta de Netflix: lista o «poner» con su ▶; pulsarlo no rehace la ta
 // ── Voz sincronizada: la respuesta sale frase a frase con la voz y se ilumina lo ya dicho
 const FOGAR = 'Hola, Sito. Hoy hace sol. Mañana llueve.';
 const vturn = fogar => ({ id: 1, you: 'Qué tal', youFinal: true, fogar, tools: [], error: false, hint: '' });
-const jline = p => p.host().shadowRoot.all().find(n => cls(n).includes('j'));
+const jline = p => p.host().shadowRoot.all().find(n => cls(n).includes('fogar'));
 const jwords = p => jline(p).childNodes.map(n => n.textContent);
 const saidN = p => jline(p).childNodes.filter(n => cls(n).includes('said')).length;
 
@@ -1022,7 +1022,7 @@ test('voz: sin arrancar (el TTS no manda audio), al quitarse la respuesta se rev
   p.advance(400);
   assert.ok(jwords(p).length > 0 && jwords(p).length < 7, 'palabra a palabra');
   const css = p.host().shadowRoot.adoptedStyleSheets[0].css;
-  assert.match(css, /\.j\[data-voice\] \.wd:not\(\.said\)\{opacity:\.45\}/);
+  assert.match(css, /\.fogar\[data-voice\] \.wd:not\(\.said\)\{opacity:\.45\}/);
   assert.match(css, /\.wd\{[^}]*animation:wIn[^};]*backwards;transition:opacity \d+ms/, 'tenue por opacidad; la entrada sin fill forwards no lo tapa');
   assert.match(css, /\.w\[data-calm\] \.wd\{[^}]*transition:none/);
 });

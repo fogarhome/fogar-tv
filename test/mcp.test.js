@@ -14,7 +14,7 @@ test('tv_power y tv_source mandan su orden a /api/cmd', { skip }, async () => {
   const got = [];
   const api = http.createServer((req, res) => {
     let b = ''; req.on('data', d => { b += d; });
-    req.on('end', () => { got.push(JSON.parse(b)); res.end('{"tv":{"power":"off","src":"j"}}'); });
+    req.on('end', () => { got.push(JSON.parse(b)); res.end('{"tv":{"power":"off","src":"fogar"}}'); });
   });
   await new Promise(r => api.listen(0, '127.0.0.1', r));
   const client = new Client({ name: 'test', version: '0' });
@@ -28,6 +28,6 @@ test('tv_power y tv_source mandan su orden a /api/cmd', { skip }, async () => {
     await client.callTool({ name: 'tv_source', arguments: { source: 'tv' } });
     await client.callTool({ name: 'tv_source', arguments: { source: 'fogar-tv' } });
     await client.callTool({ name: 'tv_channel', arguments: { number: 3 } });
-    assert.deepEqual(got, [{ t: 'power', on: false }, { t: 'power', on: true }, { t: 'src', s: 'tv' }, { t: 'src', s: 'j' }, { t: 'channel', n: 3 }]);
+    assert.deepEqual(got, [{ t: 'power', on: false }, { t: 'power', on: true }, { t: 'src', s: 'tv' }, { t: 'src', s: 'fogar' }, { t: 'channel', n: 3 }]);
   } finally { await client.close(); api.close(); }
 });

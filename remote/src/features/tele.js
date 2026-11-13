@@ -5,9 +5,9 @@
 //   - al encenderse la tele (off → on, también con el mando original) va a Fogar TV una sola vez; si la encendimos
 //     nosotros y aun así sale otra cosa (el lanzador llega después del am start), se vuelve a Fogar TV una vez;
 //   - al apagar o pasar a Tele (por orden nuestra o con el mando original) se pausa lo que suena en Fogar TV, una vez;
-//   - src con la tele apagada la enciende antes (j: el encendido ya va a Fogar TV; tv: encender y luego Tele);
+//   - src con la tele apagada la enciende antes (fogar: el encendido ya va a Fogar TV; tv: encender y luego Tele);
 //   - channel abre la TDT (encendiendo si hace falta, sin saltar a Fogar TV) y marca el número;
-//   - las órdenes que necesitan la pantalla esperan antes a ver Fogar TV delante (ensureJ, como mucho 6 s).
+//   - las órdenes que necesitan la pantalla esperan antes a ver Fogar TV delante (ensureFogar, como mucho 6 s).
 const { TV_KEYS } = require('../tv/android-tv');
 
 const WATCHED_MS = 3000, IDLE_MS = 15000;
@@ -29,8 +29,8 @@ const SCREEN = new Set(['nav', 'home', 'youtube:play', 'present', 'show', 'netfl
 function createTele({ tv, state, broadcast, watched, pause, onOff, log }) {
   state.tv = { power: null, src: null };
   let lastPower = null; // último encendido conocido (sin null): de él sale el salto a Fogar TV
-  let lastSrc = null;   // entrada en la última lectura encendida (null tras verla apagada): de ella sale el j → tv
-  /** @type {false|'j'|'tv'} el encendido lo pedimos nosotros, con la entrada a la que va */
+  let lastSrc = null;   // entrada en la última lectura encendida (null tras verla apagada): de ella sale el fogar → tv
+  /** @type {false|'fogar'|'tv'} el encendido lo pedimos nosotros, con la entrada a la que va */
   let own = false;
   /** @type {null|'off'|'tv'} ya pausamos para este cambio (orden propia), hasta pausedUntil */
   let pausedFor = null, pausedUntil = 0;
@@ -47,13 +47,13 @@ function createTele({ tv, state, broadcast, watched, pause, onOff, log }) {
     if (p !== null) {
       if (lastPower === 'off' && p === 'on' && !own) {
         log.info('tele: encendida, a Fogar TV');
-        tv.toJ().catch(() => {});
+        tv.toFogar().catch(() => {});
       }
       if (p === 'on' && own) {
-        if (own === 'j' && src !== 'j') { log.info('tele: encendida pero no en Fogar TV, a Fogar TV'); tv.toJ().catch(() => {}); }
+        if (own === 'fogar' && src !== 'fogar') { log.info('tele: encendida pero no en Fogar TV, a Fogar TV'); tv.toFogar().catch(() => {}); }
         own = false;
       }
-      const change = lastPower === 'on' && p === 'off' ? 'off' : p === 'on' && lastSrc === 'j' && src === 'tv' ? 'tv' : null;
+      const change = lastPower === 'on' && p === 'off' ? 'off' : p === 'on' && lastSrc === 'fogar' && src === 'tv' ? 'tv' : null;
       if (change === 'off') try { Promise.resolve(onOff?.()).catch(() => {}); } catch {}   // al apagar, el reposo vuelve a empezar de cero, la pausara quien la pausara
       if (change) {
         if (pausedFor === change && Date.now() < pausedUntil) pausedFor = null;
@@ -96,17 +96,17 @@ function createTele({ tv, state, broadcast, watched, pause, onOff, log }) {
   function power(on) {
     return act(async () => {
       if (!on) { await ownPause('off'); return undoPause(() => tv.power(false)); }
-      own = 'j';
+      own = 'fogar';
       try { await tv.power(true); } catch (e) { own = false; throw e; }
     });
   }
-  /** @param {'j'|'tv'} s */
+  /** @param {'fogar'|'tv'} s */
   function src(s) {
     return act(async () => {
       if (asleep()) {
         own = s;
         try { await tv.power(true, s); } catch (e) { own = false; throw e; }
-      } else if (s === 'tv') { await ownPause('tv'); await undoPause(() => tv.toTv()); } else await tv.toJ();
+      } else if (s === 'tv') { await ownPause('tv'); await undoPause(() => tv.toTv()); } else await tv.toFogar();
     });
   }
 
@@ -117,7 +117,7 @@ function createTele({ tv, state, broadcast, watched, pause, onOff, log }) {
         own = 'tv';
         try { await tv.power(true, 'tdt'); } catch (e) { own = false; throw e; }
       } else {
-        if (state.tv.src === 'j') await ownPause('tv');
+        if (state.tv.src === 'fogar') await ownPause('tv');
         await undoPause(() => tv.toTdt());
       }
       await sleep(TDT_MS);
@@ -126,11 +126,11 @@ function createTele({ tv, state, broadcast, watched, pause, onOff, log }) {
   }
 
   /** Enciende o vuelve a Fogar TV si hace falta y espera a verlo (como mucho 6 s). */
-  async function ensureJ() {
-    const ok = () => state.tv.power === 'on' && state.tv.src === 'j';
+  async function ensureFogar() {
+    const ok = () => state.tv.power === 'on' && state.tv.src === 'fogar';
     if (ok()) return true;
     try {
-      if (asleep()) { own = 'j'; await tv.power(true); } else if (state.tv.src === 'tv') await tv.toJ();
+      if (asleep()) { own = 'fogar'; await tv.power(true); } else if (state.tv.src === 'tv') await tv.toFogar();
     } catch { own = false; }
     for (const end = Date.now() + ENSURE_MS; Date.now() < end;) {
       await sleep(ENSURE_STEP_MS);
@@ -151,7 +151,7 @@ function createTele({ tv, state, broadcast, watched, pause, onOff, log }) {
       if (types.has(m.t) || types.has(m.t + ':' + m.op)) {
         await readNow();   // el estado guardado puede tener 15 s: la tele pudo apagarse con el mando original
         // sin responder y sin haberla visto apagada no se espera: la orden va directa
-        if ((asleep() || state.tv.src === 'tv') && !(await ensureJ())) log.info('tele: no llegó a Fogar TV a tiempo');
+        if ((asleep() || state.tv.src === 'tv') && !(await ensureFogar())) log.info('tele: no llegó a Fogar TV a tiempo');
       }
       return c.run(m, ctx);
     } } : c));
@@ -160,7 +160,7 @@ function createTele({ tv, state, broadcast, watched, pause, onOff, log }) {
   /** @type {import('../transport/commands').Command[]} */
   const commands = [
     { t: 'power', run: m => power(!!m.on) },
-    { t: 'src', run: m => src(m.s === 'tv' ? 'tv' : 'j') },
+    { t: 'src', run: m => src(m.s === 'tv' ? 'tv' : 'fogar') },
     { t: 'channel', run: m => {
       const n = Number(m.n);
       if (!tv.hasTdt) return { error: 'falta la entrada de la TDT (TV_TDT)' };
@@ -173,7 +173,7 @@ function createTele({ tv, state, broadcast, watched, pause, onOff, log }) {
     } },
   ];
 
-  return { start: tick, ensureJ, withScreen, commands };
+  return { start: tick, ensureFogar, withScreen, commands };
 }
 
 module.exports = createTele;

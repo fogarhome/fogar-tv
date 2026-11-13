@@ -29,24 +29,24 @@ async function redeem({ http, code, name, fetchImpl = fetch, timeoutMs = 8000 })
   if (r.status === 400) return { error: 'Código no válido o caducado' };
   if (r.status === 429) return { error: 'Demasiados intentos; espera un minuto' };
   if (r.status !== 201) return { error: 'El gateway no ha aceptado el emparejamiento' };
-  let j;
-  try { j = /** @type {any} */ (await r.json()); } catch { j = null; }
-  if (!j || typeof j.client_key !== 'string' || !j.client_key) return { error: 'El gateway no ha devuelto la clave' };
-  return { key: j.client_key, name: String(j.gateway?.name || '').slice(0, 80), version: String(j.gateway?.version || '').slice(0, 40) };
+  let body;
+  try { body = /** @type {any} */ (await r.json()); } catch { body = null; }
+  if (!body || typeof body.client_key !== 'string' || !body.client_key) return { error: 'El gateway no ha devuelto la clave' };
+  return { key: body.client_key, name: String(body.gateway?.name || '').slice(0, 80), version: String(body.gateway?.version || '').slice(0, 40) };
 }
 
 /**
  * El código, sacado en este equipo con `fogar-gw --json pair … --no-wait`. Sin admin que ponga la plantilla, la tele pide
- * su agente como el único permitido: el mismo que pide al abrir sesión (si no, el Gateway la rechazaría).
+ * su agente (TV_AGENT) como el único permitido: el mismo que pide al abrir sesión. Sin TV_AGENT, el agente lo decide el Gateway.
  * @param {{ name: string, agent: string, exec?: typeof execFile }} o @returns {Promise<{ code: string } | { error: string }>}
  */
 function localCode({ name, agent, exec = execFile }) {
   const args = ['--json', 'pair', '--type', CLIENT_TYPE, '--name', String(name || 'tele').slice(0, 80),
-    '--agent', agent, '--allowed-agent', agent, '--no-wait'];
+    ...(agent ? ['--agent', agent, '--allowed-agent', agent] : []), '--no-wait'];
   return new Promise(resolve => exec('fogar-gw', args, { timeout: 15000, maxBuffer: 1 << 20 }, (err, out) => {
     if (err) return resolve({ error: /** @type {any} */ (err).code === 'ENOENT' ? 'fogar-gw no está instalado en este equipo' : 'fogar-gw no ha podido sacar el código' });
-    let j; try { j = JSON.parse(String(out)); } catch { j = null; }
-    const code = cleanCode(j && j.code);
+    let body; try { body = JSON.parse(String(out)); } catch { body = null; }
+    const code = cleanCode(body && body.code);
     resolve(code ? { code } : { error: 'fogar-gw no ha devuelto un código' });
   }));
 }

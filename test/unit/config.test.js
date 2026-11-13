@@ -28,7 +28,7 @@ test('config: sin entorno, valores por defecto del contrato y nada personal', ()
     assert.equal(d.STATE_DIR, path.join(home, '.local', 'state', 'fogar-tv'));
     assert.equal(d.STAGE_DIR, path.join(d.STATE_DIR, 'stage'));
     for (const f of Object.values(d.FILES)) assert.equal(path.dirname(f), d.STATE_DIR, f);
-    assert.equal(d.AGENT, 'j-assistant');
+    assert.equal(d.AGENT, '', 'sin TV_AGENT el agente lo decide el Gateway');
     assert.equal(d.GATEWAY_URL, '');
     assert.equal(d.GATEWAY_KEY, '');
     assert.equal(d.OWNER, '');

@@ -159,7 +159,7 @@ function measure() {
   if (!h) return null;
   const r = h.shadowRoot, q = s => r.querySelector(s);
   const box = e => { const b = e.getBoundingClientRect(); return { x: b.left, y: b.top, r: b.right, b: b.bottom }; };
-  const overflow = [...r.querySelectorAll('.u, .j, .hint, .tt')].filter(e => e.getClientRects().length)
+  const overflow = [...r.querySelectorAll('.u, .fogar, .hint, .tt')].filter(e => e.getClientRects().length)
     .filter(e => getComputedStyle(e).textOverflow !== 'ellipsis' && e.scrollWidth > e.clientWidth + 1).map(e => e.className + ' «' + e.textContent.slice(0, 30) + '»');
   const sheet = box(q('.sheet'));
   const words = [...r.querySelectorAll('.wd')].filter(e => e.getClientRects().length).map(box).filter(b => b.r > sheet.r + 1 || b.x < sheet.x - 1).length;

@@ -1,5 +1,5 @@
 'use strict';
-// Capacidad «tele» con una tele falsa: sondeo, órdenes power/src/tvkey, siempre a Fogar TV al encender y ensureJ.
+// Capacidad «tele» con una tele falsa: sondeo, órdenes power/src/tvkey, siempre a Fogar TV al encender y ensureFogar.
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -16,10 +16,10 @@ function fakeTv() {
   const calls = [];
   const no = () => { throw new Error('La tele no responde'); };
   const tv = {
-    calls, offs: [], fail: false, st: { power: 'on', src: 'j', vol: 22, muted: false },
+    calls, offs: [], fail: false, st: { power: 'on', src: 'fogar', vol: 22, muted: false },
     async status() { if (tv.fail) no(); return { ...tv.st }; },
     async power(on, to) { calls.push('power:' + on + (to === 'tv' || to === 'tdt' ? ':' + to : '')); if (tv.fail) no(); if (tv.wakes !== false) tv.st = { ...tv.st, power: on ? 'on' : 'off', src: on ? tv.st.src : null }; },
-    async toJ() { calls.push('toJ'); if (tv.fail) no(); },
+    async toFogar() { calls.push('toFogar'); if (tv.fail) no(); },
     async toTv() { calls.push('toTv'); if (tv.fail) no(); },
     async key(k) { calls.push('key:' + k); if (tv.fail) no(); },
     hasTdt: true,
@@ -60,7 +60,7 @@ test('sondeo off, on, on (tv), on (tv): a Fogar TV una sola vez', async t => {
   tele.start(); await flush();
   tv.st = { ...tv.st, power: 'on', src: 'tv' }; await step(15000);
   await step(15000); await step(15000);
-  assert.equal(tv.calls.filter(c => c === 'toJ').length, 1);
+  assert.equal(tv.calls.filter(c => c === 'toFogar').length, 1);
 });
 
 test('sondeo off, null, on (reposo profundo): a Fogar TV una vez', async t => {
@@ -69,7 +69,7 @@ test('sondeo off, null, on (reposo profundo): a Fogar TV una vez', async t => {
   tele.start(); await flush();
   tv.st = { ...tv.st, power: null, src: null }; await step(15000);
   tv.st = { ...tv.st, power: 'on', src: 'tv' }; await step(15000);
-  assert.equal(tv.calls.filter(c => c === 'toJ').length, 1);
+  assert.equal(tv.calls.filter(c => c === 'toFogar').length, 1);
 });
 
 test('arranque con la tele ya encendida (null, on): no salta', async t => {
@@ -77,7 +77,7 @@ test('arranque con la tele ya encendida (null, on): no salta', async t => {
   tv.st = { ...tv.st, power: null, src: null };
   tele.start(); await flush();
   tv.st = { ...tv.st, power: 'on', src: 'tv' }; await step(15000);
-  assert.equal(tv.calls.filter(c => c === 'toJ').length, 0);
+  assert.equal(tv.calls.filter(c => c === 'toFogar').length, 0);
 });
 
 test('src tv pausa y pasa a la tele; tecla no válida', async t => {
@@ -124,13 +124,13 @@ test('un fallo al difundir no para el sondeo', async t => {
 
 test('withScreen lee al momento: guardada encendida, apagada de verdad → enciende', async t => {
   const { tv, tele, step } = setup(t);
-  tele.start(); await flush();                    // guardado: on / j
+  tele.start(); await flush();                    // guardado: on / fogar
   tv.st = { ...tv.st, power: 'off', src: null };  // apagada con el mando original, sin sondeo todavía
   const [nav] = tele.withScreen([{ t: 'nav', run: () => ({ ok: 1 }) }], new Set(['nav']));
   const p = nav.run({ t: 'nav' }, /** @type {any} */ ({}));
   await flush();
   assert.deepEqual(tv.calls, ['pause', 'power:true'], 'el apagado de fuera también pausa');
-  tv.st = { ...tv.st, src: 'j' }; await step(500);
+  tv.st = { ...tv.st, src: 'fogar' }; await step(500);
   assert.deepEqual(await p, { ok: 1 });
 });
 
@@ -143,7 +143,7 @@ test('withScreen en reposo profundo (off y luego sin responder): intenta encende
   const p = nav.run({ t: 'nav' }, /** @type {any} */ ({}));
   await flush();
   assert.deepEqual(tv.calls, ['power:true']);
-  tv.st = { ...tv.st, src: 'j' }; await step(500);
+  tv.st = { ...tv.st, src: 'fogar' }; await step(500);
   assert.deepEqual(await p, { ok: 1 });
 });
 
@@ -162,20 +162,20 @@ test('tele caída: estado desconocido y la orden da error', async t => {
   assert.deepEqual(state.tv, { power: null, src: null });
 });
 
-test('ensureJ enciende y espera a Fogar TV; el sondeo no repite el salto', async t => {
+test('ensureFogar enciende y espera a Fogar TV; el sondeo no repite el salto', async t => {
   const { tv, tele, step } = setup(t);
   tv.st = { ...tv.st, power: 'off', src: null };
   tele.start(); await flush();
-  const p = tele.ensureJ();
+  const p = tele.ensureFogar();
   await flush();
   assert.deepEqual(tv.calls, ['power:true']);
-  tv.st = { ...tv.st, src: 'j' }; await step(500);
+  tv.st = { ...tv.st, src: 'fogar' }; await step(500);
   assert.equal(await p, true);
   await step(15000);
-  assert.equal(tv.calls.filter(c => c === 'toJ').length, 0, 'power(true) ya fue a Fogar TV');
+  assert.equal(tv.calls.filter(c => c === 'toFogar').length, 0, 'power(true) ya fue a Fogar TV');
 });
 
-test('ensureJ que no llega en 6 s da false y la orden envuelta se hace igual', async t => {
+test('ensureFogar que no llega en 6 s da false y la orden envuelta se hace igual', async t => {
   const { tv, seen, tele, step } = setup(t);
   tv.st = { ...tv.st, power: 'off', src: null }; tv.wakes = false;
   tele.start(); await flush();
@@ -188,7 +188,7 @@ test('ensureJ que no llega en 6 s da false y la orden envuelta se hace igual', a
   assert.ok(seen.logs.includes('tele: no llegó a Fogar TV a tiempo'));
 });
 
-test('withScreen: nav con la tele en Tele pasa por ensureJ; vol y lo que no está en la lista, no', async t => {
+test('withScreen: nav con la tele en Tele pasa por ensureFogar; vol y lo que no está en la lista, no', async t => {
   const { tv, tele, step } = setup(t);
   tv.st = { ...tv.st, src: 'tv' };
   tele.start(); await flush();
@@ -203,13 +203,13 @@ test('withScreen: nav con la tele en Tele pasa por ensureJ; vol y lo que no est�
   assert.deepEqual(tv.calls, []);
   const p = list[0].run({ t: 'nav' }, /** @type {any} */ ({}));
   await flush();
-  tv.st = { ...tv.st, src: 'j' }; await step(500);
+  tv.st = { ...tv.st, src: 'fogar' }; await step(500);
   await p;
-  assert.deepEqual(tv.calls, ['toJ']);
+  assert.deepEqual(tv.calls, ['toFogar']);
   assert.deepEqual(order, ['vol', 'netflix', 'nav']);
 });
 
-test('withScreen con SCREEN: youtube search no toca la tele; youtube play pasa por ensureJ', async t => {
+test('withScreen con SCREEN: youtube search no toca la tele; youtube play pasa por ensureFogar', async t => {
   const { tv, tele, step } = setup(t);
   tv.st = { ...tv.st, src: 'tv' };
   tele.start(); await flush();
@@ -218,19 +218,19 @@ test('withScreen con SCREEN: youtube search no toca la tele; youtube play pasa p
   assert.deepEqual(tv.calls, [], 'buscar no enciende ni saca de Tele');
   const p = yt.run({ t: 'youtube', op: 'play' }, /** @type {any} */ ({}));
   await flush();
-  tv.st = { ...tv.st, src: 'j' }; await step(500);
+  tv.st = { ...tv.st, src: 'fogar' }; await step(500);
   await p;
-  assert.deepEqual(tv.calls, ['toJ']);
+  assert.deepEqual(tv.calls, ['toFogar']);
 });
 
 test('apagada o pasada a Tele desde fuera: el sondeo pausa una vez', async t => {
   const { tv, tele, step } = setup(t);
-  tele.start(); await flush();                                  // on / j
+  tele.start(); await flush();                                  // on / fogar
   tv.st = { ...tv.st, src: 'tv' }; await step(15000);
-  assert.deepEqual(tv.calls, ['pause'], 'j → tv');
+  assert.deepEqual(tv.calls, ['pause'], 'fogar → tv');
   await step(15000);
   assert.deepEqual(tv.calls, ['pause'], 'sigue en tv: no repite');
-  tv.st = { ...tv.st, src: 'j' }; await step(15000);
+  tv.st = { ...tv.st, src: 'fogar' }; await step(15000);
   tv.st = { ...tv.st, power: 'off', src: null }; await step(15000);
   assert.deepEqual(tv.calls, ['pause', 'pause'], 'on → off');
   await step(15000);
@@ -240,11 +240,11 @@ test('apagada o pasada a Tele desde fuera: el sondeo pausa una vez', async t => 
 test('apagado o paso a Tele propios: una sola pausa, aunque el sondeo lo vea después', async t => {
   const { tv, tele, step, cmd } = setup(t);
   tele.start(); await flush();
-  tv.toTv = async () => { tv.calls.push('toTv'); };             // la tele tarda: la lectura de justo después aún es j
+  tv.toTv = async () => { tv.calls.push('toTv'); };             // la tele tarda: la lectura de justo después aún es fogar
   await cmd('src', { s: 'tv' });
   tv.st = { ...tv.st, src: 'tv' }; await step(15000);
   assert.deepEqual(tv.calls, ['pause', 'toTv']);
-  tv.st = { ...tv.st, src: 'j' }; await step(15000);
+  tv.st = { ...tv.st, src: 'fogar' }; await step(15000);
   await cmd('power', { on: false });
   await step(15000);
   assert.deepEqual(tv.calls, ['pause', 'toTv', 'pause', 'power:false']);
@@ -266,11 +266,11 @@ test('encendido propio que sale en el lanzador: una vez a Fogar TV', async t => 
   tv.power = async on => { tv.calls.push('power:' + on); tv.st = { ...tv.st, power: 'on', src: 'tv' }; };
   await cmd('power', { on: true });
   await step(15000); await step(15000);
-  assert.deepEqual(tv.calls, ['power:true', 'toJ']);
+  assert.deepEqual(tv.calls, ['power:true', 'toFogar']);
 });
 
-test('src con la tele apagada la enciende antes: j solo enciende, tv enciende y pasa a Tele', async t => {
-  for (const s of ['j', 'tv']) {
+test('src con la tele apagada la enciende antes: fogar solo enciende, tv enciende y pasa a Tele', async t => {
+  for (const s of ['fogar', 'tv']) {
     await t.test(s, async t2 => {
       const { tv, tele, step, cmd } = setup(t2);
       tv.st = { ...tv.st, power: 'off', src: null };
@@ -278,7 +278,7 @@ test('src con la tele apagada la enciende antes: j solo enciende, tv enciende y 
       tv.power = async (on, to) => { tv.calls.push('power:' + on + (to === 'tv' ? ':tv' : '')); tv.st = { ...tv.st, power: 'on', src: s }; };
       await cmd('src', { s });
       await step(15000); await step(15000);
-      assert.deepEqual(tv.calls.filter(c => c !== 'pause'), s === 'j' ? ['power:true'] : ['power:true:tv'], 'tv: despertar e Inicio en una sola orden, sin toTv aparte');
+      assert.deepEqual(tv.calls.filter(c => c !== 'pause'), s === 'fogar' ? ['power:true'] : ['power:true:tv'], 'tv: despertar e Inicio en una sola orden, sin toTv aparte');
     });
   }
 });
@@ -347,7 +347,7 @@ test('channel con la tele apagada: enciende directa en la TDT, marca y no salta 
   await step(2000);
   assert.deepEqual(await r, { tv: { power: 'on', src: 'tv' } });
   await step(15000); await step(15000);
-  assert.deepEqual(tv.calls.filter(c => c !== 'pause'), ['power:true:tdt', 'digits:3'], 'sin toJ: el encendido era nuestro');
+  assert.deepEqual(tv.calls.filter(c => c !== 'pause'), ['power:true:tdt', 'digits:3'], 'sin toFogar: el encendido era nuestro');
 });
 
 test('channel desde Fogar TV: pausa, abre la TDT, espera y marca el número entero', async t => {
@@ -376,7 +376,7 @@ test('onOff: una vez por encendida → apagada (sondeo y orden propia); con null
   tv.st = { ...tv.st, power: 'off', src: null }; await step(15000);
   await step(15000);
   assert.equal(tv.offs.length, 1);
-  tv.st = { ...tv.st, power: 'on', src: 'j' }; await step(15000);
+  tv.st = { ...tv.st, power: 'on', src: 'fogar' }; await step(15000);
   await cmd('power', { on: false }); await step(15000);
   assert.equal(tv.offs.length, 2);
 });
@@ -388,6 +388,6 @@ test('onOff que devuelve una promesa rechazada: sin rechazo sin manejar y el son
   tv.st = { ...tv.st, power: 'off', src: null }; await step(15000);
   await new Promise(r => setImmediate(r));
   assert.deepEqual(un, []);
-  tv.st = { ...tv.st, power: 'on', src: 'j' }; await step(15000);
+  tv.st = { ...tv.st, power: 'on', src: 'fogar' }; await step(15000);
   assert.equal(tv.st.power, 'on');
 });

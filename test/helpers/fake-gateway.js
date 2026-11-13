@@ -15,12 +15,12 @@ async function startFakeGateway({ name = 'green-house', code = '123456', keyPref
     req.on('data', d => { body += d; });
     req.on('end', () => {
       const send = (s, j) => { res.writeHead(s, { 'content-type': 'application/json' }); res.end(JSON.stringify(j)); };
-      if (req.method === 'GET' && req.url === '/.well-known/fogar-gateway') return send(200, { service: 'fogar-gateway', version: '1.29.0', name, pairing: true });
+      if (req.method === 'GET' && req.url === '/.well-known/fogar-gateway') return send(200, { service: 'fogar-gateway', version: '2.0.0', name, instance_id: 'test' });
       if (req.method === 'POST' && req.url === '/pair') {
         let j = {}; try { j = JSON.parse(body); } catch {}
         pairs.push(j);
         if (j.code !== code) return send(400, { detail: 'invalid or expired code' });
-        return send(201, { client_id: 'c' + (++n), name: j.name, client_key: `${keyPrefix}-${n}`, gateway: { name, version: '1.29.0' } });
+        return send(201, { client_id: 'c' + (++n), name: body.name, client_key: `${keyPrefix}-${n}`, gateway: { name, version: '2.0.0' } });
       }
       send(404, {});
     });

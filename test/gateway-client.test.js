@@ -7,7 +7,7 @@ const path = require('node:path');
 const { WebSocketServer } = require(path.join(__dirname, '..', 'remote', 'node_modules', 'ws'));
 const { createGatewayClient } = require(path.join(__dirname, '..', 'remote', 'src', 'gateway', 'client'));
 
-const HANDSHAKE = { client_key: 'k', input_mode: 'audio', output_mode: ['audio', 'text', 'status'], agent: 'j-assistant' };
+const HANDSHAKE = { client_key: 'k', input_mode: 'audio', output_mode: ['audio', 'text', 'status'], agent: 'salon' };
 const nolog = { info() {}, warn() {}, error() {}, debug() {} };
 
 /** Gateway falso: guarda lo que recibe y deja que cada prueba decida qué contesta. @param {(ws: any, n: number) => void} [onConn] */
@@ -23,8 +23,8 @@ async function fake(onConn) {
   f.stop = async () => { for (const c of wss.clients) c.terminate(); await new Promise(r => wss.close(r)); };
   return f;
 }
-const ready = ws => ws.send(JSON.stringify({ type: 'ready', session_id: 's', agent: 'j-assistant' }));
-const mk = (f, o = {}) => createGatewayClient({ url: f.url, key: 'k', agent: 'j-assistant', log: nolog, ...o });
+const ready = ws => ws.send(JSON.stringify({ type: 'ready', session_id: 's', agent: 'salon' }));
+const mk = (f, o = {}) => createGatewayClient({ url: f.url, key: 'k', agent: 'salon', log: nolog, ...o });
 const until = async (fn, ms = 2000) => { const t = Date.now(); while (!fn()) { if (Date.now() - t > ms) throw new Error('timeout'); await new Promise(r => setTimeout(r, 5)); } };
 
 test('ensure() manda el handshake y resuelve true con ready', async () => {
@@ -84,19 +84,19 @@ test('traduce los mensajes', async () => {
   try {
     await c.ensure();
     const ws = f.conns[0];
-    const J = o => ws.send(JSON.stringify(o));
-    J({ type: 'transcription_partial', text: 'ho' });
-    J({ type: 'transcription', text: 'hola' });
-    J({ type: 'turn_start', turn_id: 't-1', turn_seq: 7 });
-    J({ type: 'token', turn_id: 't-1', text: 'Vale' });
-    J({ type: 'error', code: 'TURN_ERROR', message: 'turn_timeout', fatal: false, turn_id: 't-1' });
-    J({ type: 'error', code: 'OTRO', message: 'x' });
-    J({ type: 'status', service: 'tts', state: 'degraded' });
-    J({ type: 'turn_end', turn_id: 't-1' });
+    const say = o => ws.send(JSON.stringify(o));
+    say({ type: 'transcription_partial', text: 'ho' });
+    say({ type: 'transcription', text: 'hola' });
+    say({ type: 'turn_start', turn_id: 't-1', turn_seq: 7 });
+    say({ type: 'token', turn_id: 't-1', text: 'Vale' });
+    say({ type: 'error', code: 'TURN_ERROR', message: 'turn_timeout', fatal: false, turn_id: 't-1' });
+    say({ type: 'error', code: 'OTRO', message: 'x' });
+    say({ type: 'status', service: 'tts', state: 'degraded' });
+    say({ type: 'turn_end', turn_id: 't-1' });
     ws.send(Buffer.from([0xA1, 0x00, 0x07, 1, 2, 3, 4]), { binary: true });
     ws.send(Buffer.from([0xB2, 0x00, 0x07, 1, 2]), { binary: true });
     ws.send(Buffer.from([0xA1, 0x00]), { binary: true });
-    J({ type: 'turn_end', turn_id: 't-2' });
+    say({ type: 'turn_end', turn_id: 't-2' });
     await until(() => evs.length >= 8);
     assert.deepEqual(evs.slice(0, 5), [
       { type: 'partial', text: 'ho' },
@@ -115,7 +115,7 @@ test('traduce los mensajes', async () => {
     assert.deepEqual(evs[7], { type: 'turn_end', turnId: 't-2' }, 'status, error ajeno y binarios ajenos se ignoran');
     assert.equal(evs.length, 8);
     off();
-    J({ type: 'turn_end', turn_id: 't-3' });
+    say({ type: 'turn_end', turn_id: 't-3' });
     await new Promise(r => setTimeout(r, 50));
     assert.equal(evs.length, 8, 'on() devuelve la baja');
   } finally { c.close(); await f.stop(); }
@@ -128,13 +128,13 @@ test('tool_call → {type:tool}: start con args (solo objeto), result como end c
   c.on(e => evs.push(e));
   try {
     await c.ensure();
-    const J = o => f.conns[0].send(JSON.stringify({ type: 'tool_call', turn_id: 't-1', ...o }));
-    J({ phase: 'start', name: 'tv-canvas__tv_open', tool_call_id: 'c1', args: { url: 'https://example.com' }, result: null, is_error: null });
-    J({ phase: 'result', name: 'tv-canvas__tv_open', tool_call_id: 'c1', args: null, result: 'secreto-del-resultado', is_error: false });
-    J({ phase: 'result', name: 'tv_volume', tool_call_id: 'c2', args: null, result: { e: 1 }, is_error: true });
-    J({ phase: 'start', name: 'tv_state', tool_call_id: 'c3', args: ['no', 'objeto'] });
-    J({ phase: 'result', name: 'tv_state', tool_call_id: 'c3' });   // sin is_error: ok
-    J({ phase: 'progress', name: 'x', tool_call_id: 'c4' });         // fase desconocida: se ignora
+    const say = o => f.conns[0].send(JSON.stringify({ type: 'tool_call', turn_id: 't-1', ...o }));
+    say({ phase: 'start', name: 'tv-canvas__tv_open', tool_call_id: 'c1', args: { url: 'https://example.com' }, result: null, is_error: null });
+    say({ phase: 'result', name: 'tv-canvas__tv_open', tool_call_id: 'c1', args: null, result: 'secreto-del-resultado', is_error: false });
+    say({ phase: 'result', name: 'tv_volume', tool_call_id: 'c2', args: null, result: { e: 1 }, is_error: true });
+    say({ phase: 'start', name: 'tv_state', tool_call_id: 'c3', args: ['no', 'objeto'] });
+    say({ phase: 'result', name: 'tv_state', tool_call_id: 'c3' });   // sin is_error: ok
+    say({ phase: 'progress', name: 'x', tool_call_id: 'c4' });         // fase desconocida: se ignora
     f.conns[0].send(JSON.stringify({ type: 'turn_end', turn_id: 't-1' }));
     await until(() => evs.some(e => e.type === 'turn_end'));
     assert.deepEqual(evs, [

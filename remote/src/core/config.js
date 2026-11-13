@@ -59,7 +59,7 @@ function loadConfig(env = process.env, { hostname = os.hostname() } = {}) {
     ADB: (env.TV_ADB || '').trim(),                             // tele Google TV por ADB (ip:5555); vacío = sin tele nativa
     INPUT: (env.TV_INPUT || '').trim(),                         // inputId de TV Input Framework donde está Fogar TV (HDMI)
     TDT: (env.TV_TDT || '').trim(),                             // inputId de la TDT (antena); vacío = sin canales
-    AGENT: (env.TV_AGENT || '').trim() || 'j-assistant',        // agente del Gateway
+    AGENT: (env.TV_AGENT || '').trim(),                         // agente del Gateway; vacío = el que decida el Gateway
     ADMIN_URL: adminUrl(env, PORT, hostname),
     SPOTIFY_BANNER: !!env.TV_SPOTIFY_BANNER,
     SP_DEVICE: (env.TV_SPOTIFY_DEVICE || '').trim() || NAME,

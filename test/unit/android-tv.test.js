@@ -23,7 +23,7 @@ const OUT = `  mWakefulness=Awake
 `;
 
 test('leer la tele: encendida con Fogar TV en la entrada', () => {
-  assert.deepEqual(parseStatus(OUT, TV_INPUT), { power: 'on', src: 'j', vol: 22, muted: false });
+  assert.deepEqual(parseStatus(OUT, TV_INPUT), { power: 'on', src: 'fogar', vol: 22, muted: false });
 });
 
 test('leer la tele: otra entrada o el launcher delante es «tv»', () => {
@@ -83,12 +83,12 @@ const TUNER = 'com.mediatek.tvinput/.tuner.TunerInputService/HW0';
 const two = (first, second, main) => `  sessionStateMap: ITvInputSession -> SessionState\n${first}${second}  mainSessionToken: android.os.Binder@${main}\n`;
 
 test('leer la tele: la entrada es la de la sesión principal', () => {
-  assert.equal(parseStatus(HEAD + REAL_AWAKE + TAIL, TV_INPUT).src, 'j', '(a) real despierta');
+  assert.equal(parseStatus(HEAD + REAL_AWAKE + TAIL, TV_INPUT).src, 'fogar', '(a) real despierta');
   const asleep = parseStatus(REAL_ASLEEP, TV_INPUT);
   assert.equal(asleep.power, 'off'); assert.equal(asleep.src, null, '(b) real dormida');
   assert.equal(parseStatus(REAL_ASLEEP.replace('Asleep', 'Awake') + HEAD, TV_INPUT).src, 'tv', '(b) mainSessionToken null');
   assert.equal(parseStatus(HEAD + two(entry('1', TV_INPUT), entry('2', TUNER), '2') + TAIL, TV_INPUT).src, 'tv', '(c) HW4 vieja primero, la principal es TDT');
-  assert.equal(parseStatus(HEAD + two(entry('1', TUNER), entry('2', TV_INPUT), '2') + TAIL, TV_INPUT).src, 'j', '(d) la principal es HW4, segunda');
+  assert.equal(parseStatus(HEAD + two(entry('1', TUNER), entry('2', TV_INPUT), '2') + TAIL, TV_INPUT).src, 'fogar', '(d) la principal es HW4, segunda');
   assert.equal(parseStatus(HEAD + two(entry('1', TV_INPUT), entry('2', TUNER), '9') + TAIL, TV_INPUT).src, 'tv', 'ninguna coincide');
 });
 
@@ -130,7 +130,7 @@ test('tele: set redondea y acota a 0..100', async () => {
   assert.deepEqual(sets(t.adb), ['34', '100', '0']);
 });
 
-test('tele: power(true) despierta y luego pasa a J; power(false) duerme', async () => {
+test('tele: power(true) despierta y luego pasa a Fogar TV; power(false) duerme', async () => {
   const { adb, tv } = mk(22);
   await tv.power(true);
   assert.match(adb.runs[0][1], /KEYCODE_WAKEUP/);
@@ -182,10 +182,10 @@ test('tele: step con volumen desconocido lanza y no fija nada', async () => {
   assert.deepEqual(sets(t.adb), []);
 });
 
-test('tele: órdenes de mute, set, home y toJ, y close() cierra las teclas', async () => {
+test('tele: órdenes de mute, set, home y toFogar, y close() cierra las teclas', async () => {
   const { adb, tv } = mk(22);
   let closed = 0; adb.keys.close = () => closed++;
-  await tv.toggleMute(); await tv.set(40); await tv.toJ(); await tv.toTv(); tv.close();
+  await tv.toggleMute(); await tv.set(40); await tv.toFogar(); await tv.toTv(); tv.close();
   assert.deepEqual(adb.runs.map(r => r[1]), [
     'cmd media_session volume --stream 3 --set 40 --show',
     'am start -a android.intent.action.VIEW -d ' + passthroughUri(TV_INPUT)]);
@@ -201,7 +201,7 @@ test('tele: input keyevent tiene 12 s de margen (hasta 6,7 s medidos al desperta
   assert.deepEqual(seen.map(([c, ms]) => [c.split(' ')[0], ms]), [['input', 12000], ['am', 3000], ['dumpsys', 3000], ['cmd', 3000]]);
 });
 
-test('tele: power(true, "tv") despierta y abre el inicio con am start, sin pasar por J ni por monkey', async () => {
+test('tele: power(true, "tv") despierta y abre el inicio con am start, sin pasar por Fogar TV ni por monkey', async () => {
   const { adb, tv } = mk(22);
   await tv.power(true, 'tv');
   assert.deepEqual(adb.runs.map(r => r[1]), ['input keyevent KEYCODE_WAKEUP', 'am start -a android.intent.action.MAIN -c android.intent.category.HOME']);

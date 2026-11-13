@@ -26,7 +26,7 @@ export function arrowAt(x, y, boxes) {
   return null;
 }
 
-let mode = 'j';            // lo que enseña el mando: 'j' | 'tv' | 'off'
+let mode = 'fogar';            // lo que enseña el mando: 'fogar' | 'tv' | 'off'
 let last = null;           // último state.tv
 let expect = null;         // orden propia en curso ({ power } o { src }): hasta ver la tele así (o 4 s tras la respuesta), el estado no la deshace
 let quietUntil = 0;        // tras una orden propia, lo que cambie no se avisa (la tele tarda en asentarse)
@@ -40,7 +40,7 @@ const CROSS_LABEL = 'Cruceta: desliza hacia un lado o toca una flecha para mover
 /** ¿El mando está en modo Tele? (los botones y el trackpad van a la tele) */
 export const inTv = () => mode === 'tv';
 /** ¿El trackpad es la cruceta del inicio? (reposo delante y mando en Fogar TV; el gesto mueve el foco de la tele) */
-export const inHome = () => mode === 'j' && home;
+export const inHome = () => mode === 'fogar' && home;
 const padAria = () => $('#pad').setAttribute('aria-label', mode === 'tv' || home ? CROSS_LABEL : padLabel);
 
 /** Orden a la tele con respuesta, sin esperarla (las flechas van seguidas): si falla, la píldora lo dice. */
@@ -62,16 +62,16 @@ export function padGesture(dx, dy, x, y) {
   e.classList.add('hit'); setTimeout(() => e.classList.remove('hit'), 260);
 }
 
-const modeOf = t => (t.power === 'off' ? 'off' : t.src === 'tv' && Date.now() > bootUntil ? 'tv' : 'j');
-const matches = t => (expect.power ? t.power === expect.power && (expect.power === 'off' || t.src === 'j') : t.power === 'on' && t.src === expect.src);
+const modeOf = t => (t.power === 'off' ? 'off' : t.src === 'tv' && Date.now() > bootUntil ? 'tv' : 'fogar');
+const matches = t => (expect.power ? t.power === expect.power && (expect.power === 'off' || t.src === 'fogar') : t.power === 'on' && t.src === expect.src);
 
-const SRC_NAME = { j: 'Fogar TV', tv: 'Tele' };
+const SRC_NAME = { fogar: 'Fogar TV', tv: 'Tele' };
 /** La píldora de fuente: el pomo al modo que se ve y, mientras la tele no lo confirma, «Cambiando» para el lector.
- *  @param {string} v 'j' | 'tv' */
+ *  @param {string} v 'fogar' | 'tv' */
 function pill2(v) {
   const p = $('#srcP'), busy = !!(expect && expect.src);
   p.dataset.src = v; p.classList.toggle('busy', busy);
-  p.setAttribute('aria-label', 'Fuente: ' + SRC_NAME[v] + (busy ? ', cambiando' : '') + '. Cambiar a ' + SRC_NAME[v === 'tv' ? 'j' : 'tv']);
+  p.setAttribute('aria-label', 'Fuente: ' + SRC_NAME[v] + (busy ? ', cambiando' : '') + '. Cambiar a ' + SRC_NAME[v === 'tv' ? 'fogar' : 'tv']);
 }
 /* ⏻ se mantiene HOLD_MS para apagar (un toque en plena película no apaga nada). El temporizador manda, no la transición:
    con movimiento reducido no hay transiciones y el aro aparece lleno de golpe */
@@ -105,7 +105,7 @@ function view(v) {
   padAria();
   // lo que no se ve tampoco se alcanza con el teclado
   $('#offV').inert = v !== 'off'; $('main.app2').inert = v === 'off';
-  for (const b of document.querySelectorAll('.j-only')) /** @type {HTMLElement} */ (b).inert = v === 'tv';
+  for (const b of document.querySelectorAll('.fogar-only')) /** @type {HTMLElement} */ (b).inert = v === 'tv';
 }
 
 /** Reposo delante o no: la ayuda sale, cambia y entra, como al cambiar de modo. */
@@ -124,7 +124,7 @@ function paint(s) {
   r.classList.toggle('tvq', lost);
   for (const b of btns) { b.hidden = !t; if (lost) b.setAttribute('aria-disabled', 'true'); else b.removeAttribute('aria-disabled'); }
   const prev = last; last = t;
-  if (!t) { known = null; view('j'); return; }                          // sin tele configurada: el mando de siempre
+  if (!t) { known = null; view('fogar'); return; }                          // sin tele configurada: el mando de siempre
   if (lost) return;                                       // sin respuesta: se queda como estaba
   const wasOff = known === 'off'; known = t.power;
   if (wasOff && t.power === 'on') {
@@ -177,7 +177,7 @@ export const tele = {
     // la píldora entera cambia a la otra fuente (misma orden src de siempre)
     $('#srcP').addEventListener('click', () => {
       if (!usable() || mode === 'off') return;
-      const s = mode === 'tv' ? 'j' : 'tv';
+      const s = mode === 'tv' ? 'fogar' : 'tv';
       buzz(7); expect = { src: s }; view(s); order({ t: 'src', s }, { src: s }); pill2(s);
     });
     const pw = $('#pw2');

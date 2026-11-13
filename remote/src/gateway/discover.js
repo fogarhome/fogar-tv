@@ -28,7 +28,7 @@ function endpoints(input, port = PORT) {
 
 /**
  * ¿Hay un Fogar ahí? @param {string} input @param {{ port?: number, timeoutMs?: number, fetchImpl?: typeof fetch }} [o]
- * @returns {Promise<{ http: string, ws: string, host: string, name: string, version: string, pairing: boolean } | null>}
+ * @returns {Promise<{ http: string, ws: string, host: string, name: string, version: string } | null>}
  */
 async function probe(input, { port = PORT, timeoutMs = 1500, fetchImpl = fetch } = {}) {
   const e = endpoints(input, port);
@@ -36,9 +36,9 @@ async function probe(input, { port = PORT, timeoutMs = 1500, fetchImpl = fetch }
   try {
     const r = await fetchImpl(`${e.http}/.well-known/fogar-gateway`, { signal: AbortSignal.timeout(timeoutMs), redirect: 'error' });
     if (!r.ok) return null;
-    const j = /** @type {any} */ (await r.json());
-    if (!j || j.service !== 'fogar-gateway') return null;
-    return { ...e, name: String(j.name || e.host).slice(0, 80), version: String(j.version || '').slice(0, 40), pairing: j.pairing === true };
+    const body = /** @type {any} */ (await r.json());
+    if (!body || body.service !== 'fogar-gateway') return null;
+    return { ...e, name: String(body.name || e.host).slice(0, 80), version: String(body.version || '').slice(0, 40) };
   } catch { return null; }
 }
 

@@ -408,20 +408,20 @@ a.bt{text-decoration:none}
 .sI{position:absolute;top:50%;width:22px;height:22px;margin-top:-11px;color:var(--text-faint);transition:opacity .15s ease}
 .sF{left:11px}.sT{right:12px;width:20px;height:20px;margin-top:-10px}
 .sL{position:absolute;top:50%;transform:translateY(-50%);line-height:1;white-space:nowrap;transition:opacity .15s ease,filter .15s ease}
-.sLj{left:49px}.sLt{right:51px}
+.sLf{left:49px}.sLt{right:51px}
 .knob{position:absolute;left:3px;top:3px;width:36px;height:36px;border-radius:999px;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;box-shadow:0 2px 8px rgba(0,0,0,.3);transition:transform .25s var(--ease)}
 .knob svg{grid-area:1/1;width:20px;height:20px;transition:opacity .15s ease}
 .knob .kF{width:22px;height:22px}
 .srcP:active .knob{transform:scale(.97)}
 .srcP .sT,.srcP .sLt,.srcP .kT{opacity:0}
 .srcP .sLt{filter:blur(2px)}
-.srcP[data-src=j] .sF{opacity:0}
-.srcP[data-src=j] .sT{opacity:1}
+.srcP[data-src=fogar] .sF{opacity:0}
+.srcP[data-src=fogar] .sT{opacity:1}
 .srcP[data-src=tv] .knob{transform:translateX(106px)}
-.srcP[data-src=tv] .kF,.srcP[data-src=tv] .sLj{opacity:0}
-.srcP[data-src=tv] .sLj{filter:blur(2px)}
+.srcP[data-src=tv] .kF,.srcP[data-src=tv] .sLf{opacity:0}
+.srcP[data-src=tv] .sLf{filter:blur(2px)}
 .srcP[data-src=tv] .kT,.srcP[data-src=tv] .sLt{opacity:1;filter:none}
-.srcP.busy[data-src=j] .sLj,.srcP.busy[data-src=tv] .sLt{opacity:.55}   /* solo el nombre a la vista */
+.srcP.busy[data-src=fogar] .sLf,.srcP.busy[data-src=tv] .sLt{opacity:.55}   /* solo el nombre a la vista */
 /* Fogar, arriba y solo asistente (A3): la línea en reposo dibuja la palabra con la brasa en la «r»; escuchando, la misma
    cabecera sigue tu voz y dice lo que entiende, sin cambiar de alto (el trackpad y el volumen no se mueven) */
 .fogar2{width:100%;height:74px;display:flex;align-items:center;gap:16px;padding:0 0 4px;border:0;border-bottom:1px solid var(--line);border-radius:0;background:transparent;color:var(--text);font:inherit;text-align:left;cursor:pointer;touch-action:manipulation}
@@ -514,11 +514,11 @@ a.bt{text-decoration:none}
 .cross .ok.hit{background:var(--halo);color:var(--accent-text);transform:scale(.94)}
 :root.tele .hint2{transition:opacity .4s ease,transform .6s var(--ease)}
 .hint2 .h-tv{display:none}
-:root.tv .hint2 .h-j,:root.home .hint2 .h-j{display:none}:root.tv .hint2 .h-tv,:root.home .hint2 .h-tv{display:inline}
+:root.tv .hint2 .h-fogar,:root.home .hint2 .h-fogar{display:none}:root.tv .hint2 .h-tv,:root.home .hint2 .h-tv{display:inline}
 .hint2.swap{opacity:0;transform:translateY(6px)}
 /* lo que en la tele no tiene sentido se recoge (no desaparece de golpe) */
 :root.tele .nav2 .b2{transition:flex-grow .55s var(--ease),opacity .3s ease,color .2s ease}
-:root.tv .nav2 .j-only{flex-grow:0;opacity:0;pointer-events:none;overflow:hidden;width:0}
+:root.tv .nav2 .fogar-only{flex-grow:0;opacity:0;pointer-events:none;overflow:hidden;width:0}
 .apps2{height:52px}
 :root.tv .apps2{height:0;opacity:0;margin:-5px 0;overflow:visible clip}  /* se recorta solo en alto y solo al plegarse: fuera, el anillo de foco se ve entero */
 /* apagada: el mando se aparta en cascada y queda el botón de encender */

@@ -32,7 +32,7 @@ function createGatewayFeature({ link, name, agent, port = discoverDefault.PORT, 
       case 'check': await link.check(); return link.info();
       case 'find': {
         const r = await discover.find({ manual: link.manual(), port });
-        return { manual: r.manual, found: r.found.map(g => ({ host: g.host, name: g.name, version: g.version, pairing: g.pairing, where: g.where })) };
+        return { manual: r.manual, found: r.found.map(g => ({ host: g.host, name: g.name, version: g.version, where: g.where })) };
       }
       case 'pair': {
         const typed = m.typed === true, host = String(m.host || '').trim().slice(0, 255) || link.manual();

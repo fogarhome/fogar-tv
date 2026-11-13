@@ -99,7 +99,7 @@ function createGatewayClient({ url, key, agent, log, WebSocketImpl = WebSocket, 
       }, readyMs);
 
       sock.on('open', () => {
-        sock.send(JSON.stringify({ client_key: key, input_mode: 'audio', output_mode: ['audio', 'text', 'status'], agent }));
+        sock.send(JSON.stringify({ client_key: key, input_mode: 'audio', output_mode: ['audio', 'text', 'status'], ...(agent ? { agent } : {}) }));
       });
       sock.on('message', (/** @type {Buffer} */ data, /** @type {boolean} */ isBinary) => {
         if (sock !== ws) return;

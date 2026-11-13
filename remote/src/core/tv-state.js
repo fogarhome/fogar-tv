@@ -15,7 +15,7 @@ const hostOf = u => { try { return new URL(u).host; } catch { return ''; } };
 function createTvState({ cdpUp, clients, ambient = () => null, gateway = () => null }) {
   // scroll: {pos, size} de 0 a 1, o null
   const state = { title: '', url: '', vol: /** @type {number | null} */ (null), muted: false, media: -1, scroll: /** @type {any} */ (null),
-    tv: /** @type {{ power: 'on'|'off'|null, src: 'j'|'tv'|null } | null} */ (null) }; // tv: solo con TV_ADB (features/tele.js)
+    tv: /** @type {{ power: 'on'|'off'|null, src: 'fogar'|'tv'|null } | null} */ (null) }; // tv: solo con TV_ADB (features/tele.js)
   function publicState() {
     return {
       t: 'state', title: state.title, url: state.url, host: hostOf(state.url),
