@@ -302,15 +302,14 @@ async function adminScenes(theme, admin) {
     await tap(p, 'Parar'); await shot(p, T('hoja-agente-parado'));
   });
   // voz: mantener pulsada la línea con el micrófono falso. vstart se contesta aquí (sin Gateway el servidor diría «no disponible»);
-  // la parcial y la final las manda el servidor, inyectadas. Un toque corto no manda nada y abre el teclado.
+  // la parcial y la final las manda el servidor, inyectadas. El modo de toque (tocar y otro toque para enviar) va en
+  // extra-micro-toque; la sección «toque corto» se queda vacía para que el registro compare con las tandas de antes.
   await run('hoja-agente-voz', async p => {
     await tap(p, 'Hablar con Fogar');
     await p.evaluate(() => { window.__wsFake['vstart:'] = { ok: 1 }; window.__wsFake['vend:'] = { ok: 1 }; });
-    const orb = await p.getByRole('button', { name: 'Mantén para hablar con Fogar; toca para escribir', exact: true }).boundingBox();
+    const orb = await p.getByRole('button', { name: 'Hablar con Fogar: toca o mantén pulsado', exact: true }).boundingBox();
     const [x, y] = [orb.x + orb.width / 2, orb.y + orb.height / 2];
-    await p.mouse.move(x, y); await p.mouse.down(); await p.waitForTimeout(100); await p.mouse.up(); await p.waitForTimeout(500);
     await takeLog(p, T('hoja-agente-voz: toque corto'));
-    await p.locator('#agin').blur();
     await p.mouse.move(x, y); await p.mouse.down();
     await p.locator('#agS[data-st="rec"]').waitFor({ state: 'attached', timeout: 5000 }); await p.waitForTimeout(900);   // la primera vez el micro tarda
     await inject(p, { t: 'talk', ev: 'partial', text: 'pon algo de música' });
@@ -448,6 +447,24 @@ const SP_PL = { name: 'Mi lista n.º 55', description: 'Para estudiar sin distra
 async function extraScenes(admin) {
   const run = async (name, fn, o = {}) => { const p = await newPage({ token: admin, theme: 'oscuro', name, ...o }); try { await open(p); await fn(p); } finally { await takeLog(p, name); await p.context().close(); } };
   await run('extra-apaisado', p => shot(p, 'extra-apaisado'), { landscape: true });
+  // micro del pulgar como los audios de WhatsApp: un toque empieza a escuchar en la cabecera (el mando no se mueve) y
+  // otro toque envía (vstart y vend, como al mantener); al enviar, la hoja de voz
+  await run('extra-micro-toque', async p => {
+    await p.evaluate(() => { window.__wsFake['vstart:'] = { ok: 1 }; window.__wsFake['vend:'] = { ok: 1 }; });
+    const pad0 = await p.locator('#pad').boundingBox();
+    const mic = await p.locator('#mic2').boundingBox();
+    const [x, y] = [mic.x + mic.width / 2, mic.y + mic.height / 2];
+    await p.mouse.move(x, y); await p.mouse.down(); await p.waitForTimeout(80); await p.mouse.up();
+    await p.locator(':root.escucha').waitFor({ state: 'attached', timeout: 5000 }); await p.waitForTimeout(900);
+    await inject(p, { t: 'talk', ev: 'partial', text: 'pon algo tranquilo para cenar' });
+    await shot(p, 'extra-micro-toque');
+    const hint = await p.locator('#fS').textContent(), pad1 = await p.locator('#pad').boundingBox();
+    if (hint !== 'Te escucho · toca para enviar') errors.push(`extra-micro-toque: la pista dice «${hint}»`);
+    if (pad1.y !== pad0.y || pad1.height !== pad0.height) errors.push('extra-micro-toque: el trackpad se ha movido al escuchar');
+    await p.mouse.down(); await p.waitForTimeout(80); await p.mouse.up(); await p.waitForTimeout(600);
+    if (!(await p.locator('#agS.on').count())) errors.push('extra-micro-toque: al enviar no se abre la hoja');
+    await shot(p, 'extra-micro-enviado');
+  });
   await run('extra-sin-navegador', async p => {
     await inject(p, { t: 'state', title: '', url: '', host: '', vol: 35, muted: false, media: null, cdp: false, scroll: null });
     await shot(p, 'extra-sin-navegador');

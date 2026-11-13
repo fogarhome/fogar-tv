@@ -1,4 +1,5 @@
-// Voz (v4): mantener pulsada la línea de «Hablar con Fogar» (o el micro del pulgar, que escucha en la cabecera) para hablar. El micrófono del móvil sube en directo al servidor como
+// Voz (v4): hablar con Fogar desde la línea de la hoja o el micro del pulgar (que escucha en la cabecera), como los audios
+// de WhatsApp: mantener pulsado escucha y al soltar envía; un toque corto empieza a escuchar y otro toque envía. El micrófono del móvil sube en directo al servidor como
 // PCM (Float32 LE, 16 kHz, mono, trozos de 100 ms) por el WebSocket del mando: `vstart`, audio binario y `vend`. La vista
 // del agente enseña la frase mientras se dice (`talk` partial) y la respuesta. La respuesta suena en UN solo sitio: la
 // tele (por defecto), este móvil o ninguno (solo texto). No es un módulo del mando: la hoja `agS` es de agent.js, que
@@ -14,7 +15,7 @@ import { lineLevel } from './linea.js';
 const OUTS = ['tv', 'phone', 'none'];
 const OUT_LABEL = { tv: 'Responde en la tele', phone: 'Responde en el móvil', none: 'Responde solo con texto' };
 const MAX_MS = 30000;                                   // tope de una grabación (el servidor corta a los 32 s)
-const TAP_MS = 300;                                     // soltar antes de esto es un toque: abre el teclado, no manda nada
+const TAP_MS = 300;                                     // soltar antes de esto es un toque: sigue escuchando hasta otro toque
 const FLUSH_MS = 200;                                   // al soltar, lo más que se espera el último trozo del worklet
 const NOT_READY = 'No he podido preparar el micrófono. Prueba otra vez.';
 
@@ -29,16 +30,18 @@ let src = null;
 /** @type {AudioWorkletNode | null} */
 let node = null;
 let held = false;                                       // el dedo (o la tecla) sigue sobre la línea
-let long = false;                                       // la pulsación ya pasa de TAP_MS (o es de teclado)
+let long = false;                                       // la pulsación ya pasa de TAP_MS (o es de teclado, o de toque)
+let latched = false;                                    // modo de toque: escucha sin el dedo encima hasta el segundo toque
+let endArm = false;                                     // el segundo toque ya bajó: al levantarlo, se envía
 let started = false;                                    // vstart enviado: el audio va al servidor
 let press = 0;                                          // número de la pulsación (lo que llega tarde de otra se ignora)
 let tapT = 0, stopT = 0, flushT = 0;
 /** @type {Float32Array[]} */
 let pending = [];                                       // los primeros trozos, en memoria hasta saber que no es un toque
-/** @type {{ stage: (st: string) => void, said: (t: string) => void, rep: (t: string, cls?: string) => void, focus: () => void, press?: () => void }} */
+/** @type {{ stage: (st: string) => void, said: (t: string) => void, rep: (t: string, cls?: string) => void, latch?: () => void, press?: () => void }} */
 let ui;
-/** Lo propio del botón de la pulsación en curso: al empezar, con un toque corto (por defecto, ui.focus) y al enviar.
- *  @typedef {{ press?: () => void, tap?: () => void, sent?: () => void }} Who */
+/** Lo propio del botón de la pulsación en curso: al empezar y al enviar.
+ *  @typedef {{ press?: () => void, sent?: () => void }} Who */
 /** @type {Who} */
 let who = {};
 
@@ -58,8 +61,12 @@ export const interruptOn = () => cfg.voiceInterrupt !== false;
 export const outSel = out;
 function paintOut() { const b = $('#agOut'); b.textContent = OUT_LABEL[out()]; b.dataset.out = out(); }
 
+/** ¿Escucha en modo de toque? (la pista dice «toca para enviar» en lugar de «suelta para enviar») */
+export const latchedNow = () => latched;
+
 /** Suelta el micrófono y los nodos (el contexto se queda). */
 function release() {
+  latched = false; endArm = false;
   clearTimeout(tapT); clearTimeout(stopT); clearTimeout(flushT);
   if (node) { node.port.onmessage = null; node.disconnect(); node = null; }
   if (src) { src.disconnect(); src = null; }
@@ -123,7 +130,7 @@ async function start(key = false, h = {}) {
   }
   if (me !== press || !held) {                          // se soltó (o se cerró la hoja) mientras se pedía el micrófono
     s.getTracks().forEach(t => t.stop());
-    if (me === press && long) { ui.rep('Listo. Mantén pulsada la línea otra vez para hablar.'); ui.stage('idle'); }
+    if (me === press && long) { ui.rep('Listo. Toca o mantén la línea otra vez para hablar.'); ui.stage('idle'); }
     return;
   }
   stream = s;
@@ -140,13 +147,19 @@ async function start(key = false, h = {}) {
   go();                                                 // si el permiso tardó más que un toque, ya es voz
 }
 
-/** Soltar: un toque corto se descarta sin mandar nada y abre el teclado (lo de siempre); si no, vend. */
+/** Soltar: tras un toque corto se sigue escuchando (modo de toque) hasta otro toque; si no, vend. También al llegar a
+ *  MAX_MS, en los dos modos. */
 function stop() {
   if (!held) return;
-  held = false;
-  const tap = !long, sent = started;
-  if (tap || !sent || !node) { release(); started = false; }
-  if (tap) { ui.stage('idle'); (who.tap || ui.focus)(); return; }
+  if (!long) {                                          // toque corto: ya es voz, sin el dedo encima
+    clearTimeout(tapT); long = true; latched = true;
+    if (ui.latch) ui.latch();
+    go();                                               // sin micrófono aún, start() sigue y lo manda al tenerlo
+    return;
+  }
+  held = false; latched = false;
+  const sent = started;
+  if (!sent || !node) { release(); started = false; }
   if (!sent) return;                                    // aún sin micrófono: start() avisa al volver
   buzz(6); ui.rep('Pensando', 'wait'); ui.stage('wait');
   if (who.sent) who.sent();
@@ -191,14 +204,20 @@ export const voice = {
     if (!held && !started && !node && !stream) return;
     held = false; started = false; press++; release();
   },
-  /** Otro botón que graba igual que la línea (el micro del pulgar), con lo suyo al empezar, al tocar y al enviar.
+  /** Un botón que graba (la línea de la hoja y el micro del pulgar), con lo suyo al empezar y al enviar.
    *  @param {HTMLElement} b @param {Who} [h] */
   bind(b, h = {}) {
-    b.addEventListener('pointerdown', e => { e.preventDefault(); b.setPointerCapture(e.pointerId); start(false, h); });
-    for (const ev of ['pointerup', 'pointercancel']) b.addEventListener(ev, stop);
+    // en modo de toque, el segundo toque envía al levantar el dedo (un pointercancel no envía: sigue escuchando)
+    b.addEventListener('pointerdown', e => {
+      e.preventDefault(); b.setPointerCapture(e.pointerId);
+      if (latched) { endArm = true; return; }
+      start(false, h);
+    });
+    b.addEventListener('pointerup', () => { if (endArm) { endArm = false; latched = false; stop(); return; } if (!latched) stop(); });
+    b.addEventListener('pointercancel', () => { endArm = false; if (!latched) stop(); });
     b.addEventListener('contextmenu', e => e.preventDefault());
     // teclado: espacio o Intro mantenidos
-    b.addEventListener('keydown', e => { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); start(true, h); } });
+    b.addEventListener('keydown', e => { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); if (latched) { latched = false; stop(); } else start(true, h); } });
     b.addEventListener('keyup', e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); stop(); } });
   },
   /** @param {typeof ui} hooks @returns {boolean} true si hay micrófono (la línea graba) */
@@ -206,8 +225,8 @@ export const voice = {
     ui = hooks;
     if (!canRecord()) return false;
     const b = $('#agOrb'), o = $('#agOut');
-    b.setAttribute('aria-label', 'Mantén para hablar con Fogar; toca para escribir');
-    $('#agH').textContent = 'Mantén pulsada la línea para hablar · toca para escribir';
+    b.setAttribute('aria-label', 'Hablar con Fogar: toca o mantén pulsado');
+    $('#agH').textContent = 'Toca o mantén la línea para hablar';
     o.hidden = false; paintOut();
     voice.bind(b);
     // un solo destino, y se recuerda en este móvil

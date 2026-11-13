@@ -11,7 +11,7 @@ import { $, el } from '../core/dom.js';
 import { cmd, rpc, onWs } from '../core/api.js';
 import { buzz } from '../ui/haptics.js';
 import { openSheet, closeSheet, isOpen } from '../ui/sheets.js';
-import { voice, audioCtx, ensureAudioCtx, outSel, interruptOn } from './voice.js';
+import { voice, audioCtx, ensureAudioCtx, outSel, interruptOn, latchedNow } from './voice.js';
 import { createPcmPlayer } from './pcm-player.js';
 import { talkForm } from './talkform.js';
 import { lineInit, lineStage, lineWake } from './linea.js';
@@ -33,7 +33,9 @@ let voxText = '', voxSaid = 0, voxRaf = 0;              // la respuesta acumulad
 let voxShown = '';                                      // lo pintado (palabras y dichas): si no cambia, el DOM no se toca
 const SENTENCE_END = /[.!?…:]["'»)\]]*$/;              // palabra que cierra frase (como en la tele)
 // la cabecera de Fogar (A3): mientras se habla con el micro del pulgar, escucha ahí mismo y dice lo que va entendiendo
-const HEAD = { t: 'Dime qué quieres ver', s: 'Habla o escribe', rec: 'Te escucho', recS: 'Te escucho · suelta para enviar' };
+const HEAD = { t: 'Dime qué quieres ver', s: 'Habla o escribe', rec: 'Te escucho' };
+/** La pista mientras escucha: al mantener, se envía al soltar; en modo de toque, con otro toque. */
+const sendHint = (sep = ' · ') => 'Te escucho' + sep + (latchedNow() ? 'toca para enviar' : 'suelta para enviar');
 let thumb = false;                                      // la pulsación en curso es del micro del pulgar (hoja cerrada)
 
 /** Carácter dicho en el ms `t` de audio (copia de charAt de src/features/voice-sync.js).
@@ -80,7 +82,7 @@ function cut() { if (interruptOn() || !player.playing()) player.stop(); }
 function head(on, heard = '') {
   document.documentElement.classList.toggle('escucha', on);
   $('#fT').textContent = on ? heard || HEAD.rec : HEAD.t;
-  $('#fS').textContent = on ? HEAD.recS : HEAD.s;
+  $('#fS').textContent = on ? sendHint() : HEAD.s;
 }
 /** Estado de la vista: 'idle' (pídeme algo), 'rec' (grabando con la línea), 'wait' (un momento) o 'done' (respuesta). */
 function stage(st) {
@@ -89,7 +91,7 @@ function stage(st) {
   lineStage(st);
   if (thumb && st === 'rec' && !isOpen('agS')) head(true); else if (st !== 'rec') head(false);
   $('#shade').classList.toggle('think', st === 'wait' || st === 'rec');
-  $('#agSt').textContent = st === 'wait' ? 'Un momento' : st === 'done' ? 'Fogar' : st === 'rec' ? 'Te escucho… suelta para enviar' : 'Pídeme algo';   // en reposo nadie escucha todavía
+  $('#agSt').textContent = st === 'wait' ? 'Un momento' : st === 'done' ? 'Fogar' : st === 'rec' ? sendHint('… ') : 'Pídeme algo';   // en reposo nadie escucha todavía
   if (st !== 'done') noQuit();
   acts();
 }
@@ -231,16 +233,16 @@ export const agent = {
     // un error del micro del pulgar se lee en la hoja (la cabecera no tiene sitio para él)
     const rep = (t, cls = '') => { if (cls === 'err') { if (thumb && !isOpen('agS')) openSheet('agS'); return fail(t, false); } const r = $('#rep'); r.className = 'rep' + (cls ? ' ' + cls : ''); r.textContent = t; };
     onWs('bin', b => player.play(b));
-    mic = voice.init({ stage, said, rep, press: () => { cut(); voiceReset(); out = outSel(); asked++; talking = false; lastAsk = ''; retry = false; }, focus: () => { buzz(8); agin.focus(); } });
-    // el micro del pulgar: mantener = la cabecera escucha (el mando no se mueve) y al soltar, la hoja con la respuesta;
-    // un toque abre la hoja para escribir. Sin micrófono propio (http) sigue con data-click: abre la hoja.
+    // latch: un toque corto pasa a modo de toque; si ya escucha, la pista cambia a «toca para enviar»
+    mic = voice.init({ stage, said, rep, latch: () => { if ($('#agS').dataset.st === 'rec') stage('rec'); }, press: () => { cut(); voiceReset(); out = outSel(); asked++; talking = false; lastAsk = ''; retry = false; } });
+    // el micro del pulgar: mantener (o tocar y otro toque para enviar) = la cabecera escucha (el mando no se mueve) y al
+    // enviar, la hoja con la respuesta. Para escribir, la cabecera. Sin micrófono propio (http) sigue con data-click: abre la hoja.
     const m = $('#mic2');
     if (mic) {
       m.removeAttribute('data-click'); m.removeAttribute('data-a');
-      m.setAttribute('aria-label', 'Micrófono: mantén pulsado para hablar con Fogar, toca para escribir');
+      m.setAttribute('aria-label', 'Micrófono de Fogar: toca o mantén pulsado para hablar');
       voice.bind(m, {
         press: () => { thumb = !isOpen('agS'); },
-        tap: () => { thumb = false; head(false); openSheet('agS'); buzz(8); agin.focus(); },
         sent: () => { if (thumb) openSheet('agS'); },
       });
     }
