@@ -176,7 +176,7 @@
         V[i][0] = 0.5 * V[i][0] + 0.25 * (V[i - 1][0] + V[i + 1][0]); V[i][1] = 0.5 * V[i][1] + 0.25 * (V[i - 1][1] + V[i + 1][1]);
       }
       for (let i = 0; i < N; i++) { P[i][0] += V[i][0] * dt; P[i][1] += V[i][1] * dt; mv = Math.max(mv, Math.abs(V[i][0]) + Math.abs(V[i][1]), Math.abs(TN[i][0] - P[i][0]) + Math.abs(TN[i][1] - P[i][1])); }
-      moving = mv > 0.05;
+      moving = mv > 1.5;   // 1,5 del lienzo de 1000 es ~0,5 px en la tele: menos no se ve y el arrastre final tarda segundos
     }
     return {
       W, H, N,
