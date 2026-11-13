@@ -135,7 +135,9 @@ function createAndroidTv({ addr, input, tdt = '', log, adb }) {
     }
   }
   // input arranca un proceso Java en cada llamada: hasta 6,7 s medidos al despertar la tele, más que los 3 s del resto
-  const sh = (/** @type {string} */ cmd) => run(['shell', cmd], cmd.startsWith('input ') ? 12000 : 3000);
+  // input keyevent y am start, 12 s: con /data casi lleno la tele tarda a veces más de 3 s en cambiar de entrada (la cambia
+  // igual) y con 3 s la orden salía como fallida y el mando volvía a «Tele»
+  const sh = (/** @type {string} */ cmd) => run(['shell', cmd], /^(input|am) /.test(cmd) ? 12000 : 3000);
   const status = async () => parseStatus(await sh(STATUS_CMD), input);
   /** @param {string} code KEYCODE_… @param {string} name para el registro */
   const press = async (code, name) => {

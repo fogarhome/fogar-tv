@@ -193,12 +193,12 @@ test('tele: órdenes de mute, set, home y toFogar, y close() cierra las teclas',
   assert.equal(closed, 1);
 });
 
-test('tele: input keyevent tiene 12 s de margen (hasta 6,7 s medidos al despertar); el sondeo y lo demás, 3 s', async () => {
+test('tele: input keyevent y am start tienen 12 s de margen (6,7 s medidos al despertar; am start, más de 3 s con la tele llena); el sondeo y lo demás, 3 s', async () => {
   const seen = [];
   const tv = createAndroidTv({ addr: 'x:5555', input: TV_INPUT, log: { info() {} },
     adb: { run: async (args, ms) => { seen.push([args[1], ms]); return OUT; }, keys: { press: async () => {}, close() {} } } });
   await tv.power(true, 'tv'); await tv.status(); await tv.set(30);
-  assert.deepEqual(seen.map(([c, ms]) => [c.split(' ')[0], ms]), [['input', 12000], ['am', 3000], ['dumpsys', 3000], ['cmd', 3000]]);
+  assert.deepEqual(seen.map(([c, ms]) => [c.split(' ')[0], ms]), [['input', 12000], ['am', 12000], ['dumpsys', 3000], ['cmd', 3000]]);
 });
 
 test('tele: power(true, "tv") despierta y abre el inicio con am start, sin pasar por Fogar TV ni por monkey', async () => {
