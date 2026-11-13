@@ -121,10 +121,10 @@ function pairInPage(o) {
     'font-family:var(--tv-letra-texto, system-ui, sans-serif);color:var(--tv-text, #d6cfc5);text-align:center;-webkit-font-smoothing:antialiased';
   const c = document.createElement('div');
   c.style.cssText = `background:var(--tv-surface, #1a2325);border-radius:${u(32)};padding:${u(44)} ${u(64)};box-shadow:var(--tv-shadow-float, 0 24px 48px -24px rgba(0,0,0,.6))`;
-  const k = document.createElement('div'); k.textContent = 'Nuevo mando'; k.style.cssText = `font-size:${u(22)};letter-spacing:.18em;text-transform:uppercase;color:var(--tv-accent, #d6cfc5);font-weight:500`;
+  const k = document.createElement('div'); k.textContent = 'Nuevo mando'; k.style.cssText = `font-size:${u(24)};letter-spacing:.18em;text-transform:uppercase;color:var(--tv-accent, #d6cfc5);font-weight:500`;
   const n = document.createElement('div'); n.textContent = o.name + ' quiere conectarse'; n.style.cssText = `font-size:${u(28)};margin-top:${u(10)};color:var(--tv-text-soft, #a3acb3)`;
   const d = document.createElement('div'); d.textContent = o.code.split('').join(' '); d.style.cssText = `font-size:${u(120)};font-weight:500;letter-spacing:.06em;margin:${u(22)} 0 ${u(6)};font-variant-numeric:tabular-nums`;
-  const h = document.createElement('div'); h.textContent = 'Escribe este código en el mando'; h.style.cssText = `font-size:${u(22)};color:var(--tv-text-soft, #a3acb3)`;
+  const h = document.createElement('div'); h.textContent = 'Escribe este código en el mando'; h.style.cssText = `font-size:${u(26)};color:var(--tv-text-soft, #a3acb3)`;
   c.append(k, n, d, h); b.appendChild(c); host.appendChild(b);
   b.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 220 });
 }

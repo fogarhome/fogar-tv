@@ -18,8 +18,8 @@ const { pairInPage } = require(path.join(ROOT, 'remote', 'src', 'tv', 'devices.j
 fs.mkdirSync(OUT, { recursive: true });
 
 const TYPES = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.woff2': 'font/woff2' };
-// una página vacía con el fondo del reposo, para la isla y el emparejamiento (que se pintan encima de cualquier web)
-const BLANK = '<!doctype html><html><head><meta charset="utf-8"></head><body style="margin:0;height:100vh;background:linear-gradient(160deg,#2a2338,#15111c)"></body></html>';
+// una página vacía con el fondo del reposo (humo y base de Fogar), para la isla y el emparejamiento (que se pintan encima de cualquier web)
+const BLANK = '<!doctype html><html><head><meta charset="utf-8"></head><body style="margin:0;height:100vh;background:linear-gradient(160deg,#13201b,#0b1012)"></body></html>';
 const srv = http.createServer((q, r) => {
   const u = q.url.split('?')[0];
   if (u === '/blank') { r.writeHead(200, { 'content-type': TYPES['.html'] }); return r.end(BLANK); }
@@ -47,9 +47,9 @@ const STAGE = [
   { name: 'tareas', tpl: 'tpl-tasks.html', data: { kicker: 'Hoy', title: 'Lista de la compra', subtitle: '2 de 4 hechas', items: [
     { text: 'Pan', done: true }, { text: 'Tomates de rama', done: true, tag: 'mercado' }, { text: 'Aceite de oliva', due: 'hoy' }, { text: 'Café en grano', tag: 'súper' }] } },
 ];
-const timer = { id: 't1', kind: 'timer', title: 'Pasta', subtitle: 'escurrir y servir', icon: '🍝', accent: '#e8b26a', endsAt: now + 444e3, duration: 600e3, updated: now };
-const music = { id: 'm1', kind: 'music', title: 'Midnight City', subtitle: 'M83', icon: '🎵', accent: '#c3b7e3', progress: 0.4, updated: now };
-const live = { id: 'l1', kind: 'live', title: 'Partido', subtitle: 'Segunda parte', icon: '⚽', accent: '#8fa8d8', updated: now };
+const timer = { id: 't1', kind: 'timer', title: 'Pasta', subtitle: 'escurrir y servir', icon: '🍝', accent: '#e3a46f', endsAt: now + 444e3, duration: 600e3, updated: now };
+const music = { id: 'm1', kind: 'music', title: 'Midnight City', subtitle: 'M83', icon: '🎵', progress: 0.4, updated: now };
+const live = { id: 'l1', kind: 'live', title: 'Partido', subtitle: 'Segunda parte', icon: '⚽', accent: '#7cc792', updated: now };
 const PANEL = { form: 'panel', ctx: 'idle', state: 'talk', live: false, night: false, calm: true, glass: 'A', colors: null, icons: {},
   turns: [{ id: 1, you: 'Pon un temporizador de diez minutos para la pasta', youFinal: true, fogar: 'Hecho, diez minutos. Te aviso cuando termine.', tools: [], error: false, hint: '' }] };
 

@@ -5,16 +5,16 @@
 @import url(/shared/tokens-tv.css);
 :root{
   --bg:var(--tv-bg);--fg:var(--tv-text);--mut:var(--tv-text-soft);--line:var(--tv-track-2);
-  --acc:var(--tv-accent);--ok:#9fd8b8;--warn:#e8b26a;
+  --acc:var(--tv-accent);--ok:#7cc792;--warn:#e3a46f;   /* contra y el ámbar de los fallos (tv-agent.js) */
   --ease:var(--tv-ease);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;overflow:hidden;cursor:default}
 body{
   font:500 calc(28 * var(--u))/1.35 var(--tv-letra-texto);font-variant-numeric:tabular-nums;color:var(--fg);
-  /* las dos luces del reposo (malva y cielo), quietas */
-  background:radial-gradient(calc(1200 * var(--u)) calc(700 * var(--u)) at 78% -10%,rgba(124,106,174,.22),transparent 60%),
-             radial-gradient(calc(900 * var(--u)) calc(600 * var(--u)) at -10% 110%,rgba(110,140,196,.14),transparent 55%),var(--bg);
+  /* las dos luces del reposo sin música (niebla y rescoldo, LUZ.sin de idle-app.js), quietas */
+  background:radial-gradient(calc(1200 * var(--u)) calc(700 * var(--u)) at 78% -10%,rgba(32,51,42,.42),transparent 60%),
+             radial-gradient(calc(900 * var(--u)) calc(600 * var(--u)) at -10% 110%,rgba(90,26,16,.42),transparent 55%),var(--bg);
   -webkit-font-smoothing:antialiased;
 }
 /* títulos en Unbounded (solo titula: es ancha, tracking apretado), el resto en Figtree; .big lleva cifras: Figtree */

@@ -91,16 +91,16 @@ module.exports = function createStage({ cdp, state, cfg, nav }) {
     if (!box || box.parentNode !== host) {
       if (box) box.remove();
       box = document.createElement('div'); box.id = '__tvtoast';
-      box.style.cssText = 'position:fixed;top:28px;right:28px;z-index:2147483647;display:flex;flex-direction:column;gap:14px;width:min(560px,44vw);pointer-events:none;font-family:system-ui,sans-serif';
+      box.style.cssText = 'position:fixed;top:28px;right:28px;z-index:2147483647;display:flex;flex-direction:column;gap:14px;width:min(560px,44vw);pointer-events:none;font-family:Figtree,system-ui,sans-serif';
       host.appendChild(box);
     }
     const el = document.createElement('div');
-    el.style.cssText = 'background:rgba(14,17,23,.94);color:#f2f5fa;border:1px solid rgba(255,255,255,.14);border-radius:20px;padding:20px 24px;box-shadow:0 18px 50px rgba(0,0,0,.55);display:flex;gap:16px;align-items:center';
+    el.style.cssText = 'background:rgba(26,35,37,.94);color:#d6cfc5;border-radius:20px;padding:20px 24px;box-shadow:inset 0 0 0 1px rgba(236,230,220,.08),0 18px 50px rgba(0,0,0,.55);display:flex;gap:16px;align-items:center';
     const ic = document.createElement('div'); ic.textContent = o.icon || '🔔'; ic.style.cssText = 'font-size:38px;line-height:1';
     const col = document.createElement('div');
     const t = document.createElement('div'); t.textContent = o.title; t.style.cssText = 'font-size:26px;font-weight:700;line-height:1.2';
     col.appendChild(t);
-    if (o.text) { const p = document.createElement('div'); p.textContent = o.text; p.style.cssText = 'font-size:21px;opacity:.82;margin-top:4px;line-height:1.3'; col.appendChild(p); }
+    if (o.text) { const p = document.createElement('div'); p.textContent = o.text; p.style.cssText = 'font-size:21px;color:#a3acb3;margin-top:4px;line-height:1.3'; col.appendChild(p); }
     el.append(ic, col); box.appendChild(el);
     el.animate([{ opacity: 0, transform: 'translateY(-16px) scale(.97)' }, { opacity: 1, transform: 'none' }], { duration: 260, easing: 'cubic-bezier(.2,.8,.2,1)' });
     setTimeout(() => {
