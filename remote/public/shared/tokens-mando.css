@@ -4,8 +4,8 @@
    Acento hueso (TVC Decisión - Reloj, acento y tokens de la tele): la semántica la da la forma, no el color. Solo la
    acción principal (play) es un disco lleno; lo activo o elegido lleva un aro (inset 1.5px de --accent). Sin sombras de
    color: la marca solo deja sombra a lo que flota de verdad.
-   Las luces (--malva, --cielo y las de la carátula de mando/features/ambient.js) siguen siendo las de antes hasta el
-   rediseño del mando (fase 4), que las recalcula con el tope por luminancia. */
+   Las luces de lo que hay en la tele (mando/features/ambient.js) ya llevan el tope por luminancia de Fogar; --malva y
+   --cielo fijos (voz, Ajustes) siguen hasta el rediseño del mando (fase 4). */
 :root,:root[data-theme=oscuro]{
   --bg:#0b1012;--orb:.24;--pad:rgba(236,230,220,.045);--halo:rgba(236,230,220,.12);
   --text:#ece6dc;--text-soft:#b8bec2;--text-faint:#8b969f;

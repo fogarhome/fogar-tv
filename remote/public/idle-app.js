@@ -3,27 +3,29 @@
 /* global nextFocus */
 const $ = id => document.getElementById(id);
 const B = document.body, BG = $('bg'), G = $('grid');
-const W = { hora: $('wHora'), ctx: $('wCtx'), mus: $('wMus'), nfx: $('wNfx'), s0: $('wS0'), s1: $('wS1'), s2: $('wS2') };
+const W = { hora: $('wHora'), ctx: $('wCtx'), mus: $('wMus'), nfx: $('wNfx'), s0: $('wS0'), s1: $('wS1'), s2: $('wS2'), fi: $('wFirma') };
 let D = { profile: 'day', weather: null, music: null, acts: [], cfg: { dimMin: 20, layout: 'rotar', rearrangeMin: 20, calm: false } }, off = 0, lastEvent = Date.now();
 
 // ── distribuciones: cada escena coloca los widgets en la rejilla (fila-inicio / col-inicio / fila-fin / col-fin), sin que
 // dos áreas se pisen: cada widget tiene su sitio reservado. A 1920×1080 caben la hora (3 filas × 7 columnas: «00:00» mide
-// ≈ 2,3 em), el contexto con una actividad (3 filas) y la música en línea (1 fila); si no, se encogen (idle.css, fit())
+// ≈ 2,3 em), el contexto con una actividad (3 filas) y la música en línea (1 fila); si no, se encogen (idle.css, fit()).
+// La firma (fi) va en una celda libre de una fila y cambia de esquina con cada escena, contra el quemado (como la hora);
+// en zonas 2, junto a la cabecera del panel del agente, que nace de ella (en las demás está lejos y se funde: tv-agent.js)
 const L = {
   margen: [
-    { hora: ['4/1/7/8', 'start', 'end', 'line', 'left'], ctx: ['1/8/4/13', 'end', 'start', 'col', 'right'], mus: ['5/8/7/13', 'end', 'end', 'line', 'right'] },
-    { hora: ['1/6/4/13', 'end', 'start', 'line', 'right'], ctx: ['1/1/5/6', 'start', 'end', 'col', 'left'], mus: ['5/1/7/7', 'start', 'end', 'line', 'left'] },
-    { hora: ['2/3/5/11', 'center', 'center', 'line', 'left'], ctx: ['5/1/7/7', 'start', 'end', 'col', 'left'], mus: ['1/8/2/13', 'end', 'start', 'line', 'right'] },
+    { hora: ['4/1/7/8', 'start', 'end', 'line', 'left'], ctx: ['1/8/4/13', 'end', 'start', 'col', 'right'], mus: ['5/8/7/13', 'end', 'end', 'line', 'right'], fi: ['1/1/2/5', 'start', 'start', '', 'left'] },
+    { hora: ['1/6/4/13', 'end', 'start', 'line', 'right'], ctx: ['1/1/5/6', 'start', 'end', 'col', 'left'], mus: ['5/1/7/7', 'start', 'end', 'line', 'left'], fi: ['6/9/7/13', 'end', 'end', '', 'right'] },
+    { hora: ['2/3/5/11', 'center', 'center', 'line', 'left'], ctx: ['5/1/7/7', 'start', 'end', 'col', 'left'], mus: ['1/8/2/13', 'end', 'start', 'line', 'right'], fi: ['1/1/2/5', 'start', 'start', '', 'left'] },
   ],
   zonas: [
-    { ctx: ['1/1/2/13', 'stretch', 'center', 'row', 'left'], hora: ['2/1/5/13', 'start', 'start', 'line', 'left'], mus: ['6/1/7/13', 'stretch', 'center', 'band', 'left'] },
-    { hora: ['1/1/4/13', 'start', 'start', 'line', 'left'], mus: ['5/1/6/13', 'stretch', 'center', 'band', 'left'], ctx: ['6/1/7/13', 'stretch', 'center', 'row', 'left'] },
-    { mus: ['1/1/2/13', 'stretch', 'center', 'band', 'left'], ctx: ['3/1/4/13', 'stretch', 'center', 'row', 'left'], hora: ['4/1/7/13', 'start', 'end', 'line', 'left'] },
+    { ctx: ['1/1/2/13', 'stretch', 'center', 'row', 'left'], hora: ['2/1/5/13', 'start', 'start', 'line', 'left'], mus: ['6/1/7/13', 'stretch', 'center', 'band', 'left'], fi: ['5/9/6/13', 'end', 'center', '', 'right'] },
+    { hora: ['1/1/4/13', 'start', 'start', 'line', 'left'], mus: ['5/1/6/13', 'stretch', 'center', 'band', 'left'], ctx: ['6/1/7/13', 'stretch', 'center', 'row', 'left'], fi: ['4/9/5/13', 'end', 'center', '', 'right'] },
+    { mus: ['1/1/2/13', 'stretch', 'center', 'band', 'left'], ctx: ['3/1/4/13', 'stretch', 'center', 'row', 'left'], hora: ['4/1/7/13', 'start', 'end', 'line', 'left'], fi: ['2/9/3/13', 'start', 'center', '', 'left'] },
   ],
   apilada: [
-    { hora: ['1/1/7/7', 'start', 'center', 'stack', 'left'], ctx: ['1/8/4/13', 'stretch', 'start', 'col', 'left'], mus: ['4/8/7/13', 'stretch', 'end', 'big', 'left'] },
-    { hora: ['1/7/7/13', 'end', 'center', 'stack', 'right'], ctx: ['1/1/4/7', 'stretch', 'start', 'col', 'left'], mus: ['4/1/7/7', 'stretch', 'end', 'big', 'left'] },
-    { hora: ['1/1/7/7', 'start', 'end', 'stack', 'left'], ctx: ['4/8/7/13', 'stretch', 'end', 'col', 'left'], mus: ['1/8/4/13', 'stretch', 'start', 'big', 'left'] },
+    { hora: ['2/1/7/7', 'start', 'center', 'stack', 'left'], ctx: ['1/8/4/13', 'stretch', 'start', 'col', 'left'], mus: ['4/8/7/13', 'stretch', 'end', 'big', 'left'], fi: ['1/1/2/5', 'start', 'start', '', 'left'] },
+    { hora: ['1/7/6/13', 'end', 'center', 'stack', 'right'], ctx: ['1/1/4/7', 'stretch', 'start', 'col', 'left'], mus: ['4/1/7/7', 'stretch', 'end', 'big', 'left'], fi: ['6/9/7/13', 'end', 'end', '', 'right'] },
+    { hora: ['2/1/7/7', 'start', 'end', 'stack', 'left'], ctx: ['4/8/7/13', 'stretch', 'end', 'col', 'left'], mus: ['1/8/4/13', 'stretch', 'start', 'big', 'left'], fi: ['1/1/2/5', 'start', 'start', '', 'left'] },
   ],
 };
 L.rotar = [...L.margen, ...L.zonas, ...L.apilada];
@@ -60,7 +62,9 @@ L.dis3 = [
 let layout = '', scene = 0, rTimer = 0, moving = false, sug = { mode: '', n: 0 };
 const scenes = () => (sug.mode === 'nfx' ? L.nfx : sug.mode ? L[sug.mode + sug.n] : L[layout]);
 // cada widget ocupa su celda entera; su contenido (.wi) se alinea dentro con data-jx/data-jy (idle.css)
+let placed = null;   // la escena que se ve (rearrange mide adónde va cada widget y vuelve a ella)
 function place(sc) {
+  placed = sc;
   for (const k of Object.keys(W)) {
     const e = W[k];
     e.classList.toggle('gone', !sc[k]);                    // lo que no está en la escena no ocupa sitio
@@ -86,31 +90,38 @@ function fit() {
     if (k < 1) e.style.setProperty('--fit', (k * .98).toFixed(3));
   }
 }
-// reacomodo coreografiado: atenuar, colocar, y que el contenido de cada widget viaje desde donde estaba (FLIP)
+// reacomodo (la tabla de movimiento de TVC Crítica 2026-11-12 - Tele A3): lo que salta poco (≤ 300 px de la tele) viaja
+// 400 ms con una curva fuerte de entrada y salida, escalonado 40 ms (FLIP); lo que salta lejos, aparece o se va se funde en
+// el sitio: sale en 160 ms (opacidad y escala .96) y entra ya en su sitio en 220 ms. Calma y reducir movimiento: solo
+// fundidos, de 120 + 200 ms. Solo transform y opacity, en el contenido (.wi)
+const EO = 'cubic-bezier(.23,1,.32,1)', EIO = 'cubic-bezier(.77,0,.175,1)', NEAR = 300;
 function rearrange(next) {
   if (moving) return;
   setFx(null);                                                  // los widgets van a moverse: el foco se apaga
-  const calm = !!D.cfg.calm; moving = true;
-  G.classList.add('leaving');
+  moving = true;
+  const soft = !!D.cfg.calm || matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const tOut = soft ? 120 : 160, tIn = soft ? 200 : 220, u = Math.min(innerWidth / 1920, innerHeight / 1080);
+  const ins = Object.values(W).map(w => w.firstElementChild), rects = () => ins.map(e => e.getBoundingClientRect());
+  const from = placed, a = rects();
+  place(scenes()[next]); const b = rects(); if (from) place(from);   // adónde va cada uno (se mide y se vuelve: no llega a verse)
+  const go = ins.map((e, i) => (!a[i].width ? 'in' : !b[i].width ? 'out' : Math.abs(b[i].left - a[i].left) < 1 && Math.abs(b[i].top - a[i].top) < 1 ? ''
+    : !soft && Math.hypot(b[i].left - a[i].left, b[i].top - a[i].top) <= NEAR * u ? 'near' : 'far'));
+  ins.forEach((e, i) => { if (go[i] !== 'far' && go[i] !== 'out') return; e.style.transition = `opacity ${tOut}ms ${EO}, transform ${tOut}ms ${EO}`; e.style.opacity = '0'; if (!soft) e.style.transform = 'scale(.96)'; });
   setTimeout(() => {
-    const els = Object.values(W), ins = els.map(e => e.firstElementChild), first = ins.map(e => e.getBoundingClientRect());
     place(scenes()[next]); scene = next;
     document.querySelectorAll('.sg-gone').forEach(e => e.classList.remove('sg-gone'));
-    if (!calm) ins.forEach((e, i) => {
-      const a = first[i], b = e.getBoundingClientRect();
-      e.style.transition = 'none'; e.style.transform = `translate(${a.left - b.left}px,${a.top - b.top}px)`;
+    const c = rects(); let k = 0;
+    ins.forEach((e, i) => {
+      if (go[i] === 'near') {
+        e.style.transition = 'none'; e.style.transform = `translate(${a[i].left - c[i].left}px,${a[i].top - c[i].top}px)`; void e.offsetWidth;
+        e.style.transition = `transform 400ms ${EIO} ${k++ * 40}ms`; e.style.transform = '';
+      } else if (go[i] === 'far' || go[i] === 'in') {
+        e.style.transition = 'none'; e.style.transform = ''; e.style.opacity = '0'; void e.offsetWidth;
+        e.style.transition = `opacity ${tIn}ms ${EO}`; e.style.opacity = '';
+      }
     });
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-      els.forEach((e, i) => {
-        const d = i * .12;
-        e.style.transition = `opacity .7s ease ${d + .35}s`;
-        ins[i].style.transition = `transform 1.5s var(--ease) ${d}s`;
-        ins[i].style.transform = '';
-      });
-      G.classList.remove('leaving');
-      setTimeout(() => { els.forEach((e, i) => { e.style.transition = ins[i].style.transition = ''; }); moving = false; }, 2200);
-    }));
-  }, 650);
+    setTimeout(() => { ins.forEach(e => { e.style.transition = e.style.transform = e.style.opacity = ''; }); moving = false; }, Math.max(tIn, 400 + 40 * k) + 50);
+  }, go.some(g => g === 'far' || g === 'out') ? tOut : 0);
 }
 function setLayout(name) {
   if (!L[name]) name = 'rotar';
@@ -204,14 +215,26 @@ function acts() {
   }
 }
 
-// ── paletas del ambiente: [luz A, luz B, base, intensidad]
-const PAL = {
-  dawn:    ['#8a76c0', '#c4949e', '#221b2a', .3],
-  day:     ['#7c6aae', '#6e8cc4', '#211b2a', .32],
-  golden:  ['#9a6aa0', '#c88a6a', '#221a26', .3],
-  evening: ['#5e4c92', '#3d5486', '#16121c', .38],
-  dark:    ['#000000', '#000000', '#000000', 0],
+// ── ambiente de Fogar (A3 «Rincón vivo» del lienzo de la tele): la base noche con humo y niebla, y dos luces prestadas de
+// lo que hay en pantalla (la carátula) que orbitan despacio; sin música, niebla y rescoldo. Tope por luminancia (TVC
+// Decisión - Reloj, acento y tokens de la tele): con todos los centros encima, el fondo no pasa de 0,05 detrás de ningún
+// texto. test/unit/luz.test.js lo comprueba con los valores de entre las marcas.
+// @luz:inicio
+const LUZ = {
+  base: '#0b1012', humo: '#13201b', aHumo: 1, niebla: '#20332a', aNiebla: 0.55,
+  a: 0.25, ymax: 0.11,                          // luces de la carátula: opacidad y luminancia máxima de cada una
+  sin: ['#20332a', '#5a1a10'], aSin: 0.42,      // sin música: niebla y rescoldo (oscuras: no necesitan tope)
 };
+// la carátula ([h, s, l] de 0–360 y 0–1) con su tono, la saturación entre 0,3 y 0,75 (un gris sigue gris) y la luminancia hasta LUZ.ymax
+function tone([h, s, l]) {
+  const rgbOf = L => { const a = s * Math.min(L, 1 - L), k = n => (n + h / 30) % 12, f = n => 255 * (L - a * Math.max(-1, Math.min(k(n) - 3, 9 - k(n), 1))); return [f(0), f(8), f(4)]; };
+  const lin = c => { c /= 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; };
+  const lum = ([r, g, b]) => 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+  s = s < 0.05 ? 0 : Math.min(0.75, Math.max(0.3, s)); l = Math.min(0.9, Math.max(0.1, l));   // los grises, grises
+  if (lum(rgbOf(l)) > LUZ.ymax) { let lo = 0, hi = l; for (let i = 0; i < 20; i++) { l = (lo + hi) / 2; if (lum(rgbOf(l)) > LUZ.ymax) hi = l; else lo = l; } l = lo; }
+  return 'rgb(' + rgbOf(l).map(Math.round).join(' ') + ')';
+}
+// @luz:fin
 function rgb2hsl(r, g, b) {
   r /= 255; g /= 255; b /= 255;
   const mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2;
@@ -220,7 +243,6 @@ function rgb2hsl(r, g, b) {
   const h = mx === r ? (g - b) / d + (g < b ? 6 : 0) : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
   return [h * 60, s, l];
 }
-const tone = (c, L) => { const [h, s, l] = c; return `hsl(${h.toFixed(0)} ${Math.min(80, Math.max(30, s * 100)).toFixed(0)}% ${(Math.min(Math.max(l, L * .7), L) * 100).toFixed(0)}%)`; };
 function extract(img) {
   const N = 36, cv = document.createElement('canvas'); cv.width = cv.height = N;
   const x = cv.getContext('2d', { willReadFrequently: true }); x.drawImage(img, 0, 0, N, N);
@@ -235,21 +257,29 @@ function extract(img) {
   return c.length ? (c.length > 1 ? c : [c[0], [(c[0][0] + 40) % 360, c[0][1], c[0][2]]]) : null;
 }
 let artPal = null;
-function timePal() {
-  const w = D.weather, now = Date.now();
-  if (D.profile === 'evening') return PAL.evening;
-  if (w && w.sunrise) {
-    if (Math.abs(now - w.sunrise) < 75 * 60e3) return PAL.dawn;
-    if (now > w.sunset - 90 * 60e3 && now < w.sunset + 40 * 60e3) return PAL.golden;
-  }
-  return PAL.day;
-}
+// sin música, niebla y rescoldo; con carátula, sus dos colores con el tope; de noche y en cine, negro y sin luces (idle.css)
 function applyPalette() {
   const dark = D.profile === 'night' || D.profile === 'cinema';
-  let p = dark ? PAL.dark : timePal();
-  if (!dark && artPal && (D.music || sug.mode)) { const ev = D.profile === 'evening'; p = [tone(artPal[0], ev ? .32 : .36), tone(artPal[1], ev ? .28 : .34), p[2], ev ? .32 : .3]; }
-  BG.style.setProperty('--ca', p[0]); BG.style.setProperty('--cb', p[1]); BG.style.setProperty('--base', p[2]); BG.style.setProperty('--orb', p[3]);
+  const p = dark ? ['#000', '#000', 0] : artPal && (D.music || sug.mode) ? [tone(artPal[0]), tone(artPal[1]), LUZ.a] : [...LUZ.sin, LUZ.aSin];
+  BG.style.setProperty('--ca', p[0]); BG.style.setProperty('--cb', p[1]); BG.style.setProperty('--orb', p[2]);
 }
+for (const [k, v] of [['--base', LUZ.base], ['--humo', LUZ.humo], ['--ah', LUZ.aHumo], ['--niebla', LUZ.niebla], ['--an', LUZ.aNiebla]]) BG.style.setProperty(k, v);
+
+// ── la firma: la palabra «Fogar» quieta, con el motor de la línea viva (shared/linea-viva.js) en el mismo lienzo de
+// 1000 × 420 y con el grosor de la línea del agente en su cabecera (4 de 360): la línea nace de aquí (tv-agent.js). Se
+// pinta una vez (sin bucle) y cuando cambia su tamaño o su color (perfil)
+const FIRMA = $('fogar-firma');
+let firmaEng = null;
+function firma() {
+  const r = FIRMA.getBoundingClientRect(), dpr = devicePixelRatio || 1, w = Math.round(r.width * dpr), h = Math.round(r.height * dpr);
+  if (!w || !h || !window.FogarLineaViva) return;
+  if (!firmaEng) { firmaEng = window.FogarLineaViva.make(); firmaEng.still('rest'); }
+  if (FIRMA.width !== w || FIRMA.height !== h) { FIRMA.width = w; FIRMA.height = h; }
+  const c = FIRMA.getContext('2d'), k = w / 1000, col = getComputedStyle(FIRMA).color;
+  c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, w, h); c.setTransform(k, 0, 0, k, 0, 0);
+  firmaEng.draw(c, 4 * 1000 / 360, [col, col, col]);
+}
+if (typeof ResizeObserver === 'function') new ResizeObserver(firma).observe(FIRMA);
 
 // ── ahora suena
 let artUrl = '', srvPalKey = '';
@@ -447,7 +477,7 @@ function suggest() {
 function profile() {
   for (const p of ['day', 'evening', 'night', 'cinema']) B.classList.toggle(p, D.profile === p);
   B.classList.toggle('calm', !!D.cfg.calm);
-  applyPalette();
+  applyPalette(); firma();
 }
 function dimCheck() {
   const n = D.profile === 'night', mins = Number(D.cfg && D.cfg.dimMin) || 0;
@@ -548,6 +578,5 @@ D.profile = (h => h >= 8 && h < 20 ? 'day' : 'evening')(new Date().getHours());
 function drift() { const u = Math.min(innerWidth / 1920, innerHeight / 1080), r = () => Math.round((Math.random() * 64 - 32) * u); $('dx').style.transform = `translate(${r()}px,${r()}px)`; }
 setInterval(drift, 150e3); setTimeout(drift, 1000);
 setLayout(D.cfg.layout); schedule(); profile(); clock(); connect();
-setInterval(applyPalette, 5 * 60e3);
 // el ajuste depende de las fuentes y del tamaño de la pantalla
 addEventListener('resize', fit); document.fonts.ready.then(fit);

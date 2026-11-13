@@ -25,10 +25,14 @@
 // La línea viva (shared/linea-viva.js, que src/tv/tokens.js pone delante) va en la cabecera en lugar del orbe, como en el
 // A3 «Rincón vivo» del lienzo de la tele: escucha, piensa, herramienta, habla, la recta si falla y la palabra al acabar.
 // Nace del logo: la palabra se dibuja en la cabecera al tamaño del logo, se deshace en su sitio (LINE.hold) y luego la
-// línea y el cristal crecen con un solo muelle crítico de 0,4 s; el contenido entra al 90 % del recorrido. Al cerrar, al
-// revés: sale el contenido, el cristal se recoge sobre la línea (que vuelve a escribir «Fogar») y la opacidad cae solo al
-// final. El foco de la línea es una luz debajo del cristal (nunca encima: el texto no pasaría 4,5:1). Con reducir
-// movimiento (o calma, o noche), la forma quieta de cada estado y fundidos de 200 ms al abrir y 120 ms al cerrar.
+// línea y el cristal crecen con un solo muelle crítico de 0,4 s; el contenido entra al 90 % del recorrido. En el reposo,
+// el logo es su firma (#fogar-firma, idle.html): si está cerca de la cabecera (LINE.near), la línea y el cristal salen de
+// su caja (escala y desplazamiento con el mismo muelle) y la firma se esconde al momento; si está lejos, la firma se funde
+// en su sitio y la línea nace en la cabecera (un vuelo largo se cambia por un fundido); vuelve cuando la línea se funde.
+// Al cerrar, al revés: sale el contenido, el cristal se recoge sobre la línea (que vuelve a escribir «Fogar») y la
+// opacidad cae solo al final. El foco de la línea es una luz debajo del cristal (nunca encima: el texto no pasaría
+// 4,5:1). Con reducir movimiento (o calma, o noche), la forma quieta de cada estado y fundidos de 200 ms al abrir y 120 ms
+// al cerrar.
 // Voz sincronizada (`voice` en la foto, del turno actual; ver src/features/voice-sync.js): la respuesta deja de ir a
 // WORD_MS y sale frase a frase al ritmo de la voz (la frase en curso entera, en tenue) y lo ya dicho se ilumina palabra a
 // palabra. Sin anclas aún, en espera (no se enseña). Al acabar o cortarse la voz, todo a la vista e iluminado.
@@ -118,10 +122,10 @@
   // `voice`: el pulso con tu voz a tope (level 1), mientras escucha
   const PULSE = { gain: 0.4, word: 0.6, event: 1, keep: 0.05, rest: 0.01, think: 0.05, voice: 0.5, listen: { base: 0.14, depth: 0.06, hz: 2.6 } };
   // la línea en la cabecera (en --u): ancho y grosor del trazo por forma (el lienzo de la línea es 1000 × 420); `logo`:
-  // de qué tamaño nace (el logo del A3, 300 de 560); `hold`: ms que se deshace la palabra antes de viajar; `on`: recorrido
-  // del cristal a partir del que entra el contenido; `fade`: --u de crecimiento en los que el cristal pasa de 0 a 1;
-  // `out`: ms que tarda en salir el contenido al cerrar (y espera el cristal); `gone`: fundido final de la línea
-  const LINE = { panel: { w: 360, px: 4 }, pill: { w: 200, px: 3.4 }, logo: 300 / 560, hold: 140, on: 0.9, fade: 90, out: 150, gone: 120,
+  // de qué tamaño nace (el logo del A3, 300 de 560); `near`: --u hasta los que la línea viaja desde la firma del reposo;
+  // `hold`: ms que se deshace la palabra antes de viajar; `on`: recorrido del cristal a partir del que entra el contenido;
+  // `fade`: --u de crecimiento en los que el cristal pasa de 0 a 1; `out`: ms que tarda en salir el contenido al cerrar (y espera el cristal); `gone`: fundido final de la línea
+  const LINE = { panel: { w: 360, px: 4 }, pill: { w: 200, px: 3.4 }, logo: 300 / 560, near: 300, hold: 140, on: 0.9, fade: 90, out: 150, gone: 120,
     // foco: radio (por ancho de la línea), alto/ancho, centro bajo la línea y envolventes (s) de entrada y salida
     foco: { r: 1040 / 560, ry: 300 / 520, cy: 0.21, in: 0.1, out: 0.067 } };
   const CALM_MS = { in: 200, out: 120 }; // reducir movimiento: fundidos en lugar del crecimiento
@@ -425,6 +429,10 @@ ${NO_BACKDROP}{-webkit-backdrop-filter:none;backdrop-filter:none}
   // foco; `goneAt`: cuándo empezó el fundido final al cerrar; `cost`: lo que tarda por frame (ms, media) el motor y el dibujo
   /** @type {any} */ let lvEng = null;
   let lvS = 1, lvV = 0, holdUntil = 0, fa = 0, goneAt = 0, lineDirty = true;
+  // la firma del reposo de la que nace: { el, s0 } (s0: su escala de partida), y cómo se esconde ('swap', 'fade' o '')
+  /** @type {any} */ let org = null;
+  let firmaHide = '';
+  /** @type {[number, number]} */ let lvT = [0, 0];   // desplazamiento que lleva la línea (hacia la firma)
   /** @type {number[][]} */ let stops = [];
   /** @type {number[][]} */ let stopsTo = [];
   const cost = { frames: 0, step: 0, draw: 0 };
@@ -569,11 +577,32 @@ ${NO_BACKDROP}{-webkit-backdrop-filter:none;backdrop-filter:none}
     lvS = born ? 1 : LINE.logo; lvV = 0; fa = 0; goneAt = 0; lineDirty = true; stops = []; stopsTo = [];
     holdUntil = born ? 0 : performance.now() + LINE.hold;
     try { const LV = window.FogarLineaViva; lvEng = LV ? LV.make() : null; if (lvEng) lvEng.still('rest'); } catch { lvEng = null; }   // nace escrita: el logo
+    org = null; lvT = [0, 0]; firmaHide = '';
     turns.clear(); // host nuevo (la página lo quitó, o tras cerrar): los turnos se vuelven a pintar desde la foto
     if (resizeObs) resizeObs.disconnect();
     resizeObs = typeof ResizeObserver === 'function' ? new ResizeObserver(() => wake()) : null;
     if (resizeObs) resizeObs.observe(sheet);
   }
+  // ¿hay firma del reposo a la vista? Cerca de la cabecera, la línea sale de ella; lejos, se funde en su sitio. Con la
+  // forma ya puesta (apply): antes la cabecera aún no está en su sitio
+  function fromFirma(born) {
+    org = null; lvT = [0, 0]; firmaHide = ''; setFirma('');
+    const f = !restoring && typeof document.getElementById === 'function' ? document.getElementById('fogar-firma') : null;
+    if (!f || f.tagName !== 'CANVAS' || (typeof f.checkVisibility === 'function' && !f.checkVisibility({ opacityProperty: true, visibilityProperty: true }))) return;
+    const r = f.getBoundingClientRect(), lr = dom.lv.getBoundingClientRect(), k = born ? 1 : LINE.logo, lw = lr.width / k, U = Math.min(innerWidth / 1920, innerHeight / 1080);
+    if (!r.width || !lw) return;
+    if (born || Math.hypot(r.left - lr.left, r.top - lr.top) > LINE.near * U) { setFirma(firmaHide = 'fade'); return; }
+    org = { el: f, s0: r.width / lw };
+    lvS = org.s0; lvT = [r.left - lr.left, r.top - lr.top];
+    dom.lv.style.transform = lineTf();
+    setFirma(firmaHide = 'swap');
+  }
+  function setFirma(mode) {
+    const d = document.documentElement && document.documentElement.dataset;
+    if (!d || d.tvFirma === (mode || undefined)) return;
+    if (mode) d.tvFirma = mode; else delete d.tvFirma;
+  }
+  const lineTf = () => (lvT[0] || lvT[1] ? `translate(${lvT[0].toFixed(1)}px, ${lvT[1].toFixed(1)}px) ` : '') + (lvS === 1 ? '' : 'scale(' + lvS.toFixed(4) + ')');
   const topLayer = () => !!host && typeof host.showPopover === 'function';
   const lifted = () => { try { return host.matches(':popover-open'); } catch { return false; } };
   // a la capa superior; `again`: sale y vuelve a entrar para quedar la última (encima de un fullscreen que entró después)
@@ -1052,7 +1081,7 @@ ${NO_BACKDROP}{-webkit-backdrop-filter:none;backdrop-filter:none}
     // cerrando: asentada sobre la línea, la línea se funde y se quita (en calma, al acabar el fundido del cristal)
     if (closing && settled) {
       if (calmNow()) { if (now - closedAt >= CALM_MS.out) return finish(); }
-      else { if (!goneAt) { goneAt = now; dom.lv.classList.add('off'); } if (now - goneAt >= LINE.gone) return finish(); }
+      else { if (!goneAt) { goneAt = now; dom.lv.classList.add('off'); setFirma(''); } if (now - goneAt >= LINE.gone) return finish(); }
     }
     if (settled && !closing) { if (++stillFrames >= SETTLE.frames && !deferred) return; } else stillFrames = 0;
     raf = requestAnimationFrame(frame);
@@ -1065,7 +1094,10 @@ ${NO_BACKDROP}{-webkit-backdrop-filter:none;backdrop-filter:none}
     const U = Math.min(innerWidth / 1920, innerHeight / 1080);
     // la línea (su caja sin la escala con la que nace) y el logo: esa caja al tamaño del logo, desde su esquina
     const lr = dom.lv.getBoundingClientRect(), k = lvS || 1, lw = lr.width / k, lh = lr.height / k;
-    const logo = { left: lr.left, top: lr.top, right: lr.left + lw * LINE.logo, bottom: lr.top + lh * LINE.logo };
+    // con firma, el logo es su caja y la línea sale de ella (fr: dónde está la firma respecto a la cabecera)
+    const f = org ? org.el.getBoundingClientRect() : null, fr = f ? [f.left - (lr.left - lvT[0]), f.top - (lr.top - lvT[1])] : null;
+    const logo = f ? { left: f.left, top: f.top, right: f.left + lw * org.s0, bottom: f.top + lh * org.s0 }
+      : { left: lr.left, top: lr.top, right: lr.left + lw * LINE.logo, bottom: lr.top + lh * LINE.logo };
     const target = closing && !calmNow() ? logo : dom.sheet.getBoundingClientRect();
     // el log se pega abajo (flex-end): lo que sobra sale por arriba y no cuenta en scrollHeight, así que se mide la caja
     const first = Array.prototype.find.call(dom.log.children, c => c.getClientRects().length > 0); // en la píldora, el anterior no se ve
@@ -1073,7 +1105,7 @@ ${NO_BACKDROP}{-webkit-backdrop-filter:none;backdrop-filter:none}
     // área segura (como --mx/--my): el cristal no la invade aunque el muelle se pase; si el contenido ya está fuera, se respeta
     const { x: sx, y: sy } = safeOf(U);
     const safe = { l: Math.min(target.left, sx), t: Math.min(target.top, sy), r: Math.max(target.right, innerWidth - sx), b: Math.max(target.bottom, innerHeight - sy) };
-    return { U, target, over, safe, lr, lw, lh, logo };
+    return { U, target, over, safe, lr, lw, lh, logo, fr };
   }
   // CALCULAR: muelles por borde y radio; devuelve si todo está quieto
   function step(m, dt, time) {
@@ -1087,10 +1119,12 @@ ${NO_BACKDROP}{-webkit-backdrop-filter:none;backdrop-filter:none}
     const held = !calm && time * 1000 < holdUntil;
     let moving = held;
     // la línea: su escala con el mismo muelle que el cristal; el motor, a su paso fijo
-    const lt = closing && !calm ? LINE.logo : 1;
+    const s0 = org ? org.s0 : LINE.logo, lt = closing && !calm ? s0 : 1;
     if (calm) lvS = lt;
     else if (!held) for (let j = 0; j < n; j++) { lvV += (ONE.k * (lt - lvS) - ONE.c * lvV) * h; lvS += lvV * h; }
     if (Math.abs(lt - lvS) > 0.001 || Math.abs(lvV) > 0.01) moving = true; else { lvS = lt; lvV = 0; }
+    // desde la firma: el desplazamiento va con la escala (el mismo muelle), de la firma (s0) a la cabecera (1)
+    if (m.fr) { const q = 1 - Math.min(1, Math.max(0, (lvS - s0) / (1 - s0 || 1))); lvT = [m.fr[0] * q, m.fr[1] * q]; }
     if (lvEng && !calm) {
       const c0 = performance.now();
       lvEng.advance(time);
@@ -1155,7 +1189,7 @@ ${NO_BACKDROP}{-webkit-backdrop-filter:none;backdrop-filter:none}
     const fi = dom.fi.style;
     fi.left = (cx - R - l).toFixed(1) + 'px'; fi.top = (cy - Ry - t).toFixed(1) + 'px'; fi.width = (2 * R).toFixed(1) + 'px'; fi.height = (2 * Ry).toFixed(1) + 'px';
     dom.foco.style.opacity = (fa * LOOK.line.foco * (0.55 + 0.45 * (lvEng ? lvEng.env : 0.35))).toFixed(3);
-    const tf = lvS === 1 ? '' : 'scale(' + lvS.toFixed(4) + ')';
+    const tf = lineTf();
     if (dom.lv.style.transform !== tf) dom.lv.style.transform = tf;
     if (lineDirty) drawLine(m);
     if (dom.log.classList.contains('over') !== m.over) dom.log.classList.toggle('over', m.over);
@@ -1194,7 +1228,7 @@ ${NO_BACKDROP}{-webkit-backdrop-filter:none;backdrop-filter:none}
     clearTimeout(removeT); removeT = 0;
     endMorph();
     if (raf) cancelAnimationFrame(raf);
-    raf = 0; closing = false; lvEng = null;
+    raf = 0; closing = false; lvEng = null; setFirma(''); org = null; lvT = [0, 0];
     clearTimeout(voiceT); voiceT = 0;
     if (resizeObs) resizeObs.disconnect();
     if (host) host.remove();
@@ -1230,11 +1264,12 @@ ${NO_BACKDROP}{-webkit-backdrop-filter:none;backdrop-filter:none}
       restoring = fresh && last.enter === 'restore';
       clearTimeout(removeT); removeT = 0;
       ensure();
-      if (closing) { closing = false; dom.sheet.classList.remove('gone'); dom.lv.classList.remove('off'); goneAt = 0; holdUntil = 0; }
+      if (closing) { closing = false; dom.sheet.classList.remove('gone'); dom.lv.classList.remove('off'); goneAt = 0; holdUntil = 0; setFirma(firmaHide); }
       dom.halo.classList.remove('off'); dom.body.classList.remove('off');
       setOpen(true);
       const tier = dom.w.dataset.tier;
       apply(last);
+      if (fresh) fromFirma(restoring || calmNow());
       restoring = false;
       schedule();
       // la misma foto (llega cada ~100 ms) no despierta una membrana asentada; las palabras y las cajas ya la despiertan

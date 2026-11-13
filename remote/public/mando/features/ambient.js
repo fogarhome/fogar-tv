@@ -1,18 +1,20 @@
 // Ambiente del mando (v3): dos luces en órbita con el color de lo que hay en la tele (malva y cielo en reposo, los colores
 // de la carátula si suena algo, el color de la app si hay una abierta) y la cabecera que dice qué es. Los colores pasan a
 // --ca/--cb de <html>, que cambian en 4 s (@property en mando.css); las luces se paran con la página oculta.
-// Los colores de fuera se recortan en luminancia: con las dos luces superpuestas, el texto secundario no baja de 4,5:1.
+// Los colores de fuera se recortan en luminancia: con las dos luces superpuestas, el fondo no pasa de 0,05 (en oscuro).
 import { cfg } from '../core/store.js';
 import { setTitle } from '../ui/status.js';
 
 /**
- * Luminancia relativa permitida a cada luz. Medida en el peor punto (los dos centros encima, con el relleno del
- * trackpad) recorriendo todos los tonos con saturación de 0,3 a 0,75: el texto secundario queda a 5,07:1 o más en
- * oscuro y a 4,54:1 o más en claro.
+ * Luminancia relativa permitida a cada luz [mínima, máxima]. En oscuro, el tope por luminancia de Fogar (TVC Decisión -
+ * Reloj, acento y tokens de la tele): en el peor punto (los dos centros encima) el fondo no pasa de 0,05 detrás de ningún
+ * texto. Manda la miniatura de la tele (luces al 45 y 35 % sobre #070b0c); el fondo con el relleno del trackpad (24 %
+ * sobre #0b1012) y ahora suena (40 % sobre #070b0c) quedan por debajo. Lo comprueba test/unit/luz.test.js. En claro, el
+ * texto secundario a 4,5:1 o más como antes (se rehace en la fase 4 del rediseño, con el mando).
  */
 export const LIMITS = {
-  mando: { oscuro: [0, 0.26], claro: [0.11, 1] },   // luces al 24 % / 16 %, medidas sobre la base de antes (#211b2a / #f6f3f0): se recalculan con el tope por luminancia en la fase 4
-  sp: { oscuro: [0, 0.18], claro: [0.17, 1] },      // ahora suena: luces al 40 % sobre #1a1420, 20 % sobre #f6f3f0
+  mando: { oscuro: [0, 0.1], claro: [0.11, 1] },
+  sp: { oscuro: [0, 0.1], claro: [0.17, 1] },
 };
 const MALVA = '#7c6aae', CIELO = '#6e8cc4';
 

@@ -1026,3 +1026,48 @@ test('voz: sin arrancar (el TTS no manda audio), al quitarse la respuesta se rev
   assert.match(css, /\.wd\{[^}]*animation:wIn[^};]*backwards;transition:opacity \d+ms/, 'tenue por opacidad; la entrada sin fill forwards no lo tapa');
   assert.match(css, /\.w\[data-calm\] \.wd\{[^}]*transition:none/);
 });
+
+// ── Nace de la firma del reposo (#fogar-firma, idle.html): si está cerca de la cabecera (≤ 300 px de la tele), la línea
+// sale de su caja y viaja con el muelle (translate + scale desde la esquina); si está lejos, la firma se funde en su sitio
+// y la línea nace en la cabecera como siempre. La firma se esconde (data-tv-firma en <html>) hasta que la línea se funde.
+function fakeFirma(win, rect) {
+  fakeLine(win, []);
+  const firma = { tagName: 'CANVAS', getBoundingClientRect: () => ({ ...rect, right: rect.left + rect.width, bottom: rect.top + rect.height }) };
+  win.document.getElementById = id => (id === 'fogar-firma' ? firma : null);
+  const mk = win.document.createElement;
+  win.document.createElement = t => {
+    const n = mk(t);
+    if (t === 'canvas') n.getBoundingClientRect = () => {
+      const tf = n.style.transform || '', k = Number((/scale\(([\d.]+)\)/.exec(tf) || [0, 1])[1]);
+      const [, x, y] = /translate\((-?[\d.]+)px, ?(-?[\d.]+)px\)/.exec(tf) || [0, 0, 0];
+      return { left: 640 + +x, top: 110 + +y, right: 640 + +x + 240 * k, bottom: 110 + +y + 101 * k, width: 240 * k, height: 101 * k };
+    };
+    return n;
+  };
+}
+test('firma cerca: la línea y el cristal nacen de su caja, viajan a la cabecera y al cerrar vuelven a ella', () => {
+  const p = loadPage(SRC, w => fakeFirma(w, { left: 700, top: 120, width: 192, height: 80.8 }));
+  const A = p.win.TVAgent, html = p.doc.documentElement;
+  A.render(snap()); p.advance(16);
+  const body = byCls(p, 'body')[0], lv = byCls(p, 'lv')[0];
+  assert.equal(html.dataset.tvFirma, 'swap', 'la firma se esconde al momento: la línea ocupa su sitio');
+  assert.ok(Math.abs(parseFloat(body.style.left) - 700) < 1 && Math.abs(parseFloat(body.style.width) - 192) < 1, `el cristal nace en la firma: ${body.style.left} ${body.style.width}`);
+  assert.match(lv.style.transform, /^translate\(60\.0px, 10\.0px\) scale\(0\.8000\)$/);
+  p.advance(1500);
+  assert.equal(lv.style.transform, '', 'llega a la cabecera');
+  A.hide(); p.advance(1500);
+  assert.ok(!('tvFirma' in html.dataset), 'al fundirse la línea, vuelve la firma');
+  assert.match(lv.style.transform, /^translate\(60\.0px, 10\.0px\) scale\(0\.8000\)$/, 'se recoge en la firma');
+});
+test('firma lejos: se funde en su sitio y la línea nace en la cabecera; sin firma, como siempre', () => {
+  const p = loadPage(SRC, w => fakeFirma(w, { left: 60, top: 560, width: 192, height: 80.8 }));
+  const A = p.win.TVAgent, html = p.doc.documentElement;
+  A.render(snap()); p.advance(16);
+  assert.equal(html.dataset.tvFirma, 'fade');
+  assert.match(byCls(p, 'lv')[0].style.transform, /^scale\(0\.53/);
+  A.hide(true);
+  assert.ok(!('tvFirma' in html.dataset), 'quitada en seco, la firma vuelve');
+  const q = loadPage(SRC, w => fakeLine(w, []));
+  q.win.TVAgent.render(snap()); q.advance(16);
+  assert.ok(!('tvFirma' in q.doc.documentElement.dataset));
+});

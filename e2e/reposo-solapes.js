@@ -126,7 +126,7 @@ function measure() {
       const s = getComputedStyle(el);
       if (s.visibility === 'hidden') continue;
       const texts = [...el.childNodes].filter(n => n.nodeType === 3 && n.textContent.trim());
-      const solid = el.matches('.art, .act svg, .pb .tr, .nf-hero, .nf-still, .nf-cimg, .sg-img, .sg-bar');
+      const solid = el.matches('.art, .act svg, .pb .tr, .nf-hero, .nf-still, .nf-cimg, .sg-img, .sg-bar, .firma');
       if (!texts.length && !solid) continue;
       let b = box(el.getBoundingClientRect());
       if (texts.length) {

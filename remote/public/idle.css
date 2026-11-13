@@ -5,11 +5,10 @@
    Legible a 3 m: la escala de shared/tokens-tv.css (--tv-cifra, --tv-destacado, --tv-texto…, por --s), ningún texto por
    debajo de 26 --u (24 solo en mayúsculas con .14em de espaciado) y barras de 8.
    Tokens: Fogar para la tele (shared/tokens-tv.css; aquí, alias locales). Unbounded solo titula y aquí no hay titulares:
-   todo va en Figtree, también las cifras (tabulares). El fondo vivo (las luces y su base) sigue siendo el de antes hasta su
-   rediseño (fase 3 del rediseño Fogar). Presupuestos: TVC Diseño - Reposo v2 (diagnóstico). */
-@property --ca{syntax:'<color>';inherits:true;initial-value:#7c6aae}
-@property --cb{syntax:'<color>';inherits:true;initial-value:#6e8cc4}
-@property --base{syntax:'<color>';inherits:true;initial-value:#211b2a}
+   todo va en Figtree, también las cifras (tabulares). El fondo vivo y la firma son los del A3 «Rincón vivo» (TVC Decisión -
+   Reposo de Fogar). Presupuestos: TVC Diseño - Reposo v2 (diagnóstico). */
+@property --ca{syntax:'<color>';inherits:true;initial-value:#20332a}
+@property --cb{syntax:'<color>';inherits:true;initial-value:#5a1a10}
 @property --orb{syntax:'<number>';inherits:true;initial-value:.42}
 :root{
   --ease:var(--tv-ease);
@@ -24,23 +23,36 @@
 html,body{height:100%;overflow:hidden;background:#000;cursor:none}
 body{font-family:var(--sans);color:var(--text);-webkit-font-smoothing:antialiased;font-feature-settings:"tnum" 1}
 
-/* ── ambiente: tinta y dos luces en órbita (solo transform; periodos primos entre sí) */
-#bg{position:fixed;inset:0;background:var(--base);transition:--base 4s,--ca 4s,--cb 4s,--orb 4s;overflow:hidden}
-.orb{position:absolute;border-radius:50%;opacity:var(--orb);will-change:transform}
-.oa{left:14vw;top:8vh;width:68vw;height:68vw;background:radial-gradient(closest-side,var(--ca),transparent);animation:orbA 131s linear infinite}
-.ob{left:44vw;top:-40vh;width:62vw;height:62vw;background:radial-gradient(closest-side,var(--cb),transparent);animation:orbB 173s linear infinite}
-@keyframes orbA{from{transform:rotate(0deg) translateX(16vw) rotate(0deg)}to{transform:rotate(360deg) translateX(16vw) rotate(-360deg)}}
-@keyframes orbB{from{transform:rotate(360deg) translateX(12.5vw) rotate(-360deg)}to{transform:rotate(0deg) translateX(12.5vw) rotate(0deg)}}
+/* ── ambiente de Fogar (valores en idle-app.js, LUZ: --base, --humo, --niebla y sus alfas): la base noche con humo y niebla
+   quietos y dos luces prestadas (--ca, --cb, al --orb) que orbitan despacio (61 y 83 s; solo transform). Centros y radios
+   del A3 «Rincón vivo» en una tele de 1920 × 1080; el perfil de cada luz, su color en el centro y un 35 % a medio radio */
+#bg{position:fixed;inset:0;overflow:hidden;transition:--ca 4s,--cb 4s,--orb 4s;
+  background:radial-gradient(57.3vw 57.3vw at 72.9vw 64.8vh,color-mix(in srgb,var(--niebla) calc(var(--an) * 100%),transparent),color-mix(in srgb,var(--niebla) calc(var(--an) * 35%),transparent) 50%,transparent),
+    radial-gradient(67.7vw 67.7vw at 36.5vw 37vh,color-mix(in srgb,var(--humo) calc(var(--ah) * 100%),transparent),color-mix(in srgb,var(--humo) calc(var(--ah) * 35%),transparent) 50%,transparent),var(--base)}
+.orb{position:absolute;border-radius:50%;opacity:var(--orb);will-change:transform;animation:orbit linear infinite}
+.oa{--r:7.3vw;left:-1vw;top:calc(24.1vh - 63.3vw);width:158.3vw;height:126.7vw;background:radial-gradient(closest-side,var(--ca),color-mix(in srgb,var(--ca) 35%,transparent) 50%,transparent);animation-duration:61s}
+.ob{--r:6.25vw;left:-28.1vw;top:calc(81.5vh - 58.3vw);width:145.8vw;height:116.7vw;background:radial-gradient(closest-side,var(--cb),color-mix(in srgb,var(--cb) 35%,transparent) 50%,transparent);animation-duration:83s;animation-direction:reverse}
+@keyframes orbit{from{transform:rotate(0deg) translateX(var(--r)) rotate(0deg)}to{transform:rotate(360deg) translateX(var(--r)) rotate(-360deg)}}
+/* de noche y en cine, negro y sin luces */
+.night #bg,.cinema #bg{background:#000}
 
 /* ── deriva anti-quemado: paseo aleatorio de ±32 --u, nunca el mismo recorrido (JS) */
 #dx{position:fixed;inset:0;transition:transform 150s ease-in-out}
-#dy{position:absolute;inset:0;transform-origin:50% 50%;transition:transform 1.2s var(--ease),filter 1.2s var(--ease)}
-/* ── Fogar habla (tv-agent.js pone html.tv-agent-talk): el reposo se aparta un poco, sin tocar el cristal. Va en #dy y no
-   en body ni #dx porque el host del cristal cuelga de body: un filter/transform en un ancestro suyo rompería el
-   backdrop-filter */
-html.tv-agent-talk #dy{transform:scale(.985);filter:brightness(.82)}
-/* el contexto (tiempo, agenda) quedaría a medias bajo el cristal: se va mientras habla Fogar */
+#dy{position:absolute;inset:0}
+/* ── Fogar habla (tv-agent.js pone html.tv-agent-talk): nada se mueve (pasa decenas de veces al día); el reloj solo se
+   atenúa y el contexto (tiempo, agenda), que quedaría a medias bajo el panel, se va. Nunca filter/transform en un
+   ancestro del host del cristal (cuelga de body): rompería su backdrop-filter */
+html.tv-agent-talk #wHora{opacity:.6}
 html.tv-agent-talk #wCtx{opacity:0}
+/* la firma: la línea del agente nace de ella (tv-agent.js pone data-tv-firma en <html>). «swap»: la línea ocupa su sitio
+   al momento; «fade»: está lejos de la cabecera y se funde en su sitio (160 ms, escala .96). Vuelve con un fundido de
+   220 ms cuando la línea se funde al cerrar. Calma y reducir movimiento: sin escala */
+.firma{display:block;width:min(calc(300 * var(--u)), 100cqw, calc(100cqh * 1000 / 420));aspect-ratio:1000/420;color:var(--clock);
+  transition:opacity 220ms cubic-bezier(.23,1,.32,1),transform 220ms cubic-bezier(.23,1,.32,1)}
+html[data-tv-firma] .firma{opacity:0;transform:scale(.96);transition-duration:160ms}
+html[data-tv-firma=swap] .firma{transition:none;transform:none}
+.calm .firma{transform:none!important}
+@media (prefers-reduced-motion:reduce){.firma{transform:none!important}}
 
 /* ── rejilla 12×6 */
 #grid{position:absolute;inset:var(--my) var(--mx);display:grid;grid-template-columns:repeat(12,minmax(0,1fr));grid-template-rows:repeat(6,minmax(0,1fr));gap:var(--gap)}
@@ -50,7 +62,6 @@ html.tv-agent-talk #wCtx{opacity:0}
 .w[data-jx=start]{justify-content:flex-start}.w[data-jx=center]{justify-content:center}.w[data-jx=end]{justify-content:flex-end}
 .w[data-jx=stretch]>.wi{flex:1 1 auto}
 .w[data-jy=start]{align-items:flex-start}.w[data-jy=center]{align-items:center}.w[data-jy=end]{align-items:flex-end}.w[data-jy=stretch]{align-items:stretch}
-#grid.leaving .w{opacity:.18}
 .w.off{opacity:0!important}
 .w.gone{display:none}
 
@@ -135,9 +146,9 @@ html.tv-agent-talk #wCtx{opacity:0}
 body.night,body.cinema{--text:#808080;--clock:#7a7a7a;--clock2:#767676;--soft:#767676;--accent:#7c7c7c;--track:rgba(255,255,255,.1)}
 .night .wxt,.night .pb,.night .eq,.night .art{display:none}
 .night #wMus .tt{font-size:calc(36 * var(--s));margin:0}.night #wMus .ar{font-size:calc(30 * var(--s))}
-.dim #wCtx,.dim #wMus{opacity:0!important}
+.dim #wCtx,.dim #wMus,.dim #wFirma{opacity:0!important}
 .dim .clk{color:#3d3d3d}
-.cinema #wCtx,.cinema #wMus{opacity:0!important}
+.cinema #wCtx,.cinema #wMus,.cinema #wFirma{opacity:0!important}
 .cinema .clk{color:#4a4a4a}
 /* modo calma: nada se mueve solo salvo la deriva */
 .calm .orb,.calm .eq i{animation-play-state:paused}
@@ -270,6 +281,6 @@ body.night,body.cinema{--text:#808080;--clock:#7a7a7a;--clock2:#767676;--soft:#7
 .rc-none{font-size:calc(var(--tv-destacado) * var(--u));color:var(--soft)}
 /* con la fila abierta el reposo se aparta (opacidad en #dy: #dx lleva la deriva lenta en su transform) */
 html.rcing #dy{opacity:.06}
-#dy{transition:transform 1.2s var(--ease),filter 1.2s var(--ease),opacity .2s var(--ease)}
+#dy{transition:opacity .2s var(--ease)}
 .calm .rc-row,.calm .rc-c.fx{transform:none;scale:1}
 @media (prefers-reduced-motion:reduce){.rc-row{transform:none}.rc-c.fx{scale:1}}
