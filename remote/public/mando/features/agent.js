@@ -36,7 +36,10 @@ const SENTENCE_END = /[.!?…:]["'»)\]]*$/;              // palabra que cierra 
 const HEAD = { t: 'Dime qué quieres ver', s: 'Habla o escribe', rec: 'Te escucho' };
 /** La pista mientras escucha: al mantener, se envía al soltar; en modo de toque, con otro toque. */
 const sendHint = (sep = ' · ') => 'Te escucho' + sep + (latchedNow() ? 'toca para enviar' : 'suelta para enviar');
-let thumb = false;                                      // la pulsación en curso es del micro del pulgar (hoja cerrada)
+let headT = 0;                                          // vuelta de la cabecera a su frase tras la respuesta o un error
+/** Con micrófono la hoja no se abre nunca: se habla con el micro o la cabecera y todo se cuenta en la cabecera, sin tapar el
+ *  mando. Sin micrófono (http), la hoja es la única forma de escribirle. */
+const inHead = () => mic && !isOpen('agS');
 
 /** Carácter dicho en el ms `t` de audio (copia de charAt de src/features/voice-sync.js).
  *  @param {[number, number][]} a @param {number} rate @param {number} t @param {number} len */
@@ -77,19 +80,28 @@ function noQuit() { clearTimeout(quitT); quit = false; }
 /** Para lo que suene en el móvil si toca: al interrumpir, o si no hay nada sonando. */
 function cut() { if (interruptOn() || !player.playing()) player.stop(); }
 
-/** La cabecera escucha (micro del pulgar con la hoja cerrada) o vuelve a su frase; `heard`, lo entendido hasta ahora.
- *  @param {boolean} on @param {string} [heard] */
-function head(on, heard = '') {
+/** La cabecera: escucha (con lo entendido), piensa, dice la respuesta o el error; `rest` en ms, vuelve sola a su frase.
+ *  @param {string} t @param {string} s @param {{ on?: boolean, rest?: number }} [o] */
+function headSay(t, s, { on = false, rest = 0 } = {}) {
+  clearTimeout(headT);
   document.documentElement.classList.toggle('escucha', on);
-  $('#fT').textContent = on ? heard || HEAD.rec : HEAD.t;
-  $('#fS').textContent = on ? sendHint() : HEAD.s;
+  $('#fT').textContent = t; $('#fS').textContent = s;
+  if (rest) headT = setTimeout(headRest, rest);
+}
+function headRest() { headSay(HEAD.t, HEAD.s); }
+/** Lo que dice la cabecera en cada estado (solo sin hoja). @param {string} st */
+function headStage(st) {
+  if (st === 'rec') headSay(HEAD.rec, sendHint(), { on: true });
+  else if (st === 'wait') headSay(voxText || lastAsk || 'Un momento', voxText ? 'Fogar' : 'Pensando…');
+  else if (st === 'done') headSay(voxText || 'Ya está', 'Fogar', { rest: 12000 });
+  else if (document.documentElement.classList.contains('escucha')) headRest();
 }
 /** Estado de la vista: 'idle' (pídeme algo), 'rec' (grabando con la línea), 'wait' (un momento) o 'done' (respuesta). */
 function stage(st) {
   const S = $('#agS');
   S.dataset.st = st;
   lineStage(st);
-  if (thumb && st === 'rec' && !isOpen('agS')) head(true); else if (st !== 'rec') head(false);
+  if (inHead()) headStage(st); else if (st !== 'idle') document.documentElement.classList.remove('escucha');
   $('#shade').classList.toggle('think', st === 'wait' || st === 'rec');
   $('#agSt').textContent = st === 'wait' ? 'Un momento' : st === 'done' ? 'Fogar' : st === 'rec' ? sendHint('… ') : 'Pídeme algo';   // en reposo nadie escucha todavía
   if (st !== 'done') noQuit();
@@ -144,6 +156,7 @@ function fail(msg, again = true) {
   const rep = $('#rep'); rep.className = 'rep err'; rep.textContent = msg;
   retry = again && !!lastAsk;
   stage('idle');
+  if (inHead()) headSay(msg, 'Toca el micro para volver a intentarlo', { rest: 10000 });
 }
 /** Pregunta nueva: la voz y el texto de la anterior ya no cuentan. */
 function voiceReset() { voiceEnd(false); voxText = ''; }
@@ -171,10 +184,10 @@ function onTalk(j) {
   // la parcial es la frase acumulada mientras se habla: sustituye sin animar (las palabras animadas, para la final)
   if (j.ev === 'partial') {
     const q = $('#agQ'); q.classList.remove('said'); q.textContent = j.text || '';
-    if (document.documentElement.classList.contains('escucha')) head(true, j.text || '');
+    if (inHead() && document.documentElement.classList.contains('escucha')) headSay(j.text || HEAD.rec, sendHint(), { on: true });
     return;
   }
-  if (j.ev === 'final') { player.stop(); said(j.text || ''); lastAsk = j.text || ''; return; }   // los frames de la respuesta anterior ya no valen; si falla, se repite por escrito
+  if (j.ev === 'final') { player.stop(); said(j.text || ''); lastAsk = j.text || ''; if (inHead() && $('#agS').dataset.st === 'wait') headStage('wait'); return; }   // los frames de la respuesta anterior ya no valen; si falla, se repite por escrito
   if (j.ev === 'voice') { onVoice(j); return; }
   // la respuesta acumulada, en directo (con voz, la pinta la voz)
   if (j.ev === 'token') { talking = out !== 'none'; voxText = j.text || ''; if (!vox) { rep.className = 'rep'; rep.textContent = voxText; } stage('wait'); return; }
@@ -212,7 +225,7 @@ export const agent = {
   sheets: { agS: {
     open() {
       const agin = $('#agin'); agin.value = ''; if (!mic) agin.focus(); $('#shade').classList.add('vz');   // con micro, sin teclado encima dla línea
-      thumb = false; head(false);
+      headRest();
       if ($('#agS').dataset.st === 'wait') stage('wait');   // se cerró mientras pensaba: las luces siguen creciendo
       lineWake();                                            // la línea pasa de la cabecera a la hoja
     },
@@ -230,21 +243,20 @@ export const agent = {
       if (!v) return;
       agin.value = ''; ask(v);
     });
-    // un error del micro del pulgar se lee en la hoja (la cabecera no tiene sitio para él)
-    const rep = (t, cls = '') => { if (cls === 'err') { if (thumb && !isOpen('agS')) openSheet('agS'); return fail(t, false); } const r = $('#rep'); r.className = 'rep' + (cls ? ' ' + cls : ''); r.textContent = t; };
+    // un error del micro se lee en la cabecera (con la hoja cerrada) o en la hoja
+    const rep = (t, cls = '') => { if (cls === 'err') return fail(t, false); const r = $('#rep'); r.className = 'rep' + (cls ? ' ' + cls : ''); r.textContent = t; };
     onWs('bin', b => player.play(b));
     // latch: un toque corto pasa a modo de toque; si ya escucha, la pista cambia a «toca para enviar»
     mic = voice.init({ stage, said, rep, latch: () => { if ($('#agS').dataset.st === 'rec') stage('rec'); }, press: () => { cut(); voiceReset(); out = outSel(); asked++; talking = false; lastAsk = ''; retry = false; } });
-    // el micro del pulgar: mantener (o tocar y otro toque para enviar) = la cabecera escucha (el mando no se mueve) y al
-    // enviar, la hoja con la respuesta. Para escribir, la cabecera. Sin micrófono propio (http) sigue con data-click: abre la hoja.
-    const m = $('#mic2');
+    // el micro del pulgar y la cabecera: mantener (o tocar y otro toque para enviar) = la cabecera escucha, piensa y dice la
+    // respuesta (que la tele enseña entera); el mando sigue a mano. Sin micrófono propio (http) siguen con data-click: la hoja.
     if (mic) {
-      m.removeAttribute('data-click'); m.removeAttribute('data-a');
-      m.setAttribute('aria-label', 'Micrófono de Fogar: toca o mantén pulsado para hablar');
-      voice.bind(m, {
-        press: () => { thumb = !isOpen('agS'); },
-        sent: () => { if (thumb) openSheet('agS'); },
-      });
+      HEAD.s = 'Toca o mantén para hablar'; headRest();
+      for (const [b, label] of [[$('#mic2'), 'Micrófono de Fogar'], [$('.fogar2'), 'Hablar con Fogar']]) {
+        b.removeAttribute('data-click'); b.removeAttribute('data-a');
+        b.setAttribute('aria-label', label + ': toca o mantén pulsado para hablar');
+        voice.bind(b);
+      }
     }
     $('#agStop').addEventListener('click', stop);
     $('#agRetry').addEventListener('click', () => { buzz(8); if (lastAsk) { ask(lastAsk); $('#agStop').focus(); } });   // se oculta: el foco pasa a Parar (sin sacar el teclado)

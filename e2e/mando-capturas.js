@@ -199,6 +199,8 @@ async function takeLog(page, section) {
 const btn = (page, name) => page.getByRole('button', { name, exact: true });
 const tap = async (page, name, ms = 400) => { await btn(page, name).tap(); await page.waitForTimeout(ms); };
 const inject = (page, o) => page.evaluate(m => window.__wsInject(m), o);
+// la hoja de Fogar solo se abre sin micrófono (http): aquí (localhost, con micro) se abre a mano para verla igual
+const openAg = page => page.evaluate(() => import('/mando/ui/sheets.js').then(m => m.openSheet('agS'))).then(() => page.waitForTimeout(450));
 const shade = async page => { await page.touchscreen.tap(195, 30); await page.waitForTimeout(400); };
 const focusTv = async o => { cdp.event('Runtime.bindingCalled', { name: '__tvFocus', payload: JSON.stringify(o) }, SID); await wait(150); };
 // hoja de ajustes: entrar en una página desde la portada (data-go) y volver
@@ -288,14 +290,14 @@ async function adminScenes(theme, admin) {
   });
   await run('hoja-direccion', async p => { await tap(p, 'Abrir una dirección'); await p.keyboard.type('elpais.com'); await shot(p, T('hoja-direccion')); });
   await run('hoja-agente', async p => {
-    await tap(p, 'Hablar con Fogar'); await shot(p, T('hoja-agente'));
+    await openAg(p); await shot(p, T('hoja-agente'));
     await inject(p, { t: 'talk', ev: 'done', reply: 'Hecho: he puesto «Lo-fi para estudiar» en YouTube a pantalla completa.' });
     await shot(p, T('hoja-agente-respuesta'));                            // con «Quitar de la tele» (suena en la tele: hasta hidden)
     await tap(p, 'Quitar de la tele');
   });
   // Fogar escribe la respuesta: «Parar» a la vista; al pulsarlo, el turno se para y queda «Parado.»
   await run('hoja-agente-parar', async p => {
-    await tap(p, 'Hablar con Fogar');
+    await openAg(p);
     await inject(p, { t: 'talk', ev: 'final', text: 'pon algo de jazz' });
     await inject(p, { t: 'talk', ev: 'token', text: 'Voy a buscar algo de jazz tranquilo' });
     await shot(p, T('hoja-agente-parar'));
@@ -305,7 +307,7 @@ async function adminScenes(theme, admin) {
   // la parcial y la final las manda el servidor, inyectadas. El modo de toque (tocar y otro toque para enviar) va en
   // extra-micro-toque; la sección «toque corto» se queda vacía para que el registro compare con las tandas de antes.
   await run('hoja-agente-voz', async p => {
-    await tap(p, 'Hablar con Fogar');
+    await openAg(p);
     await p.evaluate(() => { window.__wsFake['vstart:'] = { ok: 1 }; window.__wsFake['vend:'] = { ok: 1 }; });
     const orb = await p.getByRole('button', { name: 'Hablar con Fogar: toca o mantén pulsado', exact: true }).boundingBox();
     const [x, y] = [orb.x + orb.width / 2, orb.y + orb.height / 2];
@@ -420,7 +422,7 @@ async function walk(admin) {
     await tap(p, 'Siguiente', 400); await tap(p, 'Aleatorio', 400); await tap(p, 'Recientes', 900);
     await shade(p);
     await takeLog(p, 'recorrido: spotify');
-    await tap(p, 'Hablar con Fogar'); await p.keyboard.type('pon música tranquila'); await p.keyboard.press('Enter'); await p.waitForTimeout(600);
+    await openAg(p); await p.keyboard.type('pon música tranquila'); await p.keyboard.press('Enter'); await p.waitForTimeout(600);
     await shade(p);
     await takeLog(p, 'recorrido: agente');
     await tap(p, 'Ajustes', 1000);
@@ -448,7 +450,7 @@ async function extraScenes(admin) {
   const run = async (name, fn, o = {}) => { const p = await newPage({ token: admin, theme: 'oscuro', name, ...o }); try { await open(p); await fn(p); } finally { await takeLog(p, name); await p.context().close(); } };
   await run('extra-apaisado', p => shot(p, 'extra-apaisado'), { landscape: true });
   // micro del pulgar como los audios de WhatsApp: un toque empieza a escuchar en la cabecera (el mando no se mueve) y
-  // otro toque envía (vstart y vend, como al mantener); al enviar, la hoja de voz
+  // otro toque envía (vstart y vend, como al mantener); al enviar no se abre ninguna hoja: la cabecera piensa y responde
   await run('extra-micro-toque', async p => {
     await p.evaluate(() => { window.__wsFake['vstart:'] = { ok: 1 }; window.__wsFake['vend:'] = { ok: 1 }; });
     const pad0 = await p.locator('#pad').boundingBox();
@@ -462,8 +464,23 @@ async function extraScenes(admin) {
     if (hint !== 'Te escucho · toca para enviar') errors.push(`extra-micro-toque: la pista dice «${hint}»`);
     if (pad1.y !== pad0.y || pad1.height !== pad0.height) errors.push('extra-micro-toque: el trackpad se ha movido al escuchar');
     await p.mouse.down(); await p.waitForTimeout(80); await p.mouse.up(); await p.waitForTimeout(600);
-    if (!(await p.locator('#agS.on').count())) errors.push('extra-micro-toque: al enviar no se abre la hoja');
+    if (await p.locator('#agS.on').count()) errors.push('extra-micro-toque: al enviar se abre la hoja y tapa el mando');
+    if ((await p.locator('#fS').textContent()) !== 'Pensando…') errors.push('extra-micro-toque: la cabecera no dice «Pensando…» al enviar');
+    await inject(p, { t: 'talk', ev: 'final', text: 'pon algo tranquilo para cenar' });
+    await inject(p, { t: 'talk', ev: 'done', reply: 'Te pongo jazz suave en Spotify.' });
+    await p.waitForTimeout(300);
+    const said = await p.locator('#fT').textContent();
+    if (said !== 'Te pongo jazz suave en Spotify.') errors.push(`extra-micro-toque: la cabecera dice «${said}» y no la respuesta`);
+    if (await p.locator('#agS.on').count()) errors.push('extra-micro-toque: con la respuesta se abre la hoja');
     await shot(p, 'extra-micro-enviado');
+    // la cabecera también graba (toque y otro toque), sin abrir la hoja
+    const hb = await p.locator('.fogar2').boundingBox();
+    await p.mouse.move(hb.x + hb.width / 2, hb.y + hb.height / 2);
+    await p.mouse.down(); await p.waitForTimeout(80); await p.mouse.up();
+    await p.locator(':root.escucha').waitFor({ state: 'attached', timeout: 5000 }); await p.waitForTimeout(300);
+    if (await p.locator('#agS.on').count()) errors.push('extra-micro-toque: tocar la cabecera abre la hoja');
+    await p.mouse.down(); await p.waitForTimeout(80); await p.mouse.up(); await p.waitForTimeout(400);
+    if ((await p.locator('#fS').textContent()) !== 'Pensando…') errors.push('extra-micro-toque: la cabecera no envía con el segundo toque');
   });
   await run('extra-sin-navegador', async p => {
     await inject(p, { t: 'state', title: '', url: '', host: '', vol: 35, muted: false, media: null, cdp: false, scroll: null });
