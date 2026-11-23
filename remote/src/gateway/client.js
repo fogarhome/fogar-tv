@@ -3,13 +3,19 @@
 // Cliente del Fogar Gateway (STT local + agente + TTS) por WebSocket: ws://<host>:8004/ws/stream.
 // Una sola sesión, perezosa: solo `ensure()` conecta (handshake → `ready`); no reconecta por su cuenta, quien la necesite
 // vuelve a llamar a `ensure()`. Traduce los mensajes del Gateway a eventos simples (`GwEvent`) y deja el resto a quien escucha.
-// Si el Gateway cierra el handshake con 1008 emite `rejected` (la clave) o `refused` (otra política: el agente no está
-// permitido o no existe), antes de que ensure() resuelva false.
+// Los cierres se leen por código (protocolo 3.0+, el `reason` no se compara): 4010 en el handshake o 4200 con la sesión
+// abierta emiten `rejected` (la clave ya no vale); cualquier otro 4000–4899 en el handshake, o 4020 con la sesión
+// abierta, `refused` (el agente no está permitido o no existe; la clave sigue valiendo). Los del handshake, antes de que
+// ensure() resuelva false.
 // El audio que sale antes de `ready` se guarda (con tope) y sale en orden después. Los logs no llevan la clave ni texto,
 // solo códigos de cierre y tamaños.
 const { WebSocket } = require('ws');
 
-const AUDIO_MAGIC = 0xA1;                    // frame de audio del Gateway: 0xA1 + turn_seq (uint16 BE) + PCM16 LE 24 kHz mono
+const AUDIO_MAGIC = 0xA1;
+const CAPABILITIES = ['screen', 'speaker'];  // lo que es la tele (4.0); el micrófono es el del mando
+const BAD_KEY = 4010, KEY_REVOKED = 4200, AGENT_NOT_PERMITTED = 4020;
+/** 4000–4899: el gateway no deja y reintentar igual daría lo mismo (4900–4999 son pasajeros). @param {number} c */
+const isFix = c => c >= 4000 && c < 4900;                    // frame de audio del Gateway: 0xA1 + turn_seq (uint16 BE) + PCM16 LE 24 kHz mono
 
 /**
  * @typedef {{type:'partial',text:string} | {type:'final',text:string} | {type:'turn_start',turnId:string,seq:number}
@@ -99,7 +105,7 @@ function createGatewayClient({ url, key, agent, log, WebSocketImpl = WebSocket, 
       }, readyMs);
 
       sock.on('open', () => {
-        sock.send(JSON.stringify({ client_key: key, input_mode: 'audio', output_mode: ['audio', 'text', 'status'], ...(agent ? { agent } : {}) }));
+        sock.send(JSON.stringify({ client_key: key, input_mode: 'audio', output_mode: ['audio', 'text', 'status'], capabilities: CAPABILITIES, ...(agent ? { agent } : {}) }));
       });
       sock.on('message', (/** @type {Buffer} */ data, /** @type {boolean} */ isBinary) => {
         if (sock !== ws) return;
@@ -119,11 +125,14 @@ function createGatewayClient({ url, key, agent, log, WebSocketImpl = WebSocket, 
         const was = ready;
         if (sock === ws) { ws = null; ready = false; clearQueue(); }
         log.info(`gateway: cierre ${code}`);
-        // shortcut: el Gateway usa 1008 para varios fallos del handshake y solo el motivo dice que es la clave; si un día
-        // tiene un código propio para clave inválida, mirar solo el código
-        if (!was && code === 1008) emit(/clave/i.test(String(reason || '')) ? { type: 'rejected' } : { type: 'refused', reason: String(reason || '').slice(0, 200) });
+        const why = String(reason || '').slice(0, 200);
+        if (!was && code === BAD_KEY) emit({ type: 'rejected' });
+        else if (!was && isFix(code)) emit({ type: 'refused', reason: why });
         done(false);
-        if (was && !closing.has(sock)) emit({ type: 'down' });
+        if (!was || closing.has(sock)) return;
+        if (code === KEY_REVOKED) emit({ type: 'rejected' });
+        else if (code === AGENT_NOT_PERMITTED) emit({ type: 'refused', reason: why });
+        emit({ type: 'down' });
       });
     });
   }

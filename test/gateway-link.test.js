@@ -150,3 +150,16 @@ test('el gateway no deja usar el agente: refused, la clave se conserva y se vuel
   assert.equal(await l.ensure(), true);
   assert.equal(l.status().status, 'ok');
 });
+
+test('clave retirada con la sesión abierta (4200): revoked, se borra la guardada y no se vuelve a intentar', async () => {
+  const s = tmpStore(); s.save({ url: 'ws://gw/ws/stream', key: 'k1', name: 'gh' });
+  const f = fakes();
+  const l = createGatewayLink({ store: s, agent: 'a', log: nolog, makeClient: f.make });
+  assert.equal(await l.check(), 'ok');
+  f.made[0].emit({ type: 'rejected' });
+  f.made[0].emit({ type: 'down' });
+  assert.equal(l.status().status, 'revoked');
+  assert.equal(s.load().key, '');
+  assert.equal(await l.ensure(), false);
+  assert.equal(l.status().status, 'revoked');
+});

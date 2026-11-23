@@ -1,6 +1,6 @@
 'use strict';
 // Fogar Gateway falso para pruebas y capturas: GET /.well-known/fogar-gateway, POST /pair (código `code`, devuelve una clave
-// que empieza por `keyPrefix`) y el WebSocket /ws/stream (ready si la clave empieza por `keyPrefix`; si no, 1008 como el
+// que empieza por `keyPrefix`) y el WebSocket /ws/stream (ready si la clave empieza por `keyPrefix`; si no, 4010 como el
 // de verdad). Lo que llega a /pair queda en `pairs`.
 const http = require('node:http');
 const path = require('node:path');
@@ -28,7 +28,7 @@ async function startFakeGateway({ name = 'green-house', code = '123456', keyPref
   const wss = new WebSocketServer({ server: srv, path: '/ws/stream' });
   wss.on('connection', ws => ws.once('message', d => {
     let h = {}; try { h = JSON.parse(d.toString()); } catch {}
-    if (typeof h.client_key !== 'string' || !h.client_key.startsWith(keyPrefix)) return ws.close(1008, 'Clave de cliente invalida o inactiva.');
+    if (typeof h.client_key !== 'string' || !h.client_key.startsWith(keyPrefix)) return ws.close(4010, 'invalid or inactive credential');
     ws.send(JSON.stringify({ type: 'ready', session_id: 's', agent: h.agent || 'main' }));
   }));
   await new Promise(r => srv.listen(0, '127.0.0.1', r));

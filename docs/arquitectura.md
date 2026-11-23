@@ -93,6 +93,9 @@ remote/
                           (`KINDS`); `layoutOf` (el `layout` de tv_open / tv_open_app) y `opensPage` (la herramienta pone otra página)
   src/gateway/
     client.js             cliente WS del Fogar Gateway: ensure, send, audio, end, cancel y eventos (partial, final, token, tool, audio, turn_end, down)
+                          protocolo 4.0: handshake con `capabilities: ['screen','speaker']`; cierres por código, nunca por el texto:
+                          4010 (handshake) o 4200 (sesión abierta) → `rejected` (link: `revoked` y borra la clave guardada);
+                          otro 4000–4899 en el handshake o 4020 con la sesión abierta → `refused`; 1000, 1011, 49xx… → `down`
   src/tv/ (voz)
     speaker.js            altavoz de la tele: PCM sin cabecera a `TV_SPEAKER_CMD`; onIdle cuando acaba de sonar
     talk-view.js          lo que se dice y la respuesta, pintado en la tele (píldora o panel); hide() y onHide;

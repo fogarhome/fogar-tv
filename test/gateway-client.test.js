@@ -7,7 +7,7 @@ const path = require('node:path');
 const { WebSocketServer } = require(path.join(__dirname, '..', 'remote', 'node_modules', 'ws'));
 const { createGatewayClient } = require(path.join(__dirname, '..', 'remote', 'src', 'gateway', 'client'));
 
-const HANDSHAKE = { client_key: 'k', input_mode: 'audio', output_mode: ['audio', 'text', 'status'], agent: 'salon' };
+const HANDSHAKE = { client_key: 'k', input_mode: 'audio', output_mode: ['audio', 'text', 'status'], capabilities: ['screen', 'speaker'], agent: 'salon' };
 const nolog = { info() {}, warn() {}, error() {}, debug() {} };
 
 /** Gateway falso: guarda lo que recibe y deja que cada prueba decida qué contesta. @param {(ws: any, n: number) => void} [onConn] */
@@ -42,8 +42,8 @@ test('ensure() manda el handshake y resuelve true con ready', async () => {
   } finally { c.close(); await f.stop(); }
 });
 
-test('ensure() resuelve false si el Gateway cierra con 1008 o no manda ready en readyMs', async () => {
-  const f1 = await fake(ws => ws.close(1008, 'Clave de cliente invalida o inactiva'));
+test('ensure() resuelve false si el Gateway cierra con 4010 o no manda ready en readyMs', async () => {
+  const f1 = await fake(ws => ws.close(4010, 'invalid or inactive credential'));
   const c1 = mk(f1);
   const f2 = await fake();
   const c2 = mk(f2, { readyMs: 200 });
@@ -195,15 +195,28 @@ test('los logs no llevan la clave ni texto', async () => {
   } finally { c.close(); await f.stop(); }
 });
 
-test('1008 por la clave → rejected; 1008 por otra cosa (agente no permitido) → refused con el motivo', async () => {
-  const f1 = await fake(ws => ws.close(1008, 'Clave de cliente invalida o inactiva.'));
-  const f2 = await fake(ws => ws.close(1008, "Agent 'x' not permitted for this client."));
-  const c1 = mk(f1), c2 = mk(f2), e1 = [], e2 = [];
-  c1.on(ev => e1.push(ev.type)); c2.on(ev => e2.push(ev.type));
-  try {
-    assert.equal(await c1.ensure(), false);
-    assert.equal(await c2.ensure(), false);
-    assert.deepEqual(e1, ['rejected']);
-    assert.deepEqual(e2, ['refused']);
-  } finally { c1.close(); c2.close(); await f1.stop(); await f2.stop(); }
+test('handshake: 4010 → rejected; 4020, 4021 y otro 4xxx → refused con el motivo; 1011 y 4900 → ninguno (pasajeros)', async () => {
+  const cases = [[4010, ['rejected']], [4020, ['refused']], [4021, ['refused']], [4100, ['refused']], [1011, []], [4900, []]];
+  for (const [code, want] of cases) {
+    const f = await fake(ws => ws.close(code, 'motivo'));
+    const c = mk(f), got = [];
+    c.on(ev => got.push(ev.type));
+    try {
+      assert.equal(await c.ensure(), false);
+      assert.deepEqual(got, want, String(code));
+    } finally { c.close(); await f.stop(); }
+  }
+});
+
+test('con la sesión abierta: 4200 → rejected y down; 4020 → refused y down; 1000 → solo down', async () => {
+  for (const [code, want] of [[4200, ['rejected', 'down']], [4020, ['refused', 'down']], [1000, ['down']]]) {
+    const f = await fake(ws => { ready(ws); setTimeout(() => ws.close(code, 'motivo'), 20); });
+    const c = mk(f), got = [];
+    c.on(ev => got.push(ev.type));
+    try {
+      assert.equal(await c.ensure(), true);
+      await until(() => got.includes('down'));
+      assert.deepEqual(got, want, String(code));
+    } finally { c.close(); await f.stop(); }
+  }
 });
